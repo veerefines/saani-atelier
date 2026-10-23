@@ -29,7 +29,7 @@ function greeting(now: Date | null, zone: string) {
   return 'Buonasera';
 }
 
-function Tile({
+export function Tile({
   href,
   i,
   className,
@@ -53,8 +53,43 @@ function Tile({
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+export function Badge({ children }: { children: React.ReactNode }) {
   return <span className="h-seal">{children}</span>;
+}
+
+/** The little glass jar full of paper hearts. */
+export function JarArt() {
+  return (
+    <svg className="t-jar-svg" viewBox="0 0 120 140" aria-hidden="true">
+      <defs>
+        <linearGradient id="glass" x1="0" x2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.55" />
+          <stop offset="0.25" stopColor="#fff" stopOpacity="0.12" />
+          <stop offset="0.8" stopColor="#fff" stopOpacity="0.08" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0.4" />
+        </linearGradient>
+      </defs>
+      <rect x="34" y="8" width="52" height="16" rx="4" fill="#c99a68" />
+      <rect x="34" y="8" width="52" height="5" rx="2.5" fill="#dcb385" />
+      <path d="M30 26 h60 q6 0 6 8 v84 q0 14 -14 14 h-44 q-14 0 -14 -14 v-84 q0 -8 6 -8z" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.85)" strokeWidth="2" />
+      {[
+        [44, 112, '#f4a6c0', -15],
+        [62, 116, '#f7e3a1', 10],
+        [80, 110, '#cdb4f0', 25],
+        [52, 96, '#ffd0dc', 30],
+        [72, 94, '#bfe0d6', -20],
+        [60, 80, '#f27ca2', 5],
+        [46, 72, '#fff1f4', -30],
+        [78, 76, '#f7c9a8', 15],
+      ].map(([x, y, c, r], k) => (
+        <g key={k} transform={`translate(${x} ${y}) rotate(${r})`} className="t-heart">
+          <path d="M0 4 C -9 -3 -6 -11 0 -6 C 6 -11 9 -3 0 4 Z" fill={c as string} stroke="rgba(120,40,70,0.25)" strokeWidth="0.8" />
+        </g>
+      ))}
+      <path d="M30 26 h60 q6 0 6 8 v84 q0 14 -14 14 h-44 q-14 0 -14 -14 v-84 q0 -8 6 -8z" fill="url(#glass)" />
+      <path d="M36 36 q-2 30 0 70" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity="0.7" fill="none" />
+    </svg>
+  );
 }
 
 export default function Dashboard({
@@ -154,35 +189,7 @@ export default function Dashboard({
 
         {/* message jar */}
         <Tile href="/home/jar" i={2} className="t-jar" tilt={-2} label="Message jar">
-          <svg className="t-jar-svg" viewBox="0 0 120 140" aria-hidden="true">
-            <defs>
-              <linearGradient id="glass" x1="0" x2="1">
-                <stop offset="0" stopColor="#fff" stopOpacity="0.55" />
-                <stop offset="0.25" stopColor="#fff" stopOpacity="0.12" />
-                <stop offset="0.8" stopColor="#fff" stopOpacity="0.08" />
-                <stop offset="1" stopColor="#fff" stopOpacity="0.4" />
-              </linearGradient>
-            </defs>
-            <rect x="34" y="8" width="52" height="16" rx="4" fill="#c99a68" />
-            <rect x="34" y="8" width="52" height="5" rx="2.5" fill="#dcb385" />
-            <path d="M30 26 h60 q6 0 6 8 v84 q0 14 -14 14 h-44 q-14 0 -14 -14 v-84 q0 -8 6 -8z" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.85)" strokeWidth="2" />
-            {[
-              [44, 112, '#f4a6c0', -15],
-              [62, 116, '#f7e3a1', 10],
-              [80, 110, '#cdb4f0', 25],
-              [52, 96, '#ffd0dc', 30],
-              [72, 94, '#bfe0d6', -20],
-              [60, 80, '#f27ca2', 5],
-              [46, 72, '#fff1f4', -30],
-              [78, 76, '#f7c9a8', 15],
-            ].map(([x, y, c, r], k) => (
-              <g key={k} transform={`translate(${x} ${y}) rotate(${r})`} className="t-heart">
-                <path d="M0 4 C -9 -3 -6 -11 0 -6 C 6 -11 9 -3 0 4 Z" fill={c as string} stroke="rgba(120,40,70,0.25)" strokeWidth="0.8" />
-              </g>
-            ))}
-            <path d="M30 26 h60 q6 0 6 8 v84 q0 14 -14 14 h-44 q-14 0 -14 -14 v-84 q0 -8 6 -8z" fill="url(#glass)" />
-            <path d="M36 36 q-2 30 0 70" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity="0.7" fill="none" />
-          </svg>
+          <JarArt />
           <div className="h-tile-text">
             <h2 className="hand">Message jar</h2>
             <p className="whisper">for whatever you’re feeling</p>

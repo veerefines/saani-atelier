@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
 /** Header for each corner of the dashboard. */
-export default function PageHead({ title, sub, kicker }: { title: string; sub?: string; kicker?: string }) {
+export default function PageHead({ title, sub, kicker, back = '/home' }: { title: string; sub?: string; kicker?: string; back?: string }) {
   return (
     <header className="h-pagehead">
-      <Link href="/home" className="h-back">
+      <Link href={back} className="h-back">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

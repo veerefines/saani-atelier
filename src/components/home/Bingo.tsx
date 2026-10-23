@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import type { Square } from '@/content/home';
+import type { Dare } from '@/lib/data';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 
 type Done = Record<string, { at: string; mediaId?: string }>;
@@ -56,7 +57,22 @@ function Stitch() {
 
 type RewardView = { sq: Square; line: boolean; full: boolean };
 
-export default function Bingo({ squares, done: initial }: { squares: Square[]; done: Done }) {
+/** Dares and cheers her friends pinned to a square. */
+function Dares({ list }: { list: Dare[] }) {
+  if (!list.length) return null;
+  return (
+    <ul className="bingo-dares">
+      {list.map((d) => (
+        <li key={d.id}>
+          {d.text}
+          <span className="love-from">from {d.authorName}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default function Bingo({ squares, done: initial, dares = [] }: { squares: Square[]; done: Done; dares?: Dare[] }) {
   const [done, setDone] = useState<Done>(initial);
   const [active, setActive] = useState<Square | null>(null);
   const [reward, setReward] = useState<RewardView | null>(null);
@@ -65,6 +81,7 @@ export default function Bingo({ squares, done: initial }: { squares: Square[]; d
   const fileRef = useRef<HTMLInputElement>(null);
 
   const count = Object.keys(done).length;
+  const daresFor = (id: string) => dares.filter((d) => d.squareId === id);
   const doneIdx = useMemo(() => new Set(squares.map((s, i) => (done[s.id] ? i : -1)).filter((i) => i >= 0)), [squares, done]);
   const linesDone = (set: Set<number>) => LINES.filter((l) => l.every((i) => set.has(i))).length;
 
@@ -133,6 +150,7 @@ export default function Bingo({ squares, done: initial }: { squares: Square[]; d
               <span className="sq-label">{s.label}</span>
               {d && <Stitch />}
               {d && <span className="sq-flower">{FLOWERS[i % FLOWERS.length]}</span>}
+              {daresFor(s.id).length > 0 && <span className="sq-dare">💌{daresFor(s.id).length > 1 ? daresFor(s.id).length : ''}</span>}
             </button>
           );
         })}
@@ -155,6 +173,7 @@ export default function Bingo({ squares, done: initial }: { squares: Square[]; d
               <p className="group">{active.group}</p>
               <h2>{active.label}</h2>
               {done[active.id]?.mediaId && <img className="proof" src={mediaUrl(done[active.id].mediaId)} alt="Your photo for this square" />}
+              <Dares list={daresFor(active.id)} />
               {done[active.id] ? (
                 <div className="sheet-actions">
                   <button className="cta" onClick={() => setReward({ sq: active, line: false, full: false })}>
@@ -246,6 +265,7 @@ export default function Bingo({ squares, done: initial }: { squares: Square[]; d
                   {reward.sq.reward.line}
                 </motion.p>
               )}
+              <Dares list={daresFor(reward.sq.id)} />
               <div className="reward-actions">
                 <button className="cta" onClick={() => setReward(null)}>
                   Back to the board

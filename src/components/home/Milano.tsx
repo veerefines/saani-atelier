@@ -196,7 +196,10 @@ function Wishlist({
               <button className="check" onClick={() => toggle(w.id)} aria-pressed={w.done} aria-label={w.done ? `Mark ${w.text} as not done` : `Mark ${w.text} as done`}>
                 {w.done ? '🌷' : ''}
               </button>
-              <span>{w.text}</span>
+              <span>
+                {w.text}
+                {w.fromName && <small className="wish-from">from {w.fromName}</small>}
+              </span>
               <button className="x" onClick={() => remove(w.id)} aria-label={`Remove ${w.text}`}>
                 ×
               </button>

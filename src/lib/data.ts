@@ -11,7 +11,9 @@ export type Post = {
   authorName: string;
   kind: PostKind;
   text?: string;
+  /** the first (or only) file; albums keep every photo in mediaIds */
   mediaId?: string;
+  mediaIds?: string[];
   reactions: string[];
   look: number; // which paper / tilt style to use
 };
@@ -42,14 +44,17 @@ export type JarNote = {
 
 export type BingoState = { id: 'bingo'; createdAt: string; done: Record<string, { at: string; mediaId?: string }> };
 export type Seen = { id: 'seen'; createdAt: string; love?: string; letters?: string; jar?: string };
-export type Wish = { id: string; createdAt: string; text: string; done: boolean };
+/** A Milano list item. Friends' tips carry who suggested them. */
+export type Wish = { id: string; createdAt: string; text: string; done: boolean; fromId?: string; fromName?: string };
+/** A friend's dare or cheer pinned to a bingo square. */
+export type Dare = { id: string; createdAt: string; authorId: string; authorName: string; squareId: string; text: string };
 
 const now = () => new Date().toISOString();
 const pick = (n: number) => Math.floor(Math.random() * n);
 
 /* posts */
 export const listPosts = () => db.list<Post>('posts');
-export async function addPost(s: Session, p: { kind: PostKind; text?: string; mediaId?: string }) {
+export async function addPost(s: Session, p: { kind: PostKind; text?: string; mediaIds?: string[] }) {
   const post: Post = {
     id: db.newId('p_'),
     createdAt: now(),
@@ -57,16 +62,19 @@ export async function addPost(s: Session, p: { kind: PostKind; text?: string; me
     authorName: s.name,
     kind: p.kind,
     text: p.text?.slice(0, 4000),
-    mediaId: p.mediaId,
+    mediaId: p.mediaIds?.[0],
+    ...(p.mediaIds && p.mediaIds.length > 1 ? { mediaIds: p.mediaIds } : {}),
     reactions: [],
     look: pick(6),
   };
   return db.put('posts', post);
 }
+/** Every file a post points at (albums have several). */
+export const postMedia = (p: Post) => p.mediaIds ?? (p.mediaId ? [p.mediaId] : []);
 export async function deletePost(s: Session, id: string) {
   const post = await db.get<Post>('posts', id);
   if (!post || (post.authorId !== s.id && s.role !== 'saanika')) return false;
-  if (post.mediaId) await deleteMedia(post.mediaId);
+  for (const m of postMedia(post)) await deleteMedia(m);
   await db.remove('posts', id);
   return true;
 }
@@ -166,6 +174,26 @@ export const listWishes = () => db.list<Wish>('wishes');
 export const addWish = (text: string) => db.put<Wish>('wishes', { id: db.newId('w_'), createdAt: now(), text: text.slice(0, 140), done: false });
 export const toggleWish = (id: string) => db.update<Wish>('wishes', id, (w) => ({ ...w, done: !w.done }));
 export const deleteWish = (id: string) => db.remove('wishes', id);
+/** A friend's tip lands on her list, signed. */
+export const addTip = (s: Session, text: string) =>
+  db.put<Wish>('wishes', { id: db.newId('w_'), createdAt: now(), text: text.slice(0, 140), done: false, fromId: s.id, fromName: s.name });
+export async function deleteTip(s: Session, id: string) {
+  const w = await db.get<Wish>('wishes', id);
+  if (!w || w.fromId !== s.id) return false;
+  await db.remove('wishes', id);
+  return true;
+}
+
+/* bingo dares & cheers from friends */
+export const listDares = () => db.list<Dare>('dares');
+export const addDare = (s: Session, squareId: string, text: string) =>
+  db.put<Dare>('dares', { id: db.newId('d_'), createdAt: now(), authorId: s.id, authorName: s.name, squareId, text: text.slice(0, 280) });
+export async function deleteDare(s: Session, id: string) {
+  const d = await db.get<Dare>('dares', id);
+  if (!d || d.authorId !== s.id) return false;
+  await db.remove('dares', id);
+  return true;
+}
 
 /* media */
 export async function createMedia(s: Session, mime: string, size: number) {

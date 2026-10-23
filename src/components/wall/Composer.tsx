@@ -7,46 +7,62 @@ import { letterTitles, moods } from '@/content/home';
 import { api, uploadFile } from '@/lib/upload-client';
 import { PostBody, when } from '@/components/home/LoveWall';
 
-type Tab = 'message' | 'voice' | 'video' | 'letter' | 'jar';
+export type Tab = 'message' | 'voice' | 'video' | 'letter' | 'jar';
 const TABS: { id: Tab; label: string; emoji: string; hint: string }[] = [
-  { id: 'message', label: 'Message', emoji: '💌', hint: 'A note, a memory, a photo. It goes on her wall of love.' },
+  { id: 'message', label: 'Message & photos', emoji: '💌', hint: 'A note, a memory, or a whole little album. It goes on her wall of love.' },
   { id: 'voice', label: 'Voice note', emoji: '🎙️', hint: 'Record something she can play when she misses your voice.' },
-  { id: 'video', label: 'Video', emoji: '🎬', hint: 'A little film for her wall. Keep it short and sweet.' },
+  { id: 'video', label: 'Video', emoji: '🎬', hint: 'Record a little film right here, or upload one. Keep it short and sweet.' },
   { id: 'letter', label: 'Open-when letter', emoji: '✉️', hint: 'Sealed for a particular moment. You can lock it until a date.' },
   { id: 'jar', label: 'Jar note', emoji: '🫙', hint: 'A tiny note she’ll pull out of her jar when she feels a certain way.' },
 ];
 
-type Mine = { posts: Post[]; letters: Letter[]; jar: JarNote[] };
+const MAX_PHOTOS = 10;
+const MAX_AUDIO_SECS = 180;
+const MAX_VIDEO_SECS = 90;
 
-function useRecorder() {
-  const [state, setState] = useState<'idle' | 'recording' | 'done' | 'denied'>('idle');
+export type Mine = { posts: Post[]; letters: Letter[]; jar: JarNote[] };
+
+/** Records audio, or video with sound, in the browser. */
+function useRecorder(kind: 'audio' | 'video') {
+  const [state, setState] = useState<'idle' | 'starting' | 'recording' | 'done' | 'denied'>('idle');
   const [blob, setBlob] = useState<Blob | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [secs, setSecs] = useState(0);
   const rec = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<number>(0);
+  const max = kind === 'video' ? MAX_VIDEO_SECS : MAX_AUDIO_SECS;
 
   async function start() {
+    setState('starting');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported(t));
-      const r = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      const s = await navigator.mediaDevices.getUserMedia(
+        kind === 'video' ? { audio: true, video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } } : { audio: true },
+      );
+      const types =
+        kind === 'video'
+          ? ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+          : ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'];
+      const type = types.find((t) => MediaRecorder.isTypeSupported(t));
+      const r = new MediaRecorder(s, type ? { mimeType: type } : undefined);
       chunks.current = [];
       r.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       r.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        setBlob(new Blob(chunks.current, { type: (r.mimeType || 'audio/webm').split(';')[0] }));
+        s.getTracks().forEach((t) => t.stop());
+        setStream(null);
+        setBlob(new Blob(chunks.current, { type: (r.mimeType || (kind === 'video' ? 'video/webm' : 'audio/webm')).split(';')[0] }));
         setState('done');
         clearInterval(timer.current);
       };
+      setStream(s);
       r.start(250);
       rec.current = r;
       setSecs(0);
       setState('recording');
       timer.current = window.setInterval(() => {
-        setSecs((s) => {
-          if (s + 1 >= 180) r.state === 'recording' && r.stop();
-          return s + 1;
+        setSecs((n) => {
+          if (n + 1 >= max) r.state === 'recording' && r.stop();
+          return n + 1;
         });
       }, 1000);
     } catch {
@@ -55,57 +71,172 @@ function useRecorder() {
   }
   const stop = () => rec.current?.state === 'recording' && rec.current.stop();
   const reset = () => {
+    if (rec.current?.state === 'recording') {
+      rec.current.onstop = null;
+      rec.current.stop();
+    }
+    stream?.getTracks().forEach((t) => t.stop());
+    clearInterval(timer.current);
+    setStream(null);
     setBlob(null);
     setState('idle');
     setSecs(0);
   };
   useEffect(() => () => clearInterval(timer.current), []);
-  return { state, blob, secs, start, stop, reset };
+  return { state, blob, stream, secs, max, start, stop, reset };
 }
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-export default function Composer({ name, mine: initial }: { name: string; mine: Mine }) {
-  const [tab, setTab] = useState<Tab>('message');
+/** An object URL that's cleaned up when the thing changes. */
+function useObjectUrl(b: Blob | null) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    if (!b) return setUrl('');
+    const u = URL.createObjectURL(b);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [b]);
+  return url;
+}
+
+function Thumb({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const url = useObjectUrl(file);
+  return (
+    <span className="w-thumb">
+      {url && <img src={url} alt="" />}
+      <button type="button" onClick={onRemove} aria-label={`Remove ${file.name}`}>
+        ×
+      </button>
+    </span>
+  );
+}
+
+/** Live camera preview while recording. */
+function LiveCam({ stream }: { stream: MediaStream }) {
+  const v = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (v.current) v.current.srcObject = stream;
+  }, [stream]);
+  return <video ref={v} className="w-preview w-live" autoPlay muted playsInline />;
+}
+
+export function SentPosts({ posts, onDelete }: { posts: Post[]; onDelete: (id: string) => void }) {
+  return (
+    <>
+      {posts.map((p) => (
+        <article key={p.id} className="love-card">
+          <PostBody p={p} />
+          <div className="w-mine-meta">
+            <span>{p.reactions.length ? `Saanika sent ${p.reactions.join(' ')}` : when(p.createdAt)}</span>
+            <button onClick={() => onDelete(p.id)}>Delete</button>
+          </div>
+        </article>
+      ))}
+    </>
+  );
+}
+
+export function SentLetters({ letters, onDelete }: { letters: Letter[]; onDelete: (id: string) => void }) {
+  return (
+    <>
+      {letters.map((l) => (
+        <article key={l.id} className="love-card">
+          <div className="love-note look-2">
+            <strong className="hand" style={{ fontSize: 22, color: 'var(--burgundy)' }}>
+              ✉️ {l.title}
+            </strong>
+            {'\n'}
+            {l.body}
+          </div>
+          <div className="w-mine-meta">
+            <span>{l.openedAt ? 'She opened it 💗' : l.unlockAt ? `Sealed until ${new Date(l.unlockAt).toLocaleDateString('en-GB')}` : 'Waiting to be opened'}</span>
+            <button onClick={() => onDelete(l.id)}>Delete</button>
+          </div>
+        </article>
+      ))}
+    </>
+  );
+}
+
+export function SentJar({ jar, onDelete }: { jar: JarNote[]; onDelete: (id: string) => void }) {
+  return (
+    <>
+      {jar.map((n) => (
+        <article key={n.id} className="love-card">
+          <div className={`love-note look-${n.color % 6}`}>
+            🫙 {n.text}
+            <span className="love-from">for when she’s {moods.find((m) => m.id === n.mood)?.label}</span>
+          </div>
+          <div className="w-mine-meta">
+            <span>{n.drawnAt ? 'She’s read it 💗' : 'In the jar'}</span>
+            <button onClick={() => onDelete(n.id)}>Delete</button>
+          </div>
+        </article>
+      ))}
+    </>
+  );
+}
+
+/** Delete one of your own things, after a quick check. */
+export async function deleteMine(kind: 'posts' | 'letters' | 'jar' | 'dares' | 'tips', id: string) {
+  if (!confirm('Delete this? She won’t see it any more.')) return false;
+  await api(`/api/${kind}/${id}`, 'DELETE');
+  return true;
+}
+
+export default function Composer({ mine: initial, only, children }: { mine: Mine; only: Tab[]; children?: React.ReactNode }) {
+  const tabs = TABS.filter((t) => only.includes(t.id));
+  const [tab, setTab] = useState<Tab>(tabs[0].id);
   const [mine, setMine] = useState(initial);
   const [text, setText] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState(letterTitles[0]);
   const [customTitle, setCustomTitle] = useState('');
   const [unlock, setUnlock] = useState('');
   const [mood, setMood] = useState(moods[0].id);
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(0);
+  const [step, setStep] = useState('');
   const [err, setErr] = useState('');
   const [sent, setSent] = useState('');
-  const rec = useRecorder();
+  const audio = useRecorder('audio');
+  const video = useRecorder('video');
   const fileInput = useRef<HTMLInputElement>(null);
-  const first = name.split(' ')[0];
-
-  useEffect(() => {
-    if (!file) return setPreview('');
-    const u = URL.createObjectURL(file);
-    setPreview(u);
-    return () => URL.revokeObjectURL(u);
-  }, [file]);
+  const file = files[0] ?? null;
+  const fileUrl = useObjectUrl(tab === 'video' ? file : null);
+  const audioUrl = useObjectUrl(audio.blob);
+  const videoUrl = useObjectUrl(video.blob);
 
   function switchTab(t: Tab) {
     setTab(t);
     setErr('');
-    setFile(null);
-    rec.reset();
+    setFiles([]);
+    audio.reset();
+    video.reset();
   }
 
   function done(msg: string) {
     setText('');
-    setFile(null);
+    setFiles([]);
     setCustomTitle('');
     setUnlock('');
-    rec.reset();
+    audio.reset();
+    video.reset();
     setPct(0);
+    setStep('');
     setSent(msg);
     setTimeout(() => setSent(''), 3200);
+  }
+
+  function addPhotos(list: FileList | null) {
+    if (!list) return;
+    const picked = Array.from(list).filter((f) => f.type.startsWith('image/'));
+    setFiles((cur) => {
+      const next = [...cur, ...picked];
+      if (next.length > MAX_PHOTOS) setErr(`Up to ${MAX_PHOTOS} photos in one message. The rest can go in another.`);
+      return next.slice(0, MAX_PHOTOS);
+    });
   }
 
   async function send(e: React.FormEvent) {
@@ -114,21 +245,26 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
     setBusy(true);
     try {
       if (tab === 'message') {
-        if (!text.trim() && !file) throw new Error('Write something or add a photo.');
-        const mediaId = file ? await uploadFile(file, setPct) : undefined;
-        const p = await api<Post>('/api/posts', 'POST', { kind: file ? 'photo' : 'text', text, mediaId });
+        if (!text.trim() && !files.length) throw new Error('Write something or add a photo.');
+        const ids: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+          if (files.length > 1) setStep(`Photo ${i + 1} of ${files.length}`);
+          ids.push(await uploadFile(files[i], (p) => setPct(Math.round(((i + p / 100) / files.length) * 100))));
+        }
+        const p = await api<Post>('/api/posts', 'POST', { kind: ids.length ? 'photo' : 'text', text, mediaIds: ids.length ? ids : undefined });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
-        done('Pinned to her wall 💌');
+        done(ids.length > 1 ? `Album pinned to her wall 📸` : 'Pinned to her wall 💌');
       } else if (tab === 'voice') {
-        const blob = rec.blob ?? file;
+        const blob = audio.blob ?? file;
         if (!blob) throw new Error('Record or choose a voice note first.');
         const mediaId = await uploadFile(blob, setPct);
         const p = await api<Post>('/api/posts', 'POST', { kind: 'voice', text: text || 'A voice note', mediaId });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
         done('Voice note sent 🎙️');
       } else if (tab === 'video') {
-        if (!file) throw new Error('Choose a video first.');
-        const mediaId = await uploadFile(file, setPct);
+        const blob = video.blob ?? file;
+        if (!blob) throw new Error('Record or choose a video first.');
+        const mediaId = await uploadFile(blob, setPct);
         const p = await api<Post>('/api/posts', 'POST', { kind: 'video', text, mediaId });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
         done('Video sent 🎬');
@@ -144,40 +280,37 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
       }
     } catch (e) {
       setErr((e as Error).message);
+      setStep('');
     }
     setBusy(false);
   }
 
   async function del(kind: 'posts' | 'letters' | 'jar', id: string) {
-    if (!confirm('Delete this? She won’t see it any more.')) return;
-    const url = kind === 'posts' ? `/api/posts/${id}` : kind === 'letters' ? `/api/letters/${id}` : `/api/jar/${id}`;
     try {
-      await api(url, 'DELETE');
+      if (!(await deleteMine(kind, id))) return;
       setMine((m) => ({ ...m, [kind]: (m[kind] as { id: string }[]).filter((x) => x.id !== id) }));
     } catch (e) {
       setErr((e as Error).message);
     }
   }
 
-  const current = TABS.find((t) => t.id === tab)!;
-  const total = mine.posts.length + mine.letters.length + mine.jar.length;
+  const current = tabs.find((t) => t.id === tab)!;
+  const showPosts = only.some((t) => t === 'message' || t === 'voice' || t === 'video');
+  const total = (showPosts ? mine.posts.length : 0) + (only.includes('letter') ? mine.letters.length : 0) + (only.includes('jar') ? mine.jar.length : 0);
+  const recording = audio.state === 'recording' || video.state === 'recording';
 
   return (
-    <main className="h-page w-page">
-      <header className="h-pagehead">
-        <p className="hand h-kicker">psst, it’s a surprise</p>
-        <h1 className="chrome w-hi">Hi {first}</h1>
-        <p className="whisper h-sub">Leave something for Saanika. She’ll find it in Milan.</p>
-      </header>
-
-      <div className="w-tabs" role="tablist" aria-label="What would you like to send?">
-        {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} className="w-tab" onClick={() => switchTab(t.id)}>
-            <span aria-hidden="true">{t.emoji}</span>
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <>
+      {tabs.length > 1 && (
+        <div className="w-tabs" role="tablist" aria-label="What would you like to send?">
+          {tabs.map((t) => (
+            <button key={t.id} role="tab" aria-selected={tab === t.id} className="w-tab" onClick={() => switchTab(t.id)}>
+              <span aria-hidden="true">{t.emoji}</span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <motion.form key={tab} className="w-card" onSubmit={send} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <img className="h-tape" src="/reveal/washi.webp" alt="" />
@@ -215,34 +348,35 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
 
         {tab === 'voice' && (
           <div className="w-rec">
-            {rec.state !== 'done' && (
+            {audio.state !== 'done' && (
               <button
                 type="button"
-                className={`w-recbtn${rec.state === 'recording' ? ' on' : ''}`}
-                onClick={rec.state === 'recording' ? rec.stop : rec.start}
-                aria-label={rec.state === 'recording' ? 'Stop recording' : 'Start recording'}
+                className={`w-recbtn${audio.state === 'recording' ? ' on' : ''}`}
+                onClick={audio.state === 'recording' ? audio.stop : audio.start}
+                disabled={audio.state === 'starting'}
+                aria-label={audio.state === 'recording' ? 'Stop recording' : 'Start recording'}
               >
                 <span />
               </button>
             )}
             <p className="hand w-rec-label">
-              {rec.state === 'recording'
-                ? `recording… ${mmss(rec.secs)} (tap to stop)`
-                : rec.state === 'done'
-                  ? `recorded ${mmss(rec.secs)}`
-                  : rec.state === 'denied'
+              {audio.state === 'recording'
+                ? `recording… ${mmss(audio.secs)} (tap to stop)`
+                : audio.state === 'done'
+                  ? `recorded ${mmss(audio.secs)}`
+                  : audio.state === 'denied'
                     ? 'Allow microphone access in your browser settings, or upload a file below.'
-                    : 'tap to record (up to 3 minutes)'}
+                    : `tap to record (up to ${audio.max / 60} minutes)`}
             </p>
-            {rec.blob && (
+            {audioUrl && (
               <>
-                <audio controls src={URL.createObjectURL(rec.blob)} />
-                <button type="button" className="ghost-btn" onClick={rec.reset} style={{ padding: '0 18px' }}>
+                <audio controls src={audioUrl} />
+                <button type="button" className="ghost-btn" onClick={audio.reset} style={{ padding: '0 18px' }}>
                   Record again
                 </button>
               </>
             )}
-            {rec.state !== 'recording' && !rec.blob && (
+            {audio.state !== 'recording' && !audio.blob && (
               <button type="button" className="w-link" onClick={() => fileInput.current?.click()}>
                 {file ? `Chosen: ${file.name}` : 'or upload an audio file'}
               </button>
@@ -250,18 +384,74 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
           </div>
         )}
 
-        {(tab === 'message' || tab === 'video') && (
-          <div className="w-drop">
-            {preview && tab === 'message' && <img src={preview} alt="Your photo" className="w-preview" />}
-            {preview && tab === 'video' && <video src={preview} className="w-preview" controls playsInline />}
-            <button type="button" className="ghost-btn" onClick={() => fileInput.current?.click()} style={{ padding: '0 18px' }}>
-              {file ? (tab === 'video' ? 'Choose a different video' : 'Choose a different photo') : tab === 'video' ? 'Choose a video' : 'Add a photo (optional)'}
-            </button>
-            {file && (
-              <button type="button" className="w-link" onClick={() => setFile(null)}>
-                Remove
+        {tab === 'video' && (
+          <div className="w-rec">
+            {video.stream && <LiveCam stream={video.stream} />}
+            {videoUrl && <video src={videoUrl} className="w-preview" controls playsInline />}
+            {!videoUrl && fileUrl && <video src={fileUrl} className="w-preview" controls playsInline />}
+            {!file && video.state !== 'done' && (
+              <button
+                type="button"
+                className={`w-recbtn w-recbtn-cam${video.state === 'recording' ? ' on' : ''}`}
+                onClick={video.state === 'recording' ? video.stop : video.start}
+                disabled={video.state === 'starting'}
+                aria-label={video.state === 'recording' ? 'Stop recording' : 'Record a video'}
+              >
+                <span />
               </button>
             )}
+            <p className="hand w-rec-label">
+              {video.state === 'recording'
+                ? `recording… ${mmss(video.secs)} of ${mmss(video.max)} (tap to stop)`
+                : video.state === 'starting'
+                  ? 'opening your camera…'
+                  : video.state === 'done'
+                    ? `recorded ${mmss(video.secs)}`
+                    : video.state === 'denied'
+                      ? 'Allow camera and microphone access in your browser settings, or upload a video below.'
+                      : file
+                        ? `Chosen: ${file.name}`
+                        : `tap to record with your camera (up to ${video.max} seconds)`}
+            </p>
+            {video.blob && (
+              <button type="button" className="ghost-btn" onClick={video.reset} style={{ padding: '0 18px' }}>
+                Record again
+              </button>
+            )}
+            {!recording && !video.blob && (
+              <div className="w-drop" style={{ justifyContent: 'center' }}>
+                <button type="button" className="w-link" onClick={() => fileInput.current?.click()}>
+                  {file ? 'Choose a different video' : 'or upload a video'}
+                </button>
+                {file && (
+                  <button type="button" className="w-link" onClick={() => setFiles([])}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'message' && (
+          <div className="w-album">
+            {files.length > 0 && (
+              <div className="w-thumbs">
+                {files.map((f, i) => (
+                  <Thumb key={`${f.name}${f.size}${i}`} file={f} onRemove={() => setFiles((cur) => cur.filter((_, k) => k !== i))} />
+                ))}
+              </div>
+            )}
+            <div className="w-drop">
+              <button type="button" className="ghost-btn" onClick={() => fileInput.current?.click()} style={{ padding: '0 18px' }} disabled={files.length >= MAX_PHOTOS}>
+                {files.length ? `Add more photos (${files.length}/${MAX_PHOTOS})` : 'Add photos (optional, up to 10)'}
+              </button>
+              {files.length > 0 && (
+                <button type="button" className="w-link" onClick={() => setFiles([])}>
+                  Remove all
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -269,9 +459,11 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
           ref={fileInput}
           type="file"
           hidden
+          multiple={tab === 'message'}
           accept={tab === 'video' ? 'video/*' : tab === 'voice' ? 'audio/*' : 'image/*'}
           onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null);
+            if (tab === 'message') addPhotos(e.target.files);
+            else setFiles(e.target.files?.[0] ? [e.target.files[0]] : []);
             e.target.value = '';
           }}
         />
@@ -313,8 +505,16 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
         {err && <p className="h-err">{err}</p>}
 
         <div className="w-send">
-          <button className="cta" type="submit" disabled={busy || rec.state === 'recording'}>
-            {busy ? (pct && pct < 100 ? `Uploading ${pct}%` : 'Sending…') : tab === 'letter' ? 'Seal the letter' : tab === 'jar' ? 'Drop it in the jar' : 'Send to Saanika'}
+          <button className="cta" type="submit" disabled={busy || recording}>
+            {busy
+              ? pct && pct < 100
+                ? `${step ? `${step} · ` : 'Uploading '}${pct}%`
+                : 'Sending…'
+              : tab === 'letter'
+                ? 'Seal the letter'
+                : tab === 'jar'
+                  ? 'Drop it in the jar'
+                  : 'Send to Saanika'}
           </button>
         </div>
 
@@ -327,51 +527,16 @@ export default function Composer({ name, mine: initial }: { name: string; mine: 
         </AnimatePresence>
       </motion.form>
 
+      {children}
+
       <section className="w-mine" aria-label="What you’ve sent">
         <h2 className="hand">{total ? `What you’ve sent (${total})` : 'Nothing sent yet'}</h2>
         <div className="love-wall">
-          {mine.posts.map((p) => (
-            <article key={p.id} className="love-card">
-              <PostBody p={p} />
-              <div className="w-mine-meta">
-                <span>{p.reactions.length ? `Saanika sent ${p.reactions.join(' ')}` : when(p.createdAt)}</span>
-                <button onClick={() => del('posts', p.id)}>Delete</button>
-              </div>
-            </article>
-          ))}
-          {mine.letters.map((l) => (
-            <article key={l.id} className="love-card">
-              <div className="love-note look-2">
-                <strong className="hand" style={{ fontSize: 22, color: 'var(--burgundy)' }}>
-                  ✉️ {l.title}
-                </strong>
-                {'\n'}
-                {l.body}
-              </div>
-              <div className="w-mine-meta">
-                <span>{l.openedAt ? 'She opened it 💗' : l.unlockAt ? `Sealed until ${new Date(l.unlockAt).toLocaleDateString('en-GB')}` : 'Waiting to be opened'}</span>
-                <button onClick={() => del('letters', l.id)}>Delete</button>
-              </div>
-            </article>
-          ))}
-          {mine.jar.map((n) => (
-            <article key={n.id} className="love-card">
-              <div className={`love-note look-${n.color % 6}`}>
-                🫙 {n.text}
-                <span className="love-from">for when she’s {moods.find((m) => m.id === n.mood)?.label}</span>
-              </div>
-              <div className="w-mine-meta">
-                <span>{n.drawnAt ? 'She’s read it 💗' : 'In the jar'}</span>
-                <button onClick={() => del('jar', n.id)}>Delete</button>
-              </div>
-            </article>
-          ))}
+          {showPosts && <SentPosts posts={mine.posts} onDelete={(id) => del('posts', id)} />}
+          {only.includes('letter') && <SentLetters letters={mine.letters} onDelete={(id) => del('letters', id)} />}
+          {only.includes('jar') && <SentJar jar={mine.jar} onDelete={(id) => del('jar', id)} />}
         </div>
       </section>
-
-      <footer className="h-foot">
-        <a href="/api/logout">Sign out</a>
-      </footer>
-    </main>
+    </>
   );
 }

@@ -14,7 +14,35 @@ export function when(iso: string) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+/** Several photos in one polaroid: swipe through, with a little counter. */
+function Album({ p, ids }: { p: Post; ids: string[] }) {
+  const [at, setAt] = useState(0);
+  return (
+    <div className="j-polaroid">
+      <div
+        className="j-photo-img love-album"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          setAt(Math.round(el.scrollLeft / el.clientWidth));
+        }}
+      >
+        {ids.map((id, i) => (
+          <img key={id} src={mediaUrl(id)} alt={`${p.text || `Photo from ${p.authorName}`} (${i + 1} of ${ids.length})`} loading="lazy" />
+        ))}
+      </div>
+      <span className="love-album-count" aria-hidden="true">
+        {at + 1}/{ids.length}
+      </span>
+      <figcaption className="hand">
+        {p.text || '♡'}
+        <span className="love-from">from {p.authorName}</span>
+      </figcaption>
+    </div>
+  );
+}
+
 export function PostBody({ p }: { p: Post }) {
+  if (p.kind === 'photo' && p.mediaIds && p.mediaIds.length > 1) return <Album p={p} ids={p.mediaIds} />;
   if (p.kind === 'photo')
     return (
       <div className="j-polaroid">

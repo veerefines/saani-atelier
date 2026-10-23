@@ -35,7 +35,13 @@ Magic links work too: http://localhost:3000/hello/DEMO-SAANIKA
   - Milano bingo (`/home/bingo`): 25 squares; tapping "I did it" stitches the square shut and gives a reward (a bouquet, a quirky certificate or a cheer), with confetti for every line and a finale for the full board. Optional photo proof.
   - Milano corner (`/home/milano`): days in Milano (or sleeps until), two clocks, and "Your little Milano": mood chips (food, coffee & matcha, vibes, fashion & places, local spots, flowers, golden hour, beaches), a pastel mini map of every place, and a Surprise me button that deals a place with what to order, its Google rating and a Google Maps link. A 📍 Near me chip uses her location (only in her browser, never sent to the server) to show what's closest, with walking times, a dot on the map, and quick Google Maps searches around her (matcha, gelato, florists, fabric shops, vintage…). Then "Workshops, shows & people": the big fashion dates (Fashion Week, MICAM shoes, MIPEL bags, White, Milano Unica, Lineapelle, Design Week) counting down to the next edition, plus fashion and sewing workshops, matcha classes, runway courses and networking, linked to live listings on Eventbrite and Meetup. Below that, beaches to run away to, from Milano's lidos to the islands. Her own list sits at the side; anything can be saved to it in one tap.
   - Your story: back to the journey.
-- Well-wisher page (`/wall`): each invited person can send a message with a photo, record a voice note in the browser (or upload one), upload a video, write an open-when letter (optionally locked until a date) or drop a note in her jar for a mood. They see what they've sent, whether she opened it and her reactions, and can delete their own things.
+- Well-wishers' desk (`/wall`): the same atelier as hers, with clocks and a countdown to Saanika landing in Milano, and six tiles:
+  - Pin to her wall (`/wall/love`): a message, a photo album (up to 10), a voice note (record in the browser or upload) or a video (record with the camera, up to 90 seconds, or upload).
+  - Open when (`/wall/letters`): sealed letters, optionally locked until a date.
+  - Fill her jar (`/wall/jar`): notes by mood, with a gauge showing which moods need more.
+  - Cheer her bingo (`/wall/bingo`): see which squares she's stitched (never her photo proofs) and pin a dare or cheer to any square. She sees it on the square and with her reward.
+  - Milano tips (`/wall/milano`): places and plans that land on her Milano list as "from <name>".
+  - Your sent box (`/wall/sent`): everything they've sent, whether she's opened or read it, her reactions, and delete.
 
 ## Adding her real photos, videos and voice notes
 

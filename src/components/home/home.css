@@ -2075,3 +2075,65 @@ a.pc-rating:hover {
     animation: none;
   }
 }
+
+/* ---------- friends' bits on her side ---------- */
+.love-album {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.love-album::-webkit-scrollbar {
+  display: none;
+}
+.love-album img {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+.j-polaroid:has(.love-album) {
+  position: relative;
+}
+.love-album-count {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(30, 20, 28, 0.6);
+  color: #fff;
+  font: 600 12px var(--font-body);
+}
+.sq .sq-dare {
+  position: absolute;
+  left: 3px;
+  bottom: 2px;
+  font: 600 clamp(10px, 2.6vw, 13px) var(--font-body);
+  z-index: 3;
+}
+.bingo-dares {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 4px;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.bingo-dares li {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff7d6;
+  color: var(--ink);
+  font: 600 19px/1.2 var(--font-hand);
+  box-shadow: 0 8px 14px -10px rgba(80, 40, 30, 0.5);
+}
+.bingo-dares .love-from {
+  display: block;
+  margin-top: 4px;
+}
+.wish li span small.wish-from {
+  display: block;
+  margin-top: 2px;
+  font: 600 12px var(--font-body);
+  color: var(--berry);
+  font-style: normal;
+}

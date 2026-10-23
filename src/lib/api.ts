@@ -9,7 +9,7 @@ export const fail = (message: string, status = 400) => NextResponse.json({ error
 export async function requireSession(role?: Session['role']): Promise<Session | NextResponse> {
   const s = await getSession();
   if (!s) return fail('Sign in again to continue.', 401);
-  if (role && s.role !== role) return fail('This is only for Saanika.', 403);
+  if (role && s.role !== role) return fail(role === 'saanika' ? 'This is only for Saanika.' : 'This is for her friends to do.', 403);
   return s;
 }
 export const isResponse = (x: unknown): x is NextResponse => x instanceof NextResponse;
