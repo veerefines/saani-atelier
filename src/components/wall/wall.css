@@ -1,0 +1,180 @@
+.w-page {
+  max-width: 760px;
+}
+.w-hi {
+  font-size: clamp(56px, 16vw, 96px);
+}
+.w-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  margin: 0 -16px 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  scrollbar-width: none;
+}
+.w-tabs::-webkit-scrollbar {
+  display: none;
+}
+.w-tab {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(178, 48, 95, 0.28);
+  background: rgba(255, 251, 246, 0.8);
+  font: 600 15px var(--font-body);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.w-tab[aria-selected='true'] {
+  background: var(--berry);
+  border-color: var(--berry);
+  color: #fff;
+  box-shadow: 0 8px 16px -8px rgba(178, 48, 95, 0.8);
+}
+.w-tab:active {
+  transform: scale(0.95);
+}
+.w-card {
+  position: relative;
+  padding: 26px 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 251, 246, 0.88);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 20px 34px -20px rgba(107, 30, 58, 0.5);
+}
+.w-hint {
+  font-size: 19px;
+  line-height: 1.25;
+  color: #5a3f4c;
+  margin-bottom: 14px !important;
+}
+.w-label {
+  display: block;
+  margin: 16px 0 6px;
+  font: 600 14px var(--font-body);
+  color: #5a3f4c;
+}
+.w-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.w-preview {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #1a1218;
+}
+.w-link {
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font: 500 15px var(--font-body);
+  cursor: pointer;
+  min-height: 40px;
+}
+.w-rec {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.w-rec audio {
+  width: 100%;
+}
+.w-recbtn {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 30%, #ff8db4, #b2305f 70%);
+  box-shadow:
+    0 0 0 8px rgba(178, 48, 95, 0.12),
+    0 14px 24px -10px rgba(178, 48, 95, 0.7);
+}
+.w-recbtn span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  transition: border-radius 0.2s;
+}
+.w-recbtn.on {
+  animation: rec-pulse 1.3s ease-in-out infinite;
+}
+.w-recbtn.on span {
+  border-radius: 6px;
+}
+@keyframes rec-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 8px rgba(178, 48, 95, 0.12),
+      0 14px 24px -10px rgba(178, 48, 95, 0.7);
+  }
+  50% {
+    box-shadow:
+      0 0 0 20px rgba(178, 48, 95, 0.08),
+      0 14px 24px -10px rgba(178, 48, 95, 0.7);
+  }
+}
+.w-rec-label {
+  font-size: 22px;
+  color: var(--burgundy);
+  text-align: center;
+  margin: 0;
+}
+.w-send {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.w-sent {
+  text-align: center;
+  font-size: 26px;
+  color: var(--berry);
+  margin: 12px 0 0;
+}
+.w-mine {
+  margin-top: 40px;
+}
+.w-mine > h2 {
+  font-size: 30px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.w-mine-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6b5160;
+}
+.w-mine-meta button {
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  font: 500 13px var(--font-body);
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 36px;
+}

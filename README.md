@@ -1,0 +1,98 @@
+# Saani Atelier
+
+A private surprise website for Saanika. Next.js + Framer Motion.
+
+## Run it on your Mac
+
+```bash
+npm install
+cp env.template .env.local   # then fill in SESSION_SECRET (and INVITES later)
+npm run dev
+```
+
+Open http://localhost:3000
+
+In development, two demo codes work when `INVITES` is empty:
+
+- `DEMO-SAANIKA` – Saanika's view (the gift reveal)
+- `DEMO-FRIEND` – a well-wisher's view
+
+Magic links work too: http://localhost:3000/hello/DEMO-SAANIKA
+
+- Replay the reveal: http://localhost:3000/?replay=1
+- Sign out: http://localhost:3000/api/logout
+
+## What's built so far
+
+- Landing: the wrapped bouquet with a gift tag that is the login
+- Login: invite codes and personal magic links (`/hello/<code>`), signed cookie sessions, revocable by removing the invite
+- Surprise reveal: tap the bow, it falls, the tissue lifts, carnations bloom, petals drift, a gold needle pulls a silk thread down to a handwritten note
+- Journey (`/journey`): a scroll story in five chapters. A silk thread is stitched down the page as she scrolls, with the gold needle catching the light; backgrounds and paper textures shift with each chapter; polaroids develop, notes pin themselves down, quotes light up word by word, a film strip slides sideways, cassette voice notes, a video that plays as it scrolls into view, a boarding pass, a postcard, confetti at the end, and optional music-box background music
+- Her desk (`/home`): the dashboard she lands on after the reveal, with live Milano and Mumbai clocks, a day counter, and six desk objects:
+  - Wall of love (`/home/love`): every message, photo, voice note and video from her people, pinned up as polaroids, notes and cassettes. She reacts with 🌷 🌸 🪡 ✂️ 💗, filters by person, and sees "new" badges.
+  - Open when (`/home/letters`): sealed envelopes; some unlock on a date, and they open with a letter sliding out on handmade paper.
+  - Message jar (`/home/jar`): she picks how she feels, shakes the jar, and a note for that mood pops out.
+  - Milano bingo (`/home/bingo`): 25 squares; tapping "I did it" stitches the square shut and gives a reward (a bouquet, a quirky certificate or a cheer), with confetti for every line and a finale for the full board. Optional photo proof.
+  - Milano corner (`/home/milano`): days in Milano (or sleeps until), two clocks, and "Your little Milano": mood chips (food, coffee & matcha, vibes, fashion & places, local spots, flowers, golden hour, beaches), a pastel mini map of every place, and a Surprise me button that deals a place with what to order, its Google rating and a Google Maps link. A 📍 Near me chip uses her location (only in her browser, never sent to the server) to show what's closest, with walking times, a dot on the map, and quick Google Maps searches around her (matcha, gelato, florists, fabric shops, vintage…). Then "Workshops, shows & people": the big fashion dates (Fashion Week, MICAM shoes, MIPEL bags, White, Milano Unica, Lineapelle, Design Week) counting down to the next edition, plus fashion and sewing workshops, matcha classes, runway courses and networking, linked to live listings on Eventbrite and Meetup. Below that, beaches to run away to, from Milano's lidos to the islands. Her own list sits at the side; anything can be saved to it in one tap.
+  - Your story: back to the journey.
+- Well-wisher page (`/wall`): each invited person can send a message with a photo, record a voice note in the browser (or upload one), upload a video, write an open-when letter (optionally locked until a date) or drop a note in her jar for a mood. They see what they've sent, whether she opened it and her reactions, and can delete their own things.
+
+## Adding her real photos, videos and voice notes
+
+All journey content is in `src/content/journey.ts`, with media in `public/journey/`:
+
+- `public/journey/photos/` – drop photos in using the file names listed in `journey.ts` (e.g. `childhood-1.jpg`), or change the names there. Missing photos show a soft "your photo here" polaroid with the expected file name.
+- `public/journey/video/` – `.mp4` (H.264). The studio clip is expected at `video/studio.mp4`; until then a placeholder plays.
+- `public/journey/audio/` – `.mp3` voice notes (`voice-1.mp3` …) and `music-box.mp3` for the background music. The current files are placeholder chimes.
+
+## Where things are stored
+
+- On your Mac (development), everything people post is saved in a `.data/` folder in the project. Delete that folder to start fresh.
+- For the real site on Vercel, use Supabase (free):
+  1. Create a project at supabase.com.
+  2. In SQL Editor, run `supabase/schema.sql`.
+  3. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project Settings > API) to your Vercel environment variables, alongside `SESSION_SECRET` and `INVITES`.
+  Photos, voice notes and videos then go to a private storage bucket, and only signed-in people can see them.
+
+## Dashboard content
+
+`src/content/home.ts` holds the bingo squares and rewards, her arrival date, the letters and jar notes from you that appear on day one, the mood list and the reaction set.
+
+## Milano guide and Google ratings
+
+The places (about 90, each checked against OpenStreetMap for its location) are in `src/content/milano.ts`. Add, remove or reword freely; `q` is what Google Maps searches for.
+
+For live Google ratings on the cards, add `GOOGLE_MAPS_API_KEY` (a Google Cloud key with the Places API (New) enabled) to `.env.local` or Vercel. Ratings are cached for a week. Without a key, each card links to the place on Google Maps.
+
+Fashion dates live in `src/content/happenings.ts`. They were checked on the organisers' sites in October 2026; add the next editions each season (past ones drop off by themselves).
+
+## Things she loves (PNG keepsakes)
+
+Sunglasses, iced coffee, matcha, chamomile, bags, heels, a check scarf, flowers, Italian food and beach things are tucked around the desk and its corners. Drop transparent PNGs (about 800px on the long side) into `public/her/` with these names, then restart the server:
+
+| File | What | Where it shows |
+|---|---|---|
+| `sunglasses.png` | Gentle Monster-style sunglasses | desk, Milano corner |
+| `iced-coffee.png` | Iced coffee with a straw | desk |
+| `matcha.png` | Matcha latte | message jar |
+| `chamomile.png` | Cup of chamomile tea | message jar |
+| `handbag.png` | Designer handbag / purse | desk |
+| `heels.png` | A pair of heels | desk, bingo |
+| `scarf.png` | Check scarf, Burberry-style | letters |
+| `shopping-bags.png` | Fashion-brand shopping bags | bingo |
+| `peonies.png` | Pastel peonies or roses | desk, wall of love |
+| `daisies.png` | Daisies or wildflowers | wall of love, letters |
+| `pasta.png`, `gelato.png`, `pizza.png` | Italian food | Milano corner |
+| `seashell.png`, `starfish.png`, `sun-hat.png`, `beach-umbrella.png` | Beach things | beaches |
+
+Positions are in `src/content/keepsakes.ts`. Missing files don't show on the real site; in `npm run dev` they appear as dashed placeholders so you can see where each goes.
+
+## Swapping images and text
+
+- Photo layers live in `public/reveal/`. Replace a file with another transparent WebP/PNG of the same name.
+- The note text is in `src/content/site.ts`.
+- Bouquet layer positions are in `src/components/PhotoBouquet.tsx` (percentages of the stage).
+
+## Before sharing
+
+Set `SESSION_SECRET` and `INVITES` in your hosting provider (Vercel) environment variables. Demo codes are switched off in production.

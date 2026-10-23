@@ -1,0 +1,389 @@
+:root {
+  --blush: #fbe3e8;
+  --peach: #ffd9c7;
+  --butter: #f7e3a1;
+  --honey: #e0a84b;
+  --lilac: #cdb4f0;
+  --rose: #f4a6c0;
+  --sage: #7fb7b0;
+  --stem: #6e9e7a;
+  --burgundy: #6b1e3a;
+  --berry: #b2305f;
+  --ink: #1e1b24;
+  --paper: #fff8f3;
+
+  --font-display: 'Bagel Fat One', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-whisper: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-hand: 'Caveat Variable', 'Bradley Hand', cursive;
+  --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--blush);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Aura backdrop: soft colour fields, never a flat fill */
+.aura {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(60% 42% at 14% 8%, var(--peach) 0%, transparent 70%),
+    radial-gradient(52% 42% at 90% 18%, var(--lilac) 0%, transparent 72%),
+    radial-gradient(42% 30% at 74% 58%, rgba(247, 227, 161, 0.8) 0%, transparent 70%),
+    radial-gradient(80% 55% at 46% 104%, var(--rose) 0%, transparent 74%),
+    var(--blush);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .35 0 0 0 .45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Chrome bubble lettering */
+.chrome {
+  font-family: var(--font-display);
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #ffffff 0%, #f0c3d9 26%, #a173bd 50%, #f6cfe0 60%, #cf5f95 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1.2px rgba(111, 46, 112, 0.55);
+  paint-order: stroke fill;
+  filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.85)) drop-shadow(0 8px 12px rgba(150, 70, 130, 0.3));
+}
+
+.whisper {
+  font-family: var(--font-whisper);
+  font-style: italic;
+  font-weight: 400;
+  margin: 0;
+}
+
+.cta {
+  font-family: var(--font-body);
+  font-weight: 650;
+  font-size: 16px;
+  min-height: 48px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(180deg, #e55c8f, var(--berry));
+  box-shadow:
+    0 12px 22px -10px rgba(178, 48, 95, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.cta:hover {
+  filter: brightness(1.05);
+}
+.cta:active {
+  transform: scale(0.97);
+}
+.cta:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.cta:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--burgundy);
+  outline-offset: 3px;
+}
+
+/* ---------- Gift scene ---------- */
+.scene {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: max(6dvh, 18px) 16px calc(28px + env(safe-area-inset-bottom));
+  overflow-x: clip;
+}
+
+.bouquet {
+  position: relative;
+  height: clamp(300px, 44dvh, 460px);
+  aspect-ratio: 2 / 3;
+  flex: none;
+  transform-origin: 50% 96%;
+  animation: sway 7s ease-in-out infinite;
+  transition: height 0.9s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.bouquet.big {
+  height: clamp(320px, 54dvh, 540px);
+}
+.bouquet.small {
+  height: clamp(190px, 27dvh, 270px);
+}
+.stage {
+  position: absolute;
+  inset: 0;
+}
+.stage-inner {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 90%;
+}
+.layer {
+  position: absolute;
+  display: block;
+  height: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 14px rgba(107, 30, 58, 0.18));
+}
+.bow {
+  transform-origin: 50% 38%;
+  filter: drop-shadow(0 6px 8px rgba(107, 30, 58, 0.28));
+}
+.bow-ring {
+  position: absolute;
+  left: 35%;
+  top: 76%;
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  z-index: 9;
+  pointer-events: none;
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-0.9deg);
+  }
+  50% {
+    transform: rotate(0.9deg);
+  }
+}
+
+.untie {
+  position: absolute;
+  left: 15%;
+  top: 68%;
+  width: 40%;
+  height: 18%;
+  z-index: 10;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.slot {
+  position: relative;
+  width: min(100%, 380px);
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -2px;
+}
+
+.hint {
+  position: absolute;
+  top: 38px;
+  font-size: 26px;
+  color: var(--burgundy);
+  text-align: center;
+}
+
+/* Gift tag (the login): real paper, stretched with border-image so it fits any content */
+.hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+  margin: 0;
+  color: var(--burgundy);
+  line-height: 1;
+}
+.tag-wrap {
+  width: min(100%, 290px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 0;
+  margin-top: -10px;
+  filter: drop-shadow(0 14px 16px rgba(107, 30, 58, 0.2));
+}
+.tag-pin {
+  width: 56px;
+  height: auto;
+  margin-bottom: -34px;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.tag {
+  position: relative;
+  width: 100%;
+  border: 16px solid transparent;
+  border-image: url('/reveal/tag-body.webp') 40 fill / 16px stretch;
+  padding: 22px 8px 6px;
+  text-align: center;
+}
+.tag-title {
+  font-size: 44px;
+}
+.tag-sub {
+  margin-top: 4px !important;
+  font-size: 19px;
+  line-height: 1.25;
+  color: #5a3f4c;
+}
+.tag form {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+.tag input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  font: 500 16px var(--font-body);
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px dashed rgba(178, 48, 95, 0.45);
+  border-radius: 10px;
+}
+.tag input::placeholder {
+  color: #a88d99;
+  letter-spacing: 0.02em;
+}
+.tag-error {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--burgundy);
+}
+
+/* Note card on handmade paper */
+.note {
+  position: relative;
+  width: min(100%, 390px);
+  border: 22px solid transparent;
+  border-image: url('/reveal/paper.webp') 60 fill / 22px stretch;
+  padding: 18px 8px 8px;
+  filter: drop-shadow(0 18px 22px rgba(107, 30, 58, 0.22));
+}
+.tape {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 130px;
+  height: auto;
+  transform: translateX(-50%) rotate(-4deg);
+  opacity: 0.92;
+  z-index: 1;
+  pointer-events: none;
+}
+.note-greeting {
+  font-size: 46px;
+  margin-bottom: 12px;
+}
+.note p.whisper {
+  font-size: 21px;
+  line-height: 1.32;
+  margin-bottom: 12px;
+  color: #2a2230;
+}
+.note .signoff {
+  white-space: pre-line;
+  margin-top: 8px;
+  font-size: 30px;
+  line-height: 1.05;
+}
+.note-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.petal {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 4px rgba(107, 30, 58, 0.18));
+}
+
+/* ---------- Stub pages ---------- */
+.stub {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 24px calc(40px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.stub h1 {
+  font-size: clamp(34px, 9vw, 52px);
+}
+.stub .whisper {
+  font-size: 24px;
+  max-width: 28ch;
+  color: #4a3040;
+}
+.stub .links {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+  font-size: 15px;
+}
+.stub a {
+  color: var(--burgundy);
+  text-underline-offset: 4px;
+}
+.stitch-line {
+  width: 0;
+  height: 90px;
+  border-left: 3px dashed rgba(178, 48, 95, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bouquet {
+    animation: none;
+  }
+  .bouquet,
+  .bouquet.big {
+  height: clamp(320px, 54dvh, 540px);
+}
+.bouquet.small {
+    transition: none;
+  }
+}
