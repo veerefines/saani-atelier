@@ -3,11 +3,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Music } from './types';
 
-/** Floating record in the corner. Off by default; spins while the music plays, fades in and out gently. */
+/**
+ * Floating record in the corner. The music starts on its own when the journey opens (or, where the
+ * browser insists on a tap first, on her first tap anywhere); tapping the record pauses or resumes it.
+ */
 export default function MusicToggle({ music }: { music: Music }) {
   const audio = useRef<HTMLAudioElement>(null);
   const fade = useRef<number>(0);
   const [on, setOn] = useState(false);
+  /** she has tapped the record herself: from then on it's her call, no more auto-start */
+  const chose = useRef(false);
+  const disarm = useRef<() => void>(() => {});
 
   useEffect(() => () => cancelAnimationFrame(fade.current), []);
 
@@ -25,6 +31,28 @@ export default function MusicToggle({ music }: { music: Music }) {
     };
   }, []);
 
+  // play as the journey opens; if the browser blocks sound until a tap, start on the first tap
+  useEffect(() => {
+    const a = audio.current;
+    if (!a || music.missing) return;
+    const start = () => {
+      if (chose.current || !a.paused) return Promise.resolve();
+      a.volume = 0;
+      return a.play().then(() => ramp(0.55));
+    };
+    const onGesture = (e: Event) => {
+      // a tap on the record is handled by the record itself
+      if ((e.target as Element | null)?.closest?.('.j-music')) return;
+      disarm.current();
+      start().catch(() => {});
+    };
+    const events = ['pointerdown', 'touchend', 'keydown'] as const;
+    disarm.current = () => events.forEach((t) => window.removeEventListener(t, onGesture, true));
+    start().catch(() => events.forEach((t) => window.addEventListener(t, onGesture, true)));
+    return () => disarm.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [music.missing]);
+
   function ramp(to: number, done?: () => void) {
     const a = audio.current;
     if (!a) return;
@@ -41,6 +69,8 @@ export default function MusicToggle({ music }: { music: Music }) {
   function toggle() {
     const a = audio.current;
     if (!a) return;
+    chose.current = true;
+    disarm.current();
     if (on) {
       setOn(false);
       ramp(0, () => a.pause());
@@ -62,7 +92,7 @@ export default function MusicToggle({ music }: { music: Music }) {
           {on && music.title && <small>{music.title}</small>}
         </span>
       </button>
-      <audio ref={audio} src={music.src} loop preload="none" />
+      <audio ref={audio} src={music.src} loop preload="auto" />
     </>
   );
 }

@@ -9,6 +9,9 @@ export const milano = {
   homeCity: 'Mumbai',
   homeZone: 'Asia/Kolkata',
   milanZone: 'Europe/Rome',
+  /** where Varun is: a third clock on her desk */
+  laCity: 'Los Angeles',
+  laZone: 'America/Los_Angeles',
 };
 
 /* ---------- Bingo ---------- */

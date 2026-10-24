@@ -177,6 +177,13 @@
   inset: 0 auto auto 0;
   z-index: 6;
   pointer-events: none;
+  /* its own small composited layer: moving it never repaints the page or the thread */
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: opacity 0.4s;
+}
+.j-needle svg {
+  display: block;
   overflow: visible;
 }
 

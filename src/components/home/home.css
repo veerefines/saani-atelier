@@ -68,6 +68,9 @@
 .h-stamp + .h-stamp {
   rotate: 2deg;
 }
+.h-stamp + .h-stamp + .h-stamp {
+  rotate: -1deg;
+}
 .h-stamp-city {
   font-size: 11px;
   letter-spacing: 0.04em;

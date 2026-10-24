@@ -6,6 +6,8 @@ const NEEDLE_W = 120;
 const NEEDLE_H = NEEDLE_W * (36 / 900);
 const EYE_X = NEEDLE_W * 0.04;
 const LIGHT_DEG = -32;
+/** the needle's own little layer: room for the needle and its sparkle at any angle */
+const BOX = 300;
 
 type Pt = { x: number; y: number };
 
@@ -82,13 +84,13 @@ function buildThread(pts: Pt[], width: number): { d: string; segs: Seg[]; sample
  */
 export default function Thread({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | null> }) {
   const [geo, setGeo] = useState<{ d: string; w: number; h: number } | null>(null);
-  const drawPath = useRef<SVGPathElement>(null);
-  const needle = useRef<SVGGElement>(null);
+  const threadSvg = useRef<SVGSVGElement>(null);
+  const needle = useRef<HTMLDivElement>(null);
   const shine = useRef<SVGImageElement>(null);
   const glint = useRef<SVGGElement>(null);
+  const glintI = useRef(0);
   const segs = useRef<Seg[]>([]);
   const samples = useRef<Sample[]>([]);
-  const total = useRef(0);
   const shape = useRef('');
 
   // measure pins -> path
@@ -125,24 +127,27 @@ export default function Thread({ rootRef }: { rootRef: React.RefObject<HTMLDivEl
     };
   }, [rootRef]);
 
-  // line our sampled lengths up with the browser's, once per geometry
-  useEffect(() => {
-    const p = drawPath.current;
-    const s = samples.current;
-    if (!p || !geo || !s.length) return;
-    const L = p.getTotalLength();
-    const scale = L / (s[s.length - 1].len || 1);
-    if (scale !== 1) s.forEach((x) => (x.len *= scale));
-    total.current = L;
-    p.style.strokeDasharray = `${L}`;
-  }, [geo]);
-
   // follow the scroll
   useEffect(() => {
     let raf = 0;
     let current = 0;
+    let shown = -1;
+    let drawnFor: Sample[] | null = null;
     let spin = 0;
+    let last = performance.now();
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Phones grow and shrink the address bar while scrolling, which changes innerHeight every
+    // few frames and made the needle jump. Only take a new height on rotation or a real resize.
+    let vh = window.innerHeight;
+    let vw = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth !== vw || Math.abs(window.innerHeight - vh) > 160) {
+        vw = window.innerWidth;
+        vh = window.innerHeight;
+      }
+    };
+    window.addEventListener('resize', onResize);
 
     const lengthAtY = (y: number) => {
       const s = samples.current;
@@ -176,65 +181,78 @@ export default function Thread({ rootRef }: { rootRef: React.RefObject<HTMLDivEl
       return { ...bez(seg, t), ang: bezAngle(seg, t) };
     };
 
-    const tick = () => {
+    const tick = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
       const root = rootRef.current;
-      const p = drawPath.current;
+      const svg = threadSvg.current;
       const n = needle.current;
-      if (root && p && n && samples.current.length > 1 && total.current) {
+      const s = samples.current;
+      if (root && svg && n && s.length > 1) {
+        const L = s[s.length - 1].len;
         const top = root.getBoundingClientRect().top;
-        const targetY = window.innerHeight * 0.62 - top;
-        const target = Math.max(0, Math.min(total.current, lengthAtY(targetY)));
-        current = reduce ? target : current + (target - current) * 0.12;
-        const L = total.current;
-        p.style.strokeDashoffset = `${L - current}`;
-        const a = at(current);
-        const ang = a.ang;
-        n.setAttribute('transform', `translate(${a.x} ${a.y}) rotate(${ang})`);
-        const rel = ((ang - LIGHT_DEG) * Math.PI) / 180;
-        const I = Math.pow(Math.abs(Math.cos(rel)), 18);
-        if (shine.current) shine.current.style.opacity = String(Math.min(1, I * 1.1));
-        if (glint.current) {
-          spin += 3;
-          glint.current.style.opacity = String(I);
-          glint.current.setAttribute('transform', `translate(${NEEDLE_W * 0.55} 0) rotate(${spin - ang}) scale(${0.5 + I * 0.9})`);
+        const target = Math.max(0, Math.min(L, lengthAtY(vh * 0.62 - top)));
+        // ease by time, not by frame, so 60Hz phones and 120Hz iPads glide the same
+        current = reduce ? target : current + (target - current) * (1 - Math.exp(-dt / 0.12));
+        if (Math.abs(target - current) < 0.05) current = target;
+
+        // only touch the page when something moved (or the thread was re-laid out)
+        if (s !== drawnFor) {
+          drawnFor = s;
+          shown = -1;
         }
-        n.style.opacity = current < 2 || current >= L - 2 ? '0' : '1';
+        if (Math.abs(current - shown) > 0.02) {
+          shown = current;
+          const a = at(current);
+          // the thread is revealed down to the needle with a plain clip (cheap), not a mask
+          svg.style.clipPath = `inset(0px 0px ${Math.max(0, Number(svg.getAttribute('height')) - a.y - 3)}px 0px)`;
+          // the needle is its own small layer, moved by the compositor
+          n.style.transform = `translate3d(${a.x - BOX / 2}px, ${a.y - BOX / 2}px, 0) rotate(${a.ang}deg)`;
+          n.style.opacity = current < 2 || current >= L - 2 ? '0' : '1';
+          const rel = ((a.ang - LIGHT_DEG) * Math.PI) / 180;
+          const I = Math.pow(Math.abs(Math.cos(rel)), 18);
+          if (shine.current) shine.current.style.opacity = String(Math.min(1, I * 1.1));
+          if (glint.current) glint.current.style.opacity = String(I);
+          glintI.current = I;
+        }
+        // the sparkle keeps turning only while it's visible
+        if (glint.current && glintI.current > 0.02 && !reduce) {
+          spin += 180 * dt;
+          glint.current.setAttribute('transform', `translate(${NEEDLE_W * 0.55} 0) rotate(${spin}) scale(${0.5 + glintI.current * 0.9})`);
+        }
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+    };
   }, [rootRef]);
 
   if (!geo) return null;
   const { d, w, h } = geo;
+  const half = BOX / 2;
 
   return (
     <>
-      <svg className="j-thread" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
-        <defs>
-          <mask id="jThreadMask" maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
-            <path ref={drawPath} d={d} fill="none" stroke="#fff" strokeWidth="12" strokeLinecap="round" />
-          </mask>
-        </defs>
-        <g mask="url(#jThreadMask)">
-          <path d={d} fill="none" stroke="rgba(107,30,58,0.16)" strokeWidth="4" strokeLinecap="round" transform="translate(1 2)" />
-          <path d={d} fill="none" stroke="#e48aae" strokeWidth="3.2" strokeLinecap="round" />
-          <path d={d} fill="none" stroke="#fde0ea" strokeWidth="1.3" strokeLinecap="round" strokeDasharray="3 2.4" />
-        </g>
+      <svg ref={threadSvg} className="j-thread" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" style={{ clipPath: 'inset(0 0 100% 0)' }}>
+        <path d={d} fill="none" stroke="rgba(107,30,58,0.16)" strokeWidth="4" strokeLinecap="round" transform="translate(1 2)" />
+        <path d={d} fill="none" stroke="#e48aae" strokeWidth="3.2" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="#fde0ea" strokeWidth="1.3" strokeLinecap="round" strokeDasharray="3 2.4" />
       </svg>
-      <svg className="j-needle" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
-        <defs>
-          <filter id="jBrighten" x="-10%" y="-200%" width="120%" height="500%">
-            <feColorMatrix type="matrix" values="1.6 0 0 0 0.35  0 1.6 0 0 0.32  0 0 1.6 0 0.25  0 0 0 1 0" />
-          </filter>
-          <radialGradient id="jGlow">
-            <stop offset="0" stopColor="#fff" stopOpacity="1" />
-            <stop offset="0.35" stopColor="#fff6dc" stopOpacity="0.7" />
-            <stop offset="1" stopColor="#ffe9b0" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <g ref={needle} style={{ transition: 'opacity .4s' }}>
+      <div ref={needle} className="j-needle" style={{ width: BOX, height: BOX, transformOrigin: `${half}px ${half}px`, opacity: 0 }} aria-hidden="true">
+        <svg width={BOX} height={BOX} viewBox={`${-half} ${-half} ${BOX} ${BOX}`}>
+          <defs>
+            <filter id="jBrighten" x="-10%" y="-200%" width="120%" height="500%">
+              <feColorMatrix type="matrix" values="1.6 0 0 0 0.35  0 1.6 0 0 0.32  0 0 1.6 0 0.25  0 0 0 1 0" />
+            </filter>
+            <radialGradient id="jGlow">
+              <stop offset="0" stopColor="#fff" stopOpacity="1" />
+              <stop offset="0.35" stopColor="#fff6dc" stopOpacity="0.7" />
+              <stop offset="1" stopColor="#ffe9b0" stopOpacity="0" />
+            </radialGradient>
+          </defs>
           <g style={{ filter: 'drop-shadow(0 3px 3px rgba(60,20,40,0.3))' }}>
             <image href="/reveal/needle.webp" x={-EYE_X} y={-NEEDLE_H / 2} width={NEEDLE_W} height={NEEDLE_H} preserveAspectRatio="none" />
           </g>
@@ -254,8 +272,8 @@ export default function Thread({ rootRef }: { rootRef: React.RefObject<HTMLDivEl
             <path d="M0,-28 L2.2,-2.2 L28,0 L2.2,2.2 L0,28 L-2.2,2.2 L-28,0 L-2.2,-2.2 Z" fill="#fff" />
             <path d="M0,-12 L1.2,-1.2 L12,0 L1.2,1.2 L0,12 L-1.2,1.2 L-12,0 L-1.2,-1.2 Z" fill="#fff" transform="rotate(45)" opacity="0.8" />
           </g>
-        </g>
-      </svg>
+        </svg>
+      </div>
     </>
   );
 }

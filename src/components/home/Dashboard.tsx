@@ -9,7 +9,7 @@ import NotifyToggle from './NotifyToggle';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string; authorName: string };
 type Counts = { posts: number; newPosts: number; ready: number; sealed: number; jar: number; bingoDone: number; bingoTotal: number };
-type MilanoInfo = { arrival: string; homeCity: string; homeZone: string; milanZone: string };
+type MilanoInfo = { arrival: string; homeCity: string; homeZone: string; milanZone: string; laCity: string; laZone: string };
 
 const drop: Variants = {
   hidden: { opacity: 0, y: -40, rotate: 0 },
@@ -122,6 +122,7 @@ export default function Dashboard({
         <div className="h-stamps">
           <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
           <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />
+          <ClockStamp city={milano.laCity} zone={milano.laZone} now={now} />
         </div>
         <p className="whisper h-greet" suppressHydrationWarning>
           {greeting(now, milano.milanZone)},
