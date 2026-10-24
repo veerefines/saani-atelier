@@ -4,7 +4,7 @@ const nextConfig = {
   // The journey and keepsakes check which media files exist at request time.
   // On Vercel, ship those files with the server code too, or every check says "missing".
   outputFileTracingIncludes: {
-    '/journey': ['./public/journey/**/*'],
+    '/journey': ['./public/journey/**/*', './public/her/**/*'],
     '/home/**': ['./public/her/**/*'],
     '/wall/**': ['./public/her/**/*'],
     '/home': ['./public/her/**/*'],
@@ -12,6 +12,8 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // always fetch the newest service worker
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }] },
       {
         source: '/(.*)',
         headers: [

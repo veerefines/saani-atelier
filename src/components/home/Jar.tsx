@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import type { JarNote, Mood } from '@/lib/data';
-import { moods } from '@/content/home';
+import { moods, calm } from '@/content/home';
+import { places } from '@/content/milano';
 import { api } from '@/lib/upload-client';
 
 const HEARTS: [number, number, string, number][] = [
@@ -121,6 +122,33 @@ export default function Jar({ counts }: { counts: Record<string, number> }) {
           <motion.p key="empty" className="whisper" style={{ fontSize: 19, marginTop: 18 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             No notes for this feeling yet. Your people will add some.
           </motion.p>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {mood && calm[mood] && (note || empty) && !busy && (
+          <motion.aside
+            key={`calm-${mood}`}
+            className="jar-calm"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.9 } }}
+            exit={{ opacity: 0 }}
+            aria-label="Something calming"
+          >
+            <p className="hand jar-calm-title">something calming 🌼</p>
+            <p className="jar-calm-line">{calm[mood]!.line}</p>
+            <div className="jar-calm-places">
+              {calm[mood]!.places.map((id) => {
+                const p = places.find((x) => x.id === id);
+                return p ? (
+                  <a key={id} href={`/home/milano?place=${id}`}>
+                    {p.name}
+                    <small>{p.area}</small>
+                  </a>
+                ) : null;
+              })}
+            </div>
+          </motion.aside>
         )}
       </AnimatePresence>
     </div>

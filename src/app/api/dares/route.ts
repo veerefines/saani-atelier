@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { announce } from '@/lib/push';
 import { addDare } from '@/lib/data';
 import { bingo } from '@/content/home';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
@@ -9,5 +11,8 @@ export async function POST(req: Request) {
   const { squareId, text } = await req.json().catch(() => ({}));
   if (!bingo.some((q) => q.id === squareId)) return fail('Unknown square.');
   if (!String(text ?? '').trim()) return fail('Write your dare or cheer first.');
-  return json(await addDare(s, squareId, String(text)), 201);
+  const dare = await addDare(s, squareId, String(text));
+  const square = bingo.find((q) => q.id === squareId)!.label;
+  after(() => announce(s, { kind: 'dare', square }));
+  return json(dare, 201);
 }

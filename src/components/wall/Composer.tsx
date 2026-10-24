@@ -44,7 +44,9 @@ function useRecorder(kind: 'audio' | 'video') {
           ? ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
           : ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'];
       const type = types.find((t) => MediaRecorder.isTypeSupported(t));
-      const r = new MediaRecorder(s, type ? { mimeType: type } : undefined);
+      // keep a full-length recording comfortably under the 50 MB upload limit (~30 MB for 90s of video)
+      const bits = kind === 'video' ? { videoBitsPerSecond: 2_500_000, audioBitsPerSecond: 128_000 } : { audioBitsPerSecond: 96_000 };
+      const r = new MediaRecorder(s, { ...(type ? { mimeType: type } : {}), ...bits });
       chunks.current = [];
       r.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       r.onstop = () => {

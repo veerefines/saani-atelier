@@ -5,7 +5,7 @@ import type { Mood } from '@/lib/data';
 
 export const milano = {
   /** The day she lands. Before it: a countdown. After it: "Day N in Milano". */
-  arrival: '2026-11-01',
+  arrival: '2026-10-28',
   homeCity: 'Mumbai',
   homeZone: 'Asia/Kolkata',
   milanZone: 'Europe/Rome',
@@ -107,3 +107,28 @@ export const letterTitles = [
   'Open when you had a great day',
   'Open on your birthday',
 ];
+
+/* ---------- Something calming ---------- */
+
+/**
+ * After a note for a heavier feeling, the jar offers a small, kind next step:
+ * a chamomile ritual, and a few gentle places from the Milano guide (ids in content/milano.ts).
+ */
+export const calm: Partial<Record<Mood, { line: string; places: string[] }>> = {
+  anxious: {
+    line: 'Make a cup of chamomile. Breathe in for four, out for six, while it steeps. Then, if you like, somewhere quiet:',
+    places: ['ortobotanico', 'saryo', 'villareale'],
+  },
+  sad: {
+    line: 'Chamomile, a blanket, and something sweet. Later, a soft walk somewhere green:',
+    places: ['ortobotanico', 'alberi', 'cioccolati'],
+  },
+  homesick: {
+    line: 'Put the kettle on and make it chamomile, or chai. When you’re ready, a little taste of home:',
+    places: ['krishnabazar', 'shiva', 'dhaba'],
+  },
+  unmotivated: {
+    line: 'A slow chamomile first. Then a small change of scene, and one tiny thing done:',
+    places: ['barluce', 'mokos', 'orsonero'],
+  },
+};

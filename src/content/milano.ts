@@ -4,11 +4,12 @@
  * q is what Google Maps searches for. Add, remove or edit freely.
  */
 
-export type Category = 'food' | 'sweet' | 'vibes' | 'fashion' | 'places' | 'local' | 'bloom' | 'golden' | 'beach';
+export type Category = 'food' | 'sweet' | 'home' | 'vibes' | 'fashion' | 'places' | 'local' | 'bloom' | 'golden' | 'beach';
 
 export const categories: { id: Category; label: string; short: string; icon: string; tint: string }[] = [
   { id: 'food', label: 'Food', short: 'Food', icon: '🍝', tint: '#ffd9c7' },
   { id: 'sweet', label: 'Coffee, matcha & sweets', short: 'Coffee & matcha', icon: '🍵', tint: '#d4efdf' },
+  { id: 'home', label: 'A taste of home', short: 'Home', icon: '🪔', tint: '#fde2c8' },
   { id: 'vibes', label: 'Vibes', short: 'Vibes', icon: '🍹', tint: '#e6dcf7' },
   { id: 'fashion', label: 'Fashion houses & shopping', short: 'Fashion', icon: '👠', tint: '#f6d3ea' },
   { id: 'places', label: 'Sights & day trips', short: 'Places', icon: '🏛️', tint: '#fbe0d0' },
@@ -1693,6 +1694,61 @@ export const places: Place[] = [
     q: "Franciacorta Outlet Village",
     lat: 45.57706,
     lng: 10.11947
+  },
+  {
+    id: 'shiva',
+    name: 'Shiva',
+    cat: 'home',
+    area: 'Porta Ticinese',
+    note: 'Often called the best Indian restaurant in Milano. For the evenings when only proper Indian food will do.',
+    try: ['Paneer tikka', 'Samosas', 'Something from the tandoor'],
+    q: 'Ristorante Indiano Shiva, Viale Gian Galeazzo 7, Milano',
+    lat: 45.4529,
+    lng: 9.1824
+  },
+  {
+    id: 'rangoli',
+    name: 'Rangoli',
+    cat: 'home',
+    area: 'Brera',
+    note: 'Indian cooking in the middle of Brera, a few streets from the art school crowd.',
+    try: ['Dal with hot naan', 'Biryani'],
+    q: 'Rangoli, Via Solferino 36, Milano',
+    lat: 45.4776,
+    lng: 9.1881
+  },
+  {
+    id: 'dhaba',
+    name: 'Dhaba',
+    cat: 'home',
+    area: 'Near Centrale',
+    note: 'A small North Indian spot by the station. Cosy, homely, a little taste of a Mumbai evening.',
+    try: ['Malai kofta', 'Lamb curry'],
+    q: 'Dhaba ristorante indiano Milano Centrale',
+    lat: 45.477,
+    lng: 9.2021
+  },
+  {
+    id: 'shriganesh',
+    name: 'Shri Ganesh',
+    cat: 'home',
+    area: 'Navigli',
+    note: 'Indian food near the canals, for after a day around Porta Genova.',
+    try: ['Thali', 'Butter chicken with naan'],
+    q: 'Shri Ganesh, Via Elia Lombardini 8, Milano',
+    lat: 45.4487,
+    lng: 9.1643
+  },
+  {
+    id: 'krishnabazar',
+    name: 'Krishna Indian Bazar',
+    cat: 'home',
+    area: 'Porta Venezia',
+    note: 'An Indian grocery for the taste of home: basmati, dals, spices and snacks. Everything she needs to make masala chai in her own kitchen.',
+    try: ['Chai masala and loose tea', 'Basmati and dal', 'Snacks from home'],
+    q: 'Krishna Indian Bazar Milano',
+    lat: 45.476,
+    lng: 9.2048
   }
 ];
 

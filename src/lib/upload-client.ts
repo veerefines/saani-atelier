@@ -1,7 +1,43 @@
 'use client';
 
+/** Same as the server's limit (Supabase free plan, per file). */
+export const MAX_UPLOAD = 50 * 1024 * 1024;
+const MAX_SIDE = 2560;
+
+/**
+ * Phone photos are often 5–15 MB; shrink them to at most 2560px on the long side as JPEG.
+ * Anything the browser can't decode (or a GIF) goes up untouched.
+ */
+export async function shrinkImage(file: Blob): Promise<Blob> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' } as ImageBitmapOptions);
+    const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size < 1.5 * 1024 * 1024) return file;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    bmp.close();
+    const out = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.86));
+    return out && out.size < file.size ? out : file;
+  } catch {
+    return file;
+  }
+}
+
+const mb = (n: number) => (n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 1 : 0);
+
 /** Upload a file or recorded blob. Returns the media id once it's stored. */
-export async function uploadFile(file: Blob, onProgress?: (pct: number) => void): Promise<string> {
+export async function uploadFile(original: Blob, onProgress?: (pct: number) => void): Promise<string> {
+  const file = await shrinkImage(original);
+  if (file.size > MAX_UPLOAD) {
+    throw new Error(
+      file.type.startsWith('video/')
+        ? `That video is ${mb(file.size)} MB; the limit is 50 MB. Trim it, or record a shorter one here.`
+        : `That file is ${mb(file.size)} MB; the limit is 50 MB.`,
+    );
+  }
   const mime = file.type || 'application/octet-stream';
   const res = await fetch('/api/upload', {
     method: 'POST',

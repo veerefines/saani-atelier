@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { announce } from '@/lib/push';
 import { addLetter } from '@/lib/data';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
@@ -12,5 +14,7 @@ export async function POST(req: Request) {
     if (isNaN(d.getTime())) return fail('That date doesn’t look right.');
     when = d.toISOString();
   }
-  return json(await addLetter(s, { title: String(title), body: String(body), unlockAt: when }), 201);
+  const letter = await addLetter(s, { title: String(title), body: String(body), unlockAt: when });
+  after(() => announce(s, { kind: 'letter', locked: Boolean(when && new Date(when).getTime() > Date.now()) }));
+  return json(letter, 201);
 }

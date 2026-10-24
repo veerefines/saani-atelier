@@ -152,9 +152,12 @@ function PlaceCard({
 function Wishlist({
   wishes,
   setWishes,
+  onOpen,
 }: {
   wishes: Wish[];
   setWishes: React.Dispatch<React.SetStateAction<Wish[]>>;
+  /** open a saved place's card in the guide */
+  onOpen: (placeId: string) => void;
 }) {
   const [text, setText] = useState('');
   const [err, setErr] = useState('');
@@ -197,7 +200,13 @@ function Wishlist({
                 {w.done ? '🌷' : ''}
               </button>
               <span>
-                {w.text}
+                {w.placeId ? (
+                  <button className="wish-open" onClick={() => onOpen(w.placeId!)} aria-label={`Open ${w.text} in the guide`}>
+                    {w.text} <span aria-hidden="true">📍</span>
+                  </button>
+                ) : (
+                  w.text
+                )}
                 {w.fromName && <small className="wish-from">from {w.fromName}</small>}
               </span>
               <button className="x" onClick={() => remove(w.id)} aria-label={`Remove ${w.text}`}>
@@ -315,14 +324,31 @@ export default function Milano({
   }
 
   async function save(p: Place) {
-    return saveText(wishText(p));
+    return saveText(wishText(p), p.id);
   }
-  async function saveText(text: string) {
+  async function saveText(text: string, placeId?: string) {
     if (savedTexts.has(text)) return;
     try {
-      const w = await api<Wish>('/api/wishes', 'POST', { text });
+      const w = await api<Wish>('/api/wishes', 'POST', { text, placeId });
       setWishes((ws) => [w, ...ws]);
     } catch {}
+  }
+
+  // arriving from elsewhere (e.g. the jar's "something calming") with ?place=<id>
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('place');
+    if (id) openPlace(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** From her list: open the place's card and pin, whatever mood was showing. */
+  function openPlace(id: string) {
+    const p = places.find((x) => x.id === id);
+    if (!p) return;
+    setNear(false);
+    setCat(p.cat === 'beach' ? 'beach' : 'all');
+    choose(p);
+    guideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function showOnMap(p: Place) {
@@ -489,7 +515,7 @@ export default function Milano({
         </div>
 
         <aside className="mil-side">
-          <Wishlist wishes={wishes} setWishes={setWishes} />
+          <Wishlist wishes={wishes} setWishes={setWishes} onOpen={openPlace} />
         </aside>
       </div>
     </>

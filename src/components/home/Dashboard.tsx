@@ -5,6 +5,7 @@ import { motion, type Variants } from 'framer-motion';
 import { ClockStamp, dayInfo, hourIn, useNow } from './Clock';
 import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
+import NotifyToggle from './NotifyToggle';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string; authorName: string };
 type Counts = { posts: number; newPosts: number; ready: number; sealed: number; jar: number; bingoDone: number; bingoTotal: number };
@@ -253,6 +254,8 @@ export default function Dashboard({
           </div>
         </Tile>
       </motion.section>
+
+      <NotifyToggle />
 
       <footer className="h-foot">
         <Link href="/?replay=1">Replay the gift</Link>

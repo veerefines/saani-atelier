@@ -56,7 +56,18 @@ const SCRAPS: Record<string, { src: string; left: string; top: string; w: number
   ],
 };
 
-export default function Journey({ intro, chapters, music }: { intro: Intro; chapters: ResolvedChapter[]; music: Music }) {
+export default function Journey({
+  intro,
+  chapters,
+  music,
+  decor,
+}: {
+  intro: Intro;
+  chapters: ResolvedChapter[];
+  music: Music;
+  /** keepsakes around the opening title */
+  decor?: React.ReactNode;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const flow = useRef<HTMLDivElement>(null);
   const backdrop = useRef<HTMLDivElement>(null);
@@ -291,6 +302,7 @@ export default function Journey({ intro, chapters, music }: { intro: Intro; chap
       </div>
 
       <header className="j-hero" data-chapter>
+        {decor}
         <div className="j-hero-inner">
           <h1 className="chrome j-hero-name">{intro.name}</h1>
           <p className="j-hero-title whisper">{intro.title}</p>

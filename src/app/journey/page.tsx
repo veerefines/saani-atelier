@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth';
 import { chapters, journeyIntro, journeyMusic, type Item } from '@/content/journey';
 import type { ResolvedChapter, ResolvedItem } from '@/components/journey/types';
 import Journey from '@/components/journey/Journey';
+import Keepsakes from '@/components/Keepsakes';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,5 +48,5 @@ export default async function JourneyPage() {
   if (session.role !== 'saanika') redirect('/wall');
 
   const resolved: ResolvedChapter[] = chapters.map((c) => ({ ...c, items: c.items.map(resolve) }));
-  return <Journey intro={journeyIntro} chapters={resolved} music={{ ...journeyMusic, missing: !exists(journeyMusic.src) }} />;
+  return <Journey intro={journeyIntro} chapters={resolved} music={{ ...journeyMusic, missing: !exists(journeyMusic.src) }} decor={<Keepsakes set="journey" />} />;
 }

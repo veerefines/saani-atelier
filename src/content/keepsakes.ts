@@ -77,6 +77,13 @@ export const keepsakeSets: Record<string, Spot[]> = {
     { name: 'beach-umbrella', top: '-60px', right: '-20px', w: 140, rot: 8, phone: { top: '-26px', right: '-12px', w: 64 } },
     { name: 'starfish', top: '-10px', right: '160px', w: 60, rot: -20 },
   ],
+  // around the journey's opening title
+  journey: [
+    { name: 'peonies', top: '14%', left: '7%', w: 190, rot: -10, phone: { top: '7%', left: '-10px', w: 96 } },
+    { name: 'sunglasses', top: '18%', right: '8%', w: 180, rot: 12, phone: { top: '9%', right: '-6px', w: 88 } },
+    { name: 'iced-coffee', top: '62%', right: '12%', w: 120, rot: -6 },
+    { name: 'scarf', top: '60%', left: '10%', w: 200, rot: 8 },
+  ],
   // by the Surprise me card
   guide: [
     { name: 'sunglasses', top: '-38px', right: '-20px', w: 150, rot: 10, phone: { top: '-26px', right: '-10px', w: 84 } },

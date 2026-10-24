@@ -1,6 +1,6 @@
 /**
  * Workshops, shows and people: things to grow into in Milano.
- * Dated items were checked on the organisers' sites on 23 Oct 2026; update them each season.
+ * Dated items were checked on the organisers' sites on 24 Oct 2026; update them each season.
  * Search links open live listings (Eventbrite, Meetup…), so they're always current.
  */
 
@@ -35,7 +35,7 @@ export const happenings: Happening[] = [
   {
     id: 'mfw',
     kind: 'dates',
-    title: 'Milano Fashion Week',
+    title: 'Milano Fashion Week, women’s',
     where: 'All over the city',
     note: 'Most shows are invite-only, but the city fills with presentations, pop-ups, window installations and parties. The official calendar lists the open events.',
     editions: [
@@ -43,6 +43,18 @@ export const happenings: Happening[] = [
       { start: '2027-09-21', end: '2027-09-27' },
     ],
     links: [{ label: 'Official calendar', url: 'https://www.cameramoda.it/en/milano-moda-donna/calendar/' }],
+  },
+  {
+    id: 'mfw-men',
+    kind: 'dates',
+    title: 'Milano Fashion Week, men’s',
+    where: 'All over the city',
+    note: 'The menswear shows. Quieter than women’s week, but the city still fills with presentations, showrooms and parties.',
+    editions: [
+      { start: '2027-01-15', end: '2027-01-19' },
+      { start: '2027-06-18', end: '2027-06-22' },
+    ],
+    links: [{ label: 'Official calendar', url: 'https://www.cameramoda.it/en/milano-moda-uomo/calendar/' }],
   },
   {
     id: 'graduate',

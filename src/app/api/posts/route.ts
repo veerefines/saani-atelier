@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { announce } from '@/lib/push';
 import { addPost, getMedia, type PostKind } from '@/lib/data';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
@@ -23,5 +25,6 @@ export async function POST(req: Request) {
     }
   }
   const post = await addPost(s, { kind, text: text ? String(text) : undefined, mediaIds: kind === 'text' ? undefined : ids });
+  after(() => announce(s, { kind: 'post', postKind: kind }));
   return json(post, 201);
 }

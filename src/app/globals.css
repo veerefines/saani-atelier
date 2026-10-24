@@ -387,3 +387,82 @@ input:focus-visible {
     transition: none;
   }
 }
+
+/* ===================== keepsakes (things she loves) ===================== */
+
+.h-desk,
+.h-page {
+  position: relative;
+  isolation: isolate;
+}
+.ks-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.ks {
+  position: absolute;
+  top: var(--t);
+  width: var(--w);
+  height: auto;
+  rotate: var(--rot);
+  filter: drop-shadow(0 14px 16px rgba(90, 40, 70, 0.18));
+  animation:
+    ks-in 0.9s cubic-bezier(0.3, 0.7, 0.2, 1.25) var(--delay) both,
+    ks-bob var(--bob) ease-in-out calc(var(--delay) + 0.9s) infinite alternate;
+}
+.ks-l {
+  left: var(--l);
+}
+.ks-r {
+  right: var(--r);
+}
+.ks-empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 8px;
+  border: 2px dashed rgba(178, 48, 95, 0.4);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.45);
+  font: 600 11px/1.2 var(--font-body);
+  color: var(--berry);
+  text-align: center;
+  word-break: break-all;
+}
+@keyframes ks-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.85);
+  }
+}
+@keyframes ks-bob {
+  to {
+    transform: translateY(-7px);
+  }
+}
+/* below the width where there's room beside the column: tuck them into the corners, or hide */
+@media (max-width: 1279px) {
+  .ks-wide {
+    display: none;
+  }
+  .ks {
+    top: var(--pt);
+    width: var(--pw);
+  }
+  .ks-pl {
+    left: var(--pl);
+    right: auto;
+  }
+  .ks-pr {
+    right: var(--pr);
+    left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks {
+    animation: none;
+  }
+}

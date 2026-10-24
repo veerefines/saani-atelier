@@ -45,7 +45,7 @@ export type JarNote = {
 export type BingoState = { id: 'bingo'; createdAt: string; done: Record<string, { at: string; mediaId?: string }> };
 export type Seen = { id: 'seen'; createdAt: string; love?: string; letters?: string; jar?: string };
 /** A Milano list item. Friends' tips carry who suggested them. */
-export type Wish = { id: string; createdAt: string; text: string; done: boolean; fromId?: string; fromName?: string };
+export type Wish = { id: string; createdAt: string; text: string; done: boolean; fromId?: string; fromName?: string; placeId?: string };
 /** A friend's dare or cheer pinned to a bingo square. */
 export type Dare = { id: string; createdAt: string; authorId: string; authorName: string; squareId: string; text: string };
 
@@ -171,7 +171,9 @@ export async function markSeen(area: 'love' | 'letters' | 'jar') {
 
 /* Milano wishlist */
 export const listWishes = () => db.list<Wish>('wishes');
-export const addWish = (text: string) => db.put<Wish>('wishes', { id: db.newId('w_'), createdAt: now(), text: text.slice(0, 140), done: false });
+/** placeId links the item back to its card in the Milano guide. */
+export const addWish = (text: string, placeId?: string) =>
+  db.put<Wish>('wishes', { id: db.newId('w_'), createdAt: now(), text: text.slice(0, 140), done: false, ...(placeId ? { placeId } : {}) });
 export const toggleWish = (id: string) => db.update<Wish>('wishes', id, (w) => ({ ...w, done: !w.done }));
 export const deleteWish = (id: string) => db.remove('wishes', id);
 /** A friend's tip lands on her list, signed. */

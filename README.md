@@ -106,6 +106,13 @@ Positions are in `src/content/keepsakes.ts`. Missing files don't show on the rea
 - Production settings live in Vercel (Project → Settings → Environment Variables): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `INVITES`, and optionally `GOOGLE_MAPS_API_KEY`. After changing one, redeploy (push, or `npx vercel@latest deploy --prod`).
 - Database changes: add a file to `supabase/migrations/` and run `npx supabase@latest db push`.
 
+## Notifications, calm and keeping things awake
+
+- **Notifications:** on her desk, "Tell me when something new arrives" sends her a push notification whenever a friend pins something, seals a letter, fills the jar, leaves a dare or adds a tip. On iPhone it works from the home-screen app (iOS 16.4+). The keys are `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in Vercel.
+- **Something calming:** after a sad, anxious, homesick or unmotivated jar note, the jar suggests chamomile and a few quiet places from the guide (`calm` in `src/content/home.ts`).
+- **A taste of home:** the 🪔 Home mood in Milano corner: Indian restaurants and an Indian grocery, checked against OpenStreetMap.
+- **Keepalive:** a daily Vercel cron (`vercel.json`) calls `/api/keepalive` so Supabase's free plan doesn't pause the database. It needs `CRON_SECRET` in Vercel.
+
 ## Before sharing
 
 Set `SESSION_SECRET` and `INVITES` in your hosting provider (Vercel) environment variables. Demo codes are switched off in production.
