@@ -902,23 +902,40 @@
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 24px -12px rgba(70, 25, 45, 0.5);
 }
-.j-music-disc {
-  width: 30px;
-  height: 30px;
+.j-music-record {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  margin: -10px 0 -10px -8px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle, #fff 0 8%, #e48aae 9% 30%, transparent 31%),
-    repeating-radial-gradient(circle, #2a1e24 0 2px, #3a2a32 2px 3px);
+  filter: drop-shadow(0 4px 6px rgba(30, 10, 20, 0.35));
+  /* always spinning, but held still until the music plays, so pausing stops it where it is */
+  animation: record-spin 4s linear infinite;
+  animation-play-state: paused;
 }
-.j-music.on .j-music-disc {
-  animation: reel 3s linear infinite;
+.j-music.on .j-music-record {
+  animation-play-state: running;
+}
+.j-music-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.j-music-label small {
+  font: 500 11px var(--font-body);
+  opacity: 0.75;
+}
+@keyframes record-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tex-stars,
   .j-scroll-cue img,
   .cassette.playing .reel,
-  .j-music.on .j-music-disc {
+  .j-music-record {
     animation: none;
   }
 }

@@ -49,7 +49,7 @@ All journey content is in `src/content/journey.ts`, with media in `public/journe
 
 - `public/journey/photos/` – drop photos in using the file names listed in `journey.ts` (e.g. `childhood-1.jpg`), or change the names there. Missing photos show a soft "your photo here" polaroid with the expected file name.
 - `public/journey/video/` – `.mp4` (H.264). The studio clip is expected at `video/studio.mp4`; until then a placeholder plays.
-- `public/journey/audio/` – `.mp3` voice notes (`voice-1.mp3` …) and `music-box.mp3` for the background music. The current files are placeholder chimes.
+- `public/journey/audio/` – `.mp3` voice notes (`voice-1.mp3` …) and `river-flows-in-you.m4a` for the background music (the spinning record, bottom right). The voice notes are still placeholder chimes.
 
 ## Where things are stored
 

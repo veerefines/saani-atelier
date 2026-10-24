@@ -163,4 +163,4 @@ export const chapters: Chapter[] = [
   },
 ];
 
-export const journeyMusic = { src: '/journey/audio/music-box.mp3', label: 'Play music' };
+export const journeyMusic = { src: '/journey/audio/river-flows-in-you.m4a', label: 'Play music', title: 'River Flows in You' };
