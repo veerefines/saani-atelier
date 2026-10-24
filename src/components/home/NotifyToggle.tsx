@@ -11,6 +11,28 @@ function keyBytes(base64url: string) {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
+/** Brave exposes navigator.brave; it blocks the push service unless the user opts in. */
+const isBrave = async () => {
+  try {
+    return Boolean(await (navigator as { brave?: { isBrave?: () => Promise<boolean> } }).brave?.isBrave?.());
+  } catch {
+    return false;
+  }
+};
+
+/** Turn the browser's terse push errors into something she can act on. */
+async function explain(e: unknown) {
+  const err = e as { name?: string; message?: string };
+  const pushService = err.name === 'AbortError' || /push service/i.test(err.message ?? '');
+  if (pushService) {
+    if (await isBrave()) {
+      return 'Brave blocks notifications by default. Open brave://settings/privacy, turn on “Use Google services for push messaging”, restart Brave, then try again.';
+    }
+    return 'Your browser couldn’t reach its notification service. A VPN, firewall or ad blocker can stop it. Try turning those off, or use Chrome, Safari, or the atelier on your phone.';
+  }
+  return err.message || 'Couldn’t turn notifications on.';
+}
+
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
 
@@ -50,7 +72,7 @@ export default function NotifyToggle() {
       await api('/api/push', 'POST', { subscription: sub.toJSON() });
       setState('on');
     } catch (e) {
-      setErr((e as Error).message || 'Couldn’t turn notifications on.');
+      setErr(await explain(e));
       setState('off');
     }
   }
