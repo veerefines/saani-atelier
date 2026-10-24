@@ -239,6 +239,9 @@ export default function Journey({ intro, chapters, music }: { intro: Intro; chap
             start: 'center center',
             end: () => `+=${distance()}`,
             pin: true,
+            // .j-items is a flex column, where GSAP turns spacing off by default; without it the
+            // next item (the video) scrolls up underneath the pinned film
+            pinSpacing: true,
             scrub: 0.6,
             invalidateOnRefresh: true,
             anticipatePin: 1,
