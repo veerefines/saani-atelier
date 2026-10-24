@@ -99,6 +99,13 @@ Positions are in `src/content/keepsakes.ts`. Missing files don't show on the rea
 - The note text is in `src/content/site.ts`.
 - Bouquet layer positions are in `src/components/PhotoBouquet.tsx` (percentages of the stage).
 
+## Deployment
+
+- Live at https://saani-atelier.vercel.app (Vercel), with data and media in Supabase (project `saani-atelier`, Frankfurt).
+- Every push to `main` on GitHub deploys to production automatically.
+- Production settings live in Vercel (Project → Settings → Environment Variables): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `INVITES`, and optionally `GOOGLE_MAPS_API_KEY`. After changing one, redeploy (push, or `npx vercel@latest deploy --prod`).
+- Database changes: add a file to `supabase/migrations/` and run `npx supabase@latest db push`.
+
 ## Before sharing
 
 Set `SESSION_SECRET` and `INVITES` in your hosting provider (Vercel) environment variables. Demo codes are switched off in production.
