@@ -5,3 +5,7 @@ node_modules
 next-env.d.ts
 *.tsbuildinfo
 .data
+*.local.txt
+.vercel
+.env*
+!env.template

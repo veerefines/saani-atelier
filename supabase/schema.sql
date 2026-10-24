@@ -14,5 +14,5 @@ alter table public.docs enable row level security;
 
 -- Private bucket for photos, voice notes and videos.
 insert into storage.buckets (id, name, public, file_size_limit)
-values ('media', 'media', false, 104857600)
+values ('media', 'media', false, 52428800)
 on conflict (id) do nothing;

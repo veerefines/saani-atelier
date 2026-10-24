@@ -1,0 +1,9 @@
+.env*
+!env.template
+.data
+*.local.txt
+.next
+node_modules
+supabase/.temp
+supabase/.branches
+*.tsbuildinfo
