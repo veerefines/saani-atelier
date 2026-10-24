@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
-import { listDiary, listJourneyExtras, listSlotMedia, type JourneyExtra } from '@/lib/extras';
-import { chapters, journeyIntro, journeyMusic, type Item } from '@/content/journey';
+import { getJourneyText, listDiary, listJourneyExtras, listSlotMedia, type JourneyExtra } from '@/lib/extras';
+import { withJourneyText } from '@/lib/journey-text';
+import { journeyMusic, type Item } from '@/content/journey';
 import type { ResolvedChapter, ResolvedItem } from '@/components/journey/types';
 import Journey from '@/components/journey/Journey';
 import Keepsakes from '@/components/Keepsakes';
@@ -64,7 +65,9 @@ export default async function JourneyPage() {
   if (!session) redirect('/');
   if (session.role !== 'saanika' && !session.admin) redirect('/wall');
 
-  const [slots, diary, extras] = await Promise.all([listSlotMedia(), session.role === 'saanika' ? listDiary() : Promise.resolve([]), listJourneyExtras()]);
+  const [slots, diary, extras, edits] = await Promise.all([listSlotMedia(), session.role === 'saanika' ? listDiary() : Promise.resolve([]), listJourneyExtras(), getJourneyText()]);
+  // the words, with any edits from /admin laid over the defaults
+  const { intro: journeyIntro, chapters } = withJourneyText(edits);
   const resolve = resolver(new Map(slots.map((x) => [x.slot, x.mediaId])));
   const resolved: ResolvedChapter[] = chapters.map((c) => {
     const more = extraItems(extras.filter((x) => x.chapter === c.id));

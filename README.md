@@ -1,6 +1,8 @@
 # Saani Atelier
 
-A private surprise website for Saanika. Next.js + Framer Motion.
+A private surprise website for Saanika, moving from Mumbai to Milano (flying 27 Oct 2026). Next.js 15, React 19, Framer Motion and GSAP, with Supabase for data and media in production.
+
+Live at https://saani-atelier.vercel.app.
 
 ## Run it on your Mac
 
@@ -15,66 +17,98 @@ Open http://localhost:3000
 In development, two demo codes work when `INVITES` is empty:
 
 - `DEMO-SAANIKA` – Saanika's view (the gift reveal)
-- `DEMO-FRIEND` – a well-wisher's view
+- `DEMO-FRIEND` – a well-wisher's view (also an admin)
 
 Magic links work too: http://localhost:3000/hello/DEMO-SAANIKA
 
 - Replay the reveal: http://localhost:3000/?replay=1
 - Sign out: http://localhost:3000/api/logout
 
-## What's built so far
+## Tests
 
-- Landing: the wrapped bouquet with a gift tag that is the login
-- Login: invite codes and personal magic links (`/hello/<code>`), signed cookie sessions, revocable by removing the invite
-- Surprise reveal: tap the bow, it falls, the tissue lifts, carnations bloom, petals drift, a gold needle pulls a silk thread down to a handwritten note
-- Journey (`/journey`): a scroll story in five chapters. A silk thread is stitched down the page as she scrolls, with the gold needle catching the light; backgrounds and paper textures shift with each chapter; polaroids develop, notes pin themselves down, quotes light up word by word, a film strip slides sideways, cassette voice notes, a video that plays as it scrolls into view, a boarding pass, a postcard, confetti at the end, and optional music-box background music
-- Her desk (`/home`): the dashboard she lands on after the reveal, with live Milano and Mumbai clocks, a day counter, and six desk objects:
-  - Wall of love (`/home/love`): every message, photo, voice note and video from her people, pinned up as polaroids, notes and cassettes. She reacts with 🌷 🌸 🪡 ✂️ 💗, filters by person, and sees "new" badges.
-  - Open when (`/home/letters`): sealed envelopes; some unlock on a date, and they open with a letter sliding out on handmade paper.
-  - Message jar (`/home/jar`): she picks how she feels, shakes the jar, and a note for that mood pops out.
-  - Milano bingo (`/home/bingo`): 25 squares; tapping "I did it" stitches the square shut and gives a reward (a bouquet, a quirky certificate or a cheer), with confetti for every line and a finale for the full board. Optional photo proof.
-  - Milano corner (`/home/milano`): days in Milano (or sleeps until), two clocks, and "Your little Milano": mood chips (food, coffee & matcha, vibes, fashion & places, local spots, flowers, golden hour, beaches), a pastel mini map of every place, and a Surprise me button that deals a place with what to order, its Google rating and a Google Maps link. A 📍 Near me chip uses her location (only in her browser, never sent to the server) to show what's closest, with walking times, a dot on the map, and quick Google Maps searches around her (matcha, gelato, florists, fabric shops, vintage…). Then "Workshops, shows & people": the big fashion dates (Fashion Week, MICAM shoes, MIPEL bags, White, Milano Unica, Lineapelle, Design Week) counting down to the next edition, plus fashion and sewing workshops, matcha classes, runway courses and networking, linked to live listings on Eventbrite and Meetup. Below that, beaches to run away to, from Milano's lidos to the islands. Her own list sits at the side; anything can be saved to it in one tap.
-  - Your story: back to the journey.
-- Well-wishers' desk (`/wall`): the same atelier as hers, with clocks and a countdown to Saanika landing in Milano, and six tiles:
-  - Pin to her wall (`/wall/love`): a message, a photo album (up to 10), a voice note (record in the browser or upload) or a video (record with the camera, up to 90 seconds, or upload).
-  - Open when (`/wall/letters`): sealed letters, optionally locked until a date.
-  - Fill her jar (`/wall/jar`): notes by mood, with a gauge showing which moods need more.
-  - Cheer her bingo (`/wall/bingo`): see which squares she's stitched (never her photo proofs) and pin a dare or cheer to any square. She sees it on the square and with her reward.
-  - Milano tips (`/wall/milano`): places and plans that land on her Milano list as "from <name>".
-  - Your sent box (`/wall/sent`): everything they've sent, whether she's opened or read it, her reactions, and delete.
+```bash
+npm run build && npm test
+```
 
-## Adding her real photos, videos and voice notes
+`tests/run.sh` starts its own server on the build (port 3100), then runs:
 
-All journey content is in `src/content/journey.ts`, with media in `public/journey/`:
+- every API with each role: signed out, Saanika, friend, admin
+- the privacy rules, plus page renders
+- removing friends and deleting everything they shared
+- web push end to end, through a fake push service that decrypts each notification
 
-- `public/journey/photos/` – drop photos in using the file names listed in `journey.ts` (e.g. `childhood-1.jpg`), or change the names there. Missing photos show a soft "your photo here" polaroid with the expected file name.
-- `public/journey/video/` – `.mp4` (H.264). The studio clip is expected at `video/studio.mp4`; until then a placeholder plays.
-- `public/journey/audio/` – `.mp3` voice notes (`voice-1.mp3` …) and `river-flows-in-you.m4a` for the background music (the spinning record, bottom right). The voice notes are still placeholder chimes.
+It backs up your `.data/` first and puts it back afterwards. GitHub runs the same tests on every push (`.github/workflows/test.yml`) with throwaway secrets.
 
-## Where things are stored
+## What's built
 
-- On your Mac (development), everything people post is saved in a `.data/` folder in the project. Delete that folder to start fresh.
-- For the real site on Vercel, use Supabase (free):
-  1. Create a project at supabase.com.
-  2. In SQL Editor, run `supabase/schema.sql`.
-  3. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project Settings > API) to your Vercel environment variables, alongside `SESSION_SECRET` and `INVITES`.
-  Photos, voice notes and videos then go to a private storage bucket, and only signed-in people can see them.
+**Getting in**
+- The wrapped bouquet with a gift tag that is the login. Invite codes and personal magic links (`/hello/<code>`), with signed cookie sessions.
+- She taps the bow and the reveal plays, or she can go straight to her desk.
 
-## Dashboard content
+**The journey (`/journey`)**
+- A scroll story in five chapters, stitched by a silk thread and a gold needle. It has polaroids, notes, quotes, a sliding film strip, cassette voice notes, video, and a boarding pass whose stub tears off as she scrolls. It ends with a postcard and confetti.
+- A spinning record plays the music; tap it to pause.
+- A sixth chapter, "Milano, in your words", writes itself from her diary.
 
-`src/content/home.ts` holds the bingo squares and rewards, her arrival date, the letters and jar notes from you that appear on day one, the mood list and the reaction set.
+**Her desk (`/home`)**
+- **Clocks:** Milano, Mumbai and LA. Hover or tap one to see who's there right now.
+- **Her mood today:** friends see it, and a low day sends them one gentle nudge. "Thinking of my people 💗" sends everyone love.
+- **"Thinking of you":** friends' nudges, which she can react to or answer.
+- **The Today card:**
+  - Milano weather and an outfit idea
+  - a random Italian word or phrase with pronunciation and meaning
+  - "good time to call": when she and each of her people are both awake
+- **Six tiles:**
+  - Wall of love: messages, photo albums, voice notes and videos, with reactions and thank-you replies.
+  - Open when: letters, some locked until a date.
+  - Message jar: notes by mood.
+  - Milano bingo.
+  - Milano corner: her list at the top; a guide of about 95 places with a map, Surprise me and Near me; fashion dates and workshops; beaches.
+  - Your story.
+- **"A little memory":** something her people sent, brought back.
+- **More corners:**
+  - Lookbook: her outfits, sketches and Pinterest pins; private unless shared.
+  - Passport: check in to places for stamps.
+  - My chapter: a line and a photo a day.
+  - Songs: square tiles that open the player.
+  - Settling in: the arrival checklist.
+  - Scrapbooks: group pages laid out as a collage she can drag, shuffle and flip through.
+  - Your book: printable.
+- **Special days:** Diwali, Christmas, Departure day and others get a banner and confetti on the day.
 
-## Milano guide and Google ratings
+**Friends' desk (`/wall`)**
+- **The top of the desk:**
+  - the same clocks
+  - her mood
+  - her next special day when it's close
+  - a one-tap "Thinking of her?" nudge
+  - when to call her
+- **Ways to leave something:** pin to her wall (record voice or video in the browser), seal letters, fill the jar, cheer her bingo, Milano tips, songs, scrapbook pages, and what she's shared from her lookbook.
+- **Sent box:** whether she's opened or read each thing, her reactions and replies.
 
-The places (about 90, each checked against OpenStreetMap for its location) are in `src/content/milano.ts`. Add, remove or reword freely; `q` is what Google Maps searches for.
+**Admin (`/admin`, Vee)**
+- **Friends:** add or remove anyone. Removing someone signs them out within seconds and deletes everything they shared.
+- **Special days and scrapbook pages.**
+- **Journey media:** upload a file for any slot, or add any number of extra photos, videos and voice notes to a chapter.
+- **The journey's words:** edit every caption, note, quote and "from" name; clear one to restore the original.
+- **Keepsake images, the reveal note, and how she's getting on.**
 
-For live Google ratings on the cards, add `GOOGLE_MAPS_API_KEY` (a Google Cloud key with the Places API (New) enabled) to `.env.local` or Vercel. Ratings are cached for a week. Without a key, each card links to the place on Google Maps.
+## Adding her real photos, videos, voice notes and words
 
-Fashion dates live in `src/content/happenings.ts`. They were checked on the organisers' sites in October 2026; add the next editions each season (past ones drop off by themselves).
+Use **Admin → Journey media**. Each slot takes an upload, and each chapter has:
+
+- "More in this chapter" for extras: four or more photos become a film strip.
+- "✎ Edit the words": captions, notes, quotes and who a voice note is from.
+
+The music is the "Background music" slot.
+
+The defaults still live in `src/content/journey.ts`, with files in `public/journey/`. Uploads and edits in admin win over them.
 
 ## Things she loves (PNG keepsakes)
 
-Sunglasses, iced coffee, matcha, chamomile, bags, heels, a check scarf, flowers, Italian food and beach things are tucked around the desk and its corners. Drop transparent PNGs (about 800px on the long side) into `public/her/` with these names, then restart the server:
+Sunglasses, iced coffee, matcha, chamomile, bags, heels, a check scarf, flowers, Italian food and beach things are tucked around the desk and its corners.
+
+Upload transparent PNGs (about 800px on the long side) in **Admin → Keepsake images**, or drop them in `public/her/` with these names:
 
 | File | What | Where it shows |
 |---|---|---|
@@ -91,28 +125,54 @@ Sunglasses, iced coffee, matcha, chamomile, bags, heels, a check scarf, flowers,
 | `pasta.png`, `gelato.png`, `pizza.png` | Italian food | Milano corner |
 | `seashell.png`, `starfish.png`, `sun-hat.png`, `beach-umbrella.png` | Beach things | beaches |
 
-Positions are in `src/content/keepsakes.ts`. Missing files don't show on the real site; in `npm run dev` they appear as dashed placeholders so you can see where each goes.
+Positions are in `src/content/keepsakes.ts`.
 
-## Swapping images and text
+## Content files
 
-- Photo layers live in `public/reveal/`. Replace a file with another transparent WebP/PNG of the same name.
-- The note text is in `src/content/site.ts`.
-- Bouquet layer positions are in `src/components/PhotoBouquet.tsx` (percentages of the stage).
+| File | What it holds |
+|---|---|
+| `src/content/home.ts` | her departure date, bingo squares and rewards, your day-one letters and jar notes, reactions |
+| `src/content/italian.ts` | the Italian words and phrases (with pronunciation) |
+| `src/content/milano.ts` | the places in the guide |
+| `src/content/happenings.ts` | fashion dates; checked October 2026, so add the next editions each season |
+| `src/content/checklist.ts` | the arrival checklist |
+| `src/content/mood.ts` | her moods |
+| `src/content/nudges.ts` | nudge emoji |
+
+## Where things are stored
+
+- **On your Mac:** everything is in `.data/`. Delete it to start fresh.
+- **In production:** Supabase stores records in the `docs` table (collection, id, data) and files in a private `media` bucket that only signed-in people can see.
+
+## Notifications and the daily job
+
+Saanika and friends can each turn on notifications on their desk. On iPhone this works from the home-screen app (iOS 16.4+).
+
+**Saanika hears when:**
+- something arrives from a friend
+- a letter unlocks
+- a scheduled surprise lands
+- it's a special day
+- it's Sunday (a weekly digest)
+
+**Friends hear when:**
+- she reacts to their post or nudge, replies, or opens their letter
+- a special day is coming up, or is today
+- she's having a low day
+- she sends love back
+
+A device belongs to whoever is signed in on it. The home-screen icon shows a badge count.
+
+A daily Vercel cron (`vercel.json`, 06:00 UTC) calls `/api/daily`. It needs `CRON_SECRET`, and it also keeps Supabase's free plan awake.
 
 ## Deployment
 
-- Live at https://saani-atelier.vercel.app (Vercel), with data and media in Supabase (project `saani-atelier`, Frankfurt).
-- Every push to `main` on GitHub deploys to production automatically.
-- Production settings live in Vercel (Project → Settings → Environment Variables): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `INVITES`, and optionally `GOOGLE_MAPS_API_KEY`. After changing one, redeploy (push, or `npx vercel@latest deploy --prod`).
-- Database changes: add a file to `supabase/migrations/` and run `npx supabase@latest db push`.
-
-## Notifications, calm and keeping things awake
-
-- **Notifications:** on her desk, "Tell me when something new arrives" sends her a push notification whenever a friend pins something, seals a letter, fills the jar, leaves a dare or adds a tip. On iPhone it works from the home-screen app (iOS 16.4+). The keys are `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in Vercel.
-- **Something calming:** after a sad, anxious, homesick or unmotivated jar note, the jar suggests chamomile and a few quiet places from the guide (`calm` in `src/content/home.ts`).
-- **A taste of home:** the 🪔 Home mood in Milano corner: Indian restaurants and an Indian grocery, checked against OpenStreetMap.
-- **Keepalive:** a daily Vercel cron (`vercel.json`) calls `/api/keepalive` so Supabase's free plan doesn't pause the database. It needs `CRON_SECRET` in Vercel.
-
-## Before sharing
-
-Set `SESSION_SECRET` and `INVITES` in your hosting provider (Vercel) environment variables. Demo codes are switched off in production.
+- Every push to `main` deploys to production on Vercel.
+- **Settings** (Vercel → Project → Settings → Environment Variables):
+  - `SESSION_SECRET` and `INVITES`
+  - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+  - `CRON_SECRET`
+  - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`
+  - optionally `GOOGLE_MAPS_API_KEY`, for live ratings in the guide
+- After changing a setting, redeploy.
+- Friends can also be added and removed from `/admin` without touching `INVITES`.

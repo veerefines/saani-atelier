@@ -1,0 +1,33 @@
+# Every push and pull request: build, then run the end-to-end tests (tests/run.sh) against the build.
+# Uses throwaway secrets and the local file store; never touches the live site or Supabase.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Throwaway settings for the test run
+        run: |
+          KEYS=$(npx --no-install web-push generate-vapid-keys --json)
+          {
+            echo "SESSION_SECRET=ci-$(openssl rand -hex 24)"
+            echo "CRON_SECRET=ci-$(openssl rand -hex 24)"
+            echo "ALLOW_TEST_CLOCK=1"
+            echo 'INVITES=[{"id":"saanika","name":"Saanika","role":"saanika","code":"CHANGE-ME-1"},{"id":"priya","name":"Vee","role":"wellwisher","admin":true,"code":"CHANGE-ME-2"}]'
+            echo "VAPID_PUBLIC_KEY=$(echo "$KEYS" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).publicKey')"
+            echo "VAPID_PRIVATE_KEY=$(echo "$KEYS" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).privateKey')"
+          } > .env.local
+      - run: npm run build
+      - run: npm test

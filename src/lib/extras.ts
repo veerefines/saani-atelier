@@ -340,3 +340,16 @@ export const markMoodAlerted = (day: string) => db.update<MoodDoc>('state', 'moo
 export type HerNudge = { id: 'her-nudge'; createdAt: string; emoji: string; at: string };
 export const getHerNudge = () => db.get<HerNudge>('state', 'her-nudge');
 export const setHerNudge = (emoji: string) => db.put<HerNudge>('state', { id: 'her-nudge', createdAt: now(), emoji, at: now() });
+
+/** The journey's words, rewritten from /admin (by key; see src/lib/journey-text.ts). */
+export type JourneyTextDoc = { id: 'journey-text'; createdAt: string; edits: Record<string, string> };
+export async function getJourneyText(): Promise<Record<string, string>> {
+  return (await db.get<JourneyTextDoc>('state', 'journey-text'))?.edits ?? {};
+}
+export async function setJourneyText(key: string, value: string) {
+  const cur = await db.get<JourneyTextDoc>('state', 'journey-text');
+  const edits = { ...(cur?.edits ?? {}) };
+  if (value.trim()) edits[key] = value.trim();
+  else delete edits[key]; // blank goes back to the original words
+  return db.put<JourneyTextDoc>('state', { id: 'journey-text', createdAt: cur?.createdAt ?? now(), edits });
+}

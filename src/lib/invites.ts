@@ -53,9 +53,11 @@ function fromEnv(): Invite[] {
   return process.env.NODE_ENV === 'production' ? [] : DEMO_INVITES;
 }
 
-// friends added from /admin, cached briefly so every request doesn't query the database
+// friends added (or removed) from /admin, cached for a few seconds so every request doesn't query
+// the database; a removed friend loses access within this window on every server (instantly on the
+// one that removed them)
 let cache: { at: number; docs: InviteDoc[] } | null = null;
-const CACHE_MS = 20_000;
+const CACHE_MS = 5_000;
 async function addedFriends() {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.docs;
   const docs = await db.list<InviteDoc>('invites').catch(() => [] as InviteDoc[]);

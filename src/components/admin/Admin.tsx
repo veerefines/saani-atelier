@@ -6,6 +6,7 @@ import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 
 type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string };
 type ChapterRef = { id: string; title: string };
+type Word = { key: string; group: string; label: string; value: string; original: string; long?: boolean };
 type Slot = { slot: string; kind: 'photo' | 'video' | 'voice' | 'music'; label: string; chapter: string; mediaId: string | null };
 type Activity = {
   lastSeen: string | null;
@@ -51,7 +52,7 @@ const START: { id: Section; icon: string; title: string; sub: string }[] = [
   { id: 'note', icon: '✉️', title: 'Edit the reveal note', sub: 'the card at the end of the gift' },
 ];
 
-export default function Admin(props: { me: string; journeyChapters: ChapterRef[]; extras: JourneyExtra[]; friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity; keepsakes: Keepsake[] }) {
+export default function Admin(props: { me: string; journeyChapters: ChapterRef[]; extras: JourneyExtra[]; words: Word[]; friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity; keepsakes: Keepsake[] }) {
   const [section, setSection] = useState<Section>('activity');
   const open = (id: Section) => {
     setSection(id);
@@ -83,7 +84,7 @@ export default function Admin(props: { me: string; journeyChapters: ChapterRef[]
       {section === 'friends' && <Friends initial={props.friends} me={props.me} />}
       {section === 'occasions' && <Occasions initial={props.occasions} />}
       {section === 'pages' && <Pages initial={props.pages} />}
-      {section === 'journey' && <Journey initial={props.slots} chapterRefs={props.journeyChapters} extras={props.extras} />}
+      {section === 'journey' && <Journey initial={props.slots} chapterRefs={props.journeyChapters} extras={props.extras} words={props.words} />}
       {section === 'keepsakes' && <Keepsakes initial={props.keepsakes} />}
       {section === 'note' && <NoteEditor initial={props.note} />}
     </>
@@ -335,7 +336,7 @@ function Pages({ initial }: { initial: Page[] }) {
   );
 }
 
-function Journey({ initial, chapterRefs, extras: initialExtras }: { initial: Slot[]; chapterRefs: ChapterRef[]; extras: JourneyExtra[] }) {
+function Journey({ initial, chapterRefs, extras: initialExtras, words }: { initial: Slot[]; chapterRefs: ChapterRef[]; extras: JourneyExtra[]; words: Word[] }) {
   const [slots, setSlots] = useState(initial);
   const [extras, setExtras] = useState(initialExtras);
   const [busy, setBusy] = useState<string | null>(null);
@@ -370,9 +371,11 @@ function Journey({ initial, chapterRefs, extras: initialExtras }: { initial: Slo
         more photos, videos and voice notes as you like.
       </p>
       {err && <p className="h-err">{err}</p>}
+      <Words title="the opening screen" fields={words.filter((w) => w.group === 'Opening')} />
       {chapters.map((c) => (
         <div key={c} className="atl-chapter">
           <h3 className="hand">{c}</h3>
+          <Words title="this chapter" fields={words.filter((w) => w.group === c)} />
           <div className="atl-slots">
             {slots
               .filter((s) => s.chapter === c)
@@ -418,6 +421,57 @@ function Journey({ initial, chapterRefs, extras: initialExtras }: { initial: Slo
         </div>
       ))}
     </section>
+  );
+}
+
+/** The journey's words for one chapter: edit any of them; clearing one goes back to the original. */
+function Words({ title, fields }: { title: string; fields: Word[] }) {
+  if (!fields.length) return null;
+  return (
+    <details className="atl-words">
+      <summary>✎ Edit the words in {title}</summary>
+      {fields.map((f) => (
+        <WordField key={f.key} f={f} />
+      ))}
+    </details>
+  );
+}
+
+function WordField({ f }: { f: Word }) {
+  const [value, setValue] = useState(f.value);
+  const [saved, setSaved] = useState(f.value);
+  const [state, setState] = useState<'' | 'saving' | 'saved'>('');
+  const { err, run } = useErr();
+  const save = (v = value) =>
+    run(async () => {
+      setState('saving');
+      try {
+        const r = await api<{ value: string | null }>('/api/admin/journey/text', 'POST', { key: f.key, value: v });
+        const now = r.value ?? f.original;
+        setValue(now);
+        setSaved(now);
+        setState('saved');
+        setTimeout(() => setState(''), 1500);
+      } catch (e) {
+        setState('');
+        throw e;
+      }
+    });
+  const Input = f.long ? 'textarea' : 'input';
+  return (
+    <label className="atl-word">
+      <span>
+        {f.label}
+        {state === 'saving' ? ' · saving…' : state === 'saved' ? ' · saved ✓' : value !== saved ? ' · not saved' : ''}
+      </span>
+      <Input className="h-input" value={value} maxLength={600} rows={f.long ? 3 : undefined} placeholder={f.original} onChange={(e: React.ChangeEvent<HTMLInputElement & HTMLTextAreaElement>) => setValue(e.target.value)} onBlur={() => value !== saved && save()} />
+      {value !== f.original && (
+        <button type="button" className="w-link" onClick={() => save('')}>
+          Back to the original
+        </button>
+      )}
+      {err && <p className="h-err">{err}</p>}
+    </label>
   );
 }
 

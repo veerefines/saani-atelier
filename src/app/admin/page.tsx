@@ -4,9 +4,10 @@ import Admin from '@/components/admin/Admin';
 import { getInvites } from '@/lib/invites';
 import { getSession } from '@/lib/auth';
 import { getBingo, listJar, listLetters, listPosts } from '@/lib/data';
-import { getChecklist, getContent, getPresence, listJourneyExtras, listKeepsakeMedia, listOccasions, listPages, listSlotMedia, listStamps } from '@/lib/extras';
+import { getChecklist, getContent, getJourneyText, getPresence, listJourneyExtras, listKeepsakeMedia, listOccasions, listPages, listSlotMedia, listStamps } from '@/lib/extras';
 import { keepsakeFiles } from '@/content/keepsakes';
 import { journeySlots } from '@/lib/journey-slots';
+import { journeyTextFields } from '@/lib/journey-text';
 import { site } from '@/content/site';
 import { bingo } from '@/content/home';
 import { checklist } from '@/content/checklist';
@@ -17,7 +18,7 @@ export default async function AdminPage() {
   const h = await headers();
   const me = (await getSession())?.id ?? '';
   const origin = `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}`;
-  const [invites, occasions, pages, slotMedia, content, letters, jar, posts, board, stamps, check, presence, keepsakeMedia, extras] = await Promise.all([
+  const [invites, occasions, pages, slotMedia, content, letters, jar, posts, board, stamps, check, presence, keepsakeMedia, extras, edits] = await Promise.all([
     getInvites(),
     listOccasions(),
     listPages(),
@@ -32,6 +33,7 @@ export default async function AdminPage() {
     getPresence(),
     listKeepsakeMedia(),
     listJourneyExtras(),
+    getJourneyText(),
   ]);
   const now = Date.now();
   const fromPeople = (a: { authorId: string }) => a.authorId !== 'seed';
@@ -42,6 +44,7 @@ export default async function AdminPage() {
         me={me}
         journeyChapters={chapters.map((c) => ({ id: c.id, title: c.title }))}
         extras={extras}
+        words={journeyTextFields().map((f) => ({ ...f, original: f.value, value: edits[f.key] ?? f.value }))}
         friends={invites.map((i) => ({ id: i.id, name: i.name, role: i.role, admin: Boolean(i.admin), managed: Boolean(i.managed), link: `${origin}/hello/${i.code}` }))}
         occasions={occasions}
         pages={pages}
