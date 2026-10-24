@@ -7,6 +7,7 @@ import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
+import AtelierMark from './AtelierMark';
 import Corners, { type CornerCounts } from './Corners';
 import OccasionBanner from './OccasionBanner';
 
@@ -121,12 +122,7 @@ export default function Dashboard({
     <main className="h-desk">
       {decor}
       <header className="h-hello">
-        {/* a woven garment label, stitched on */}
-        <p className="h-label" aria-label={site.title}>
-          <span className="whisper h-label-name">{site.brand.name}</span>
-          <span className="h-label-word">{site.brand.word}</span>
-          <span className="h-label-line">{site.brand.line}</span>
-        </p>
+        <AtelierMark />
         <div className="h-stamps">
           <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
           <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />

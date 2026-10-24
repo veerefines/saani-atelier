@@ -173,8 +173,21 @@ export async function setChecked(itemId: string, done: boolean) {
 
 /* ---------- group scrapbook pages ---------- */
 
-export type Page = { id: string; createdAt: string; title: string; emoji: string; note?: string };
-export const listPages = async () => (await db.list<Page>('pages')).sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+/** Where she's placed each piece: x as % of the page width, y in % of the width too (so it scales), r = tilt. */
+export type PieceSpot = { x: number; y: number; r: number };
+export type Page = { id: string; createdAt: string; title: string; emoji: string; note?: string; layout?: Record<string, PieceSpot> };
+
+/** A first page so friends have somewhere to add from day one (admin can add more or remove it). */
+const STARTER_PAGE = { title: 'Welcome to Milano', emoji: '🌸', note: 'A photo, a wish, a voice note or a little film for her first days in Milano.' };
+
+export async function listPages(): Promise<Page[]> {
+  const seeded = await db.get('state', 'pages-seeded');
+  if (!seeded) {
+    await db.put<Page>('pages', { id: db.newId('pg_'), createdAt: now(), ...STARTER_PAGE });
+    await db.put('state', { id: 'pages-seeded', createdAt: now() });
+  }
+  return (await db.list<Page>('pages')).sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+}
 export const getPage = (id: string) => db.get<Page>('pages', id);
 export const savePage = (p: Page) => db.put<Page>('pages', p);
 export const removePage = (id: string) => db.remove('pages', id);

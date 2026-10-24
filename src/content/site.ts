@@ -4,7 +4,6 @@
  */
 export const site = {
   title: 'Saani’s Atelier',
-  brand: { name: 'Saani’s', word: 'Atelier', line: 'handmade with love · Milano' },
   recipient: 'Saanika',
   note: {
     greeting: 'Saanika,',

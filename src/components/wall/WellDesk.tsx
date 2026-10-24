@@ -7,6 +7,7 @@ import { ClockStamp, dayInfo, hourIn, useNow } from '@/components/home/Clock';
 import Link from 'next/link';
 import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
 import NotifyToggle from '@/components/home/NotifyToggle';
+import AtelierMark from '@/components/home/AtelierMark';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -65,11 +66,7 @@ export default function WellDesk({
     <main className="h-desk">
       {decor}
       <header className="h-hello">
-        <p className="h-label" aria-label={site.title}>
-          <span className="whisper h-label-name">{site.brand.name}</span>
-          <span className="h-label-word">{site.brand.word}</span>
-          <span className="h-label-line">{site.brand.line}</span>
-        </p>
+        <AtelierMark />
         <div className="h-stamps">
           <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
           <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />

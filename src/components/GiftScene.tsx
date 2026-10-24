@@ -98,6 +98,12 @@ export default function GiftScene({
     router.push('/journey');
   }, [router]);
 
+  /** She can skip the gift and go straight to her desk; she won't be shown the reveal again. */
+  const toDesk = useCallback(() => {
+    document.cookie = 'sa_seen=1; path=/; max-age=31536000; samesite=lax';
+    router.push('/home');
+  }, [router]);
+
   return (
     <MotionConfig reducedMotion="user">
       <main className="scene">
@@ -137,9 +143,31 @@ export default function GiftScene({
               </motion.p>
             )}
           </AnimatePresence>
+          <AnimatePresence>
+            {stage === 'tied' && (
+              <motion.button
+                key="desk"
+                type="button"
+                className="to-desk"
+                onClick={toDesk}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
+                or go straight to my desk →
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {stage === 'note' && noteData && <NoteCard note={noteData} onContinue={finish} />}
         </div>
+
+        {(stage === 'untying' || stage === 'open' || stage === 'thread' || stage === 'note') && (
+          <button type="button" className="skip-desk" onClick={toDesk}>
+            skip to my desk →
+          </button>
+        )}
 
         <AnimatePresence>
           {stage === 'thread' && threadPts && (

@@ -386,3 +386,16 @@
 .w-empty a {
   color: var(--burgundy);
 }
+
+/* a clear stop button while recording (bigger target than the round one on phones) */
+.w-stop {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 0;
+  background: #2a1e24;
+  color: #fff;
+  font: 600 15px var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 10px 18px -10px rgba(30, 10, 20, 0.6);
+}

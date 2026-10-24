@@ -22,16 +22,45 @@ const MAX_VIDEO_SECS = 90;
 
 export type Mine = { posts: Post[]; letters: Letter[]; jar: JarNote[] };
 
-/** Records audio, or video with sound, in the browser. */
+/** Safari's recorder can stall when asked for small slices, so it records in one piece there. */
+const isSafari = () => typeof navigator !== 'undefined' && /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+
+/**
+ * Records audio, or video with sound, in the browser.
+ * Stop always works: it ends the recording and frees the camera right away, and if the browser
+ * never reports back (an iPhone Safari quirk), the recording is put together from what's been captured.
+ */
 function useRecorder(kind: 'audio' | 'video') {
-  const [state, setState] = useState<'idle' | 'starting' | 'recording' | 'done' | 'denied'>('idle');
+  const [state, setState] = useState<'idle' | 'starting' | 'recording' | 'stopping' | 'done' | 'denied' | 'failed'>('idle');
   const [blob, setBlob] = useState<Blob | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [secs, setSecs] = useState(0);
   const rec = useRef<MediaRecorder | null>(null);
+  const live = useRef<MediaStream | null>(null);
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<number>(0);
+  const watchdog = useRef<number>(0);
+  const finished = useRef(false);
   const max = kind === 'video' ? MAX_VIDEO_SECS : MAX_AUDIO_SECS;
+
+  /** Wrap up exactly once, whether the browser reported back or not. */
+  function finish() {
+    if (finished.current) return;
+    finished.current = true;
+    clearInterval(timer.current);
+    clearTimeout(watchdog.current);
+    live.current?.getTracks().forEach((t) => t.stop());
+    live.current = null;
+    setStream(null);
+    const r = rec.current;
+    const type = (r?.mimeType || (kind === 'video' ? 'video/mp4' : 'audio/mp4')).split(';')[0];
+    if (!chunks.current.length) {
+      setState('failed');
+      return;
+    }
+    setBlob(new Blob(chunks.current, { type }));
+    setState('done');
+  }
 
   async function start() {
     setState('starting');
@@ -48,22 +77,22 @@ function useRecorder(kind: 'audio' | 'video') {
       const bits = kind === 'video' ? { videoBitsPerSecond: 2_500_000, audioBitsPerSecond: 128_000 } : { audioBitsPerSecond: 96_000 };
       const r = new MediaRecorder(s, { ...(type ? { mimeType: type } : {}), ...bits });
       chunks.current = [];
-      r.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
-      r.onstop = () => {
-        s.getTracks().forEach((t) => t.stop());
-        setStream(null);
-        setBlob(new Blob(chunks.current, { type: (r.mimeType || (kind === 'video' ? 'video/webm' : 'audio/webm')).split(';')[0] }));
-        setState('done');
-        clearInterval(timer.current);
+      finished.current = false;
+      r.ondataavailable = (e) => {
+        if (e.data && e.data.size) chunks.current.push(e.data);
       };
+      // the normal ending: the last piece has arrived
+      r.onstop = () => setTimeout(finish, 0);
+      live.current = s;
       setStream(s);
-      r.start(250);
+      if (isSafari()) r.start();
+      else r.start(1000);
       rec.current = r;
       setSecs(0);
       setState('recording');
       timer.current = window.setInterval(() => {
         setSecs((n) => {
-          if (n + 1 >= max) r.state === 'recording' && r.stop();
+          if (n + 1 >= max) setTimeout(stop, 0);
           return n + 1;
         });
       }, 1000);
@@ -71,20 +100,49 @@ function useRecorder(kind: 'audio' | 'video') {
       setState('denied');
     }
   }
-  const stop = () => rec.current?.state === 'recording' && rec.current.stop();
-  const reset = () => {
-    if (rec.current?.state === 'recording') {
-      rec.current.onstop = null;
-      rec.current.stop();
-    }
-    stream?.getTracks().forEach((t) => t.stop());
+
+  function stop() {
+    const r = rec.current;
+    if (!r || finished.current) return;
     clearInterval(timer.current);
+    setState('stopping');
+    try {
+      if (r.state === 'recording') {
+        r.requestData?.();
+        r.stop();
+      }
+    } catch {}
+    // if the browser never reports back, finish with what was captured
+    watchdog.current = window.setTimeout(finish, 2500);
+  }
+
+  const reset = () => {
+    const r = rec.current;
+    finished.current = true;
+    if (r && r.state !== 'inactive') {
+      r.onstop = null;
+      try {
+        r.stop();
+      } catch {}
+    }
+    live.current?.getTracks().forEach((t) => t.stop());
+    live.current = null;
+    clearInterval(timer.current);
+    clearTimeout(watchdog.current);
+    chunks.current = [];
     setStream(null);
     setBlob(null);
     setState('idle');
     setSecs(0);
   };
-  useEffect(() => () => clearInterval(timer.current), []);
+  useEffect(
+    () => () => {
+      clearInterval(timer.current);
+      clearTimeout(watchdog.current);
+      live.current?.getTracks().forEach((t) => t.stop());
+    },
+    [],
+  );
   return { state, blob, stream, secs, max, start, stop, reset };
 }
 
@@ -340,7 +398,7 @@ export default function Composer({
   const current = tabs.find((t) => t.id === tab)!;
   const showPosts = only.some((t) => t === 'message' || t === 'voice' || t === 'video');
   const total = (showPosts ? mine.posts.length : 0) + (only.includes('letter') ? mine.letters.length : 0) + (only.includes('jar') ? mine.jar.length : 0);
-  const recording = audio.state === 'recording' || video.state === 'recording';
+  const recording = ['recording', 'stopping'].includes(audio.state) || ['recording', 'stopping'].includes(video.state);
 
   return (
     <>
@@ -391,7 +449,7 @@ export default function Composer({
 
         {tab === 'voice' && (
           <div className="w-rec">
-            {audio.state !== 'done' && (
+            {audio.state !== 'done' && audio.state !== 'stopping' && (
               <button
                 type="button"
                 className={`w-recbtn${audio.state === 'recording' ? ' on' : ''}`}
@@ -402,9 +460,18 @@ export default function Composer({
                 <span />
               </button>
             )}
+            {audio.state === 'recording' && (
+              <button type="button" className="w-stop" onClick={audio.stop}>
+                ■ Stop recording
+              </button>
+            )}
             <p className="hand w-rec-label">
               {audio.state === 'recording'
-                ? `recording… ${mmss(audio.secs)} (tap to stop)`
+                ? `recording… ${mmss(audio.secs)}`
+                : audio.state === 'stopping'
+                  ? 'saving your voice note…'
+                  : audio.state === 'failed'
+                    ? 'That recording didn’t save. Tap to try again, or upload a file below.'
                 : audio.state === 'done'
                   ? `recorded ${mmss(audio.secs)}`
                   : audio.state === 'denied'
@@ -432,7 +499,7 @@ export default function Composer({
             {video.stream && <LiveCam stream={video.stream} />}
             {videoUrl && <video src={videoUrl} className="w-preview" controls playsInline />}
             {!videoUrl && fileUrl && <video src={fileUrl} className="w-preview" controls playsInline />}
-            {!file && video.state !== 'done' && (
+            {!file && video.state !== 'done' && video.state !== 'stopping' && (
               <button
                 type="button"
                 className={`w-recbtn w-recbtn-cam${video.state === 'recording' ? ' on' : ''}`}
@@ -443,10 +510,19 @@ export default function Composer({
                 <span />
               </button>
             )}
+            {video.state === 'recording' && (
+              <button type="button" className="w-stop" onClick={video.stop}>
+                ■ Stop recording
+              </button>
+            )}
             <p className="hand w-rec-label">
               {video.state === 'recording'
-                ? `recording… ${mmss(video.secs)} of ${mmss(video.max)} (tap to stop)`
-                : video.state === 'starting'
+                ? `recording… ${mmss(video.secs)} of ${mmss(video.max)}`
+                : video.state === 'stopping'
+                  ? 'saving your film…'
+                  : video.state === 'failed'
+                    ? 'That recording didn’t save on this phone. Tap to try again, or upload a video below.'
+                    : video.state === 'starting'
                   ? 'opening your camera…'
                   : video.state === 'done'
                     ? `recorded ${mmss(video.secs)}`

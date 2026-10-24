@@ -16,6 +16,9 @@ export default function ReplyBox({ post, onReplied }: { post: Post; onReplied: (
   const [blob, setBlob] = useState<Blob | null>(null);
   const [blobUrl, setBlobUrl] = useState('');
   const r = useRef<MediaRecorder | null>(null);
+  const parts = useRef<Blob[]>([]);
+  const live = useRef<MediaStream | null>(null);
+  const done = useRef(false);
   const first = post.authorName.split(' ')[0];
 
   useEffect(() => {
@@ -30,20 +33,45 @@ export default function ReplyBox({ post, onReplied }: { post: Post; onReplied: (
       const s = await navigator.mediaDevices.getUserMedia({ audio: true });
       const type = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported(t));
       const m = new MediaRecorder(s, { ...(type ? { mimeType: type } : {}), audioBitsPerSecond: 96_000 });
-      const chunks: Blob[] = [];
-      m.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-      m.onstop = () => {
-        s.getTracks().forEach((t) => t.stop());
-        setBlob(new Blob(chunks, { type: (m.mimeType || 'audio/webm').split(';')[0] }));
-        setRec('done');
+      parts.current = [];
+      done.current = false;
+      live.current = s;
+      m.ondataavailable = (e) => {
+        if (e.data && e.data.size) parts.current.push(e.data);
       };
-      m.start(250);
+      m.onstop = () => setTimeout(finish, 0);
+      m.start();
       r.current = m;
       setRec('on');
-      setTimeout(() => m.state === 'recording' && m.stop(), 60_000);
+      setTimeout(() => stopRec(), 60_000);
     } catch {
       setErr('Allow the microphone to record a voice note.');
     }
+  }
+
+  /** Wrap up once, even if the browser never reports back (an iPhone Safari quirk). */
+  function finish() {
+    if (done.current) return;
+    done.current = true;
+    live.current?.getTracks().forEach((t) => t.stop());
+    if (!parts.current.length) {
+      setRec('idle');
+      setErr('That recording didn’t save. Try again.');
+      return;
+    }
+    setBlob(new Blob(parts.current, { type: (r.current?.mimeType || 'audio/mp4').split(';')[0] }));
+    setRec('done');
+  }
+  function stopRec() {
+    const m = r.current;
+    if (!m || done.current) return;
+    try {
+      if (m.state === 'recording') {
+        m.requestData?.();
+        m.stop();
+      }
+    } catch {}
+    setTimeout(finish, 2500);
   }
 
   async function send(body: { emoji?: string; text?: string; voice?: boolean }) {
@@ -103,7 +131,7 @@ export default function ReplyBox({ post, onReplied }: { post: Post; onReplied: (
               </button>
             )}
             {rec === 'on' && (
-              <button type="button" className="ghost-btn reply-recording" onClick={() => r.current?.stop()}>
+              <button type="button" className="ghost-btn reply-recording" onClick={stopRec}>
                 ⏺ Recording… tap to stop
               </button>
             )}
