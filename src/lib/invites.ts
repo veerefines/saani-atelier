@@ -63,15 +63,26 @@ async function addedFriends() {
   return docs;
 }
 
-/** Everyone who can sign in: the setting, plus friends added from /admin. */
+/** Friends removed from /admin, including ones from the INVITES setting (which can't be edited from here). */
+type Removed = { id: 'removed-friends'; createdAt: string; ids: string[] };
+let removedCache: { at: number; ids: string[] } | null = null;
+async function removedIds() {
+  if (removedCache && Date.now() - removedCache.at < CACHE_MS) return removedCache.ids;
+  const doc = await db.get<Removed>('state', 'removed-friends').catch(() => null);
+  removedCache = { at: Date.now(), ids: doc?.ids ?? [] };
+  return removedCache.ids;
+}
+
+/** Everyone who can sign in: the setting, plus friends added from /admin, minus anyone removed. */
 export async function getInvites(): Promise<Invite[]> {
   const base = fromEnv();
-  const added = await addedFriends();
+  const [added, removed] = await Promise.all([addedFriends(), removedIds()]);
   const taken = new Set(base.map((i) => i.id));
+  const gone = new Set(removed);
   return [
     ...base,
     ...added.filter((d) => !taken.has(d.id)).map((d) => ({ id: d.id, name: d.name, role: 'wellwisher' as Role, code: d.code, managed: true })),
-  ];
+  ].filter((i) => i.role === 'saanika' || !gone.has(i.id));
 }
 
 export async function findInvite(code: string): Promise<Invite | null> {
@@ -108,11 +119,20 @@ export async function addFriend(name: string): Promise<Invite> {
   return { id, name: clean, role: 'wellwisher', code: doc.code, managed: true };
 }
 
-/** Only friends added from /admin can be removed there; the INVITES setting is changed in Vercel. */
+/**
+ * Remove a friend: their link stops working straight away. Friends added here are deleted; friends
+ * from the INVITES setting are remembered as removed (so they stay out even though the setting still
+ * lists them). Saanika can't be removed.
+ */
 export async function removeFriend(id: string): Promise<boolean> {
-  const doc = await db.get<InviteDoc>('invites', id);
-  if (!doc) return false;
-  await db.remove('invites', id);
+  const who = (await getInvites()).find((i) => i.id === id);
+  if (!who || who.role === 'saanika') return false;
+  if (who.managed) await db.remove('invites', id);
+  else {
+    const cur = await db.get<Removed>('state', 'removed-friends');
+    await db.put<Removed>('state', { id: 'removed-friends', createdAt: cur?.createdAt ?? new Date().toISOString(), ids: [...new Set([...(cur?.ids ?? []), id])] });
+  }
   cache = null;
+  removedCache = null;
   return true;
 }

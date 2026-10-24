@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
-import { listDiary, listSlotMedia } from '@/lib/extras';
+import { listDiary, listJourneyExtras, listSlotMedia, type JourneyExtra } from '@/lib/extras';
 import { chapters, journeyIntro, journeyMusic, type Item } from '@/content/journey';
 import type { ResolvedChapter, ResolvedItem } from '@/components/journey/types';
 import Journey from '@/components/journey/Journey';
@@ -43,6 +43,20 @@ function resolver(uploaded: Map<string, string>) {
   };
 }
 
+/** Extras added from /admin, as journey items: polaroids (a film strip once there are four or more), films and voice notes. */
+function extraItems(extras: JourneyExtra[]): ResolvedItem[] {
+  const sides = ['right', 'left', 'center'] as const;
+  const url = (id: string) => `/api/media/${id}`;
+  let k = 0;
+  return extras.flatMap((x): ResolvedItem[] => {
+    const side = () => sides[k++ % 3];
+    if (x.kind === 'video') return [{ type: 'video', src: url(x.mediaIds[0]), caption: x.caption, side: 'center', missing: false }];
+    if (x.kind === 'voice') return [{ type: 'voice', src: url(x.mediaIds[0]), title: x.caption || 'a voice note', from: x.from ?? '', side: side(), missing: false }];
+    if (x.mediaIds.length >= 4) return [{ type: 'film', title: x.caption || 'more moments', frames: x.mediaIds.map((m) => ({ src: url(m), caption: '' })) } as ResolvedItem];
+    return x.mediaIds.map((m, i) => ({ type: 'photo', src: url(m), caption: i === 0 ? x.caption : undefined, size: 'm', side: side(), tilt: k % 2 ? 3 : -3, tape: i === 0, missing: false }) as ResolvedItem);
+  });
+}
+
 const fmtDay = (day: string) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 
 export default async function JourneyPage() {
@@ -50,9 +64,16 @@ export default async function JourneyPage() {
   if (!session) redirect('/');
   if (session.role !== 'saanika' && !session.admin) redirect('/wall');
 
-  const [slots, diary] = await Promise.all([listSlotMedia(), session.role === 'saanika' ? listDiary() : Promise.resolve([])]);
+  const [slots, diary, extras] = await Promise.all([listSlotMedia(), session.role === 'saanika' ? listDiary() : Promise.resolve([]), listJourneyExtras()]);
   const resolve = resolver(new Map(slots.map((x) => [x.slot, x.mediaId])));
-  const resolved: ResolvedChapter[] = chapters.map((c) => ({ ...c, items: c.items.map(resolve) }));
+  const resolved: ResolvedChapter[] = chapters.map((c) => {
+    const more = extraItems(extras.filter((x) => x.chapter === c.id));
+    if (!more.length) return { ...c, items: c.items.map(resolve) };
+    // extras go before the chapter's closing ticket and postcard, so those stay the last thing in it
+    const items = c.items.map(resolve);
+    const tail = items.findIndex((it) => it.type === 'ticket' || it.type === 'postcard');
+    return { ...c, items: tail < 0 ? [...items, ...more] : [...items.slice(0, tail), ...more, ...items.slice(tail)] };
+  });
 
   // Chapter six: her own days in Milano, from "My chapter"
   if (diary.length) {

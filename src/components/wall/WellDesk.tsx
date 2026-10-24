@@ -9,6 +9,7 @@ import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
 import NotifyToggle from '@/components/home/NotifyToggle';
 import AtelierMark from '@/components/home/AtelierMark';
 import CallPlanner from '@/components/home/CallPlanner';
+import { NudgeSend } from '@/components/home/Nudges';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -83,6 +84,8 @@ export default function WellDesk({
         </p>
         <p className="whisper w-desk-sub">psst, it’s a surprise. Leave her something to find.</p>
       </header>
+
+      <NudgeSend />
 
       <section className="today call-card" aria-label="Good time to call Saanika">
         <CallPlanner firstName={first} />

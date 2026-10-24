@@ -7,6 +7,7 @@ import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
+import { NudgeInbox } from './Nudges';
 import AtelierMark from './AtelierMark';
 import Corners, { type CornerCounts } from './Corners';
 import OccasionBanner from './OccasionBanner';
@@ -138,6 +139,7 @@ export default function Dashboard({
       </header>
 
       {occasion && <OccasionBanner occasion={occasion} />}
+      <NudgeInbox />
       <TodayCard />
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">

@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Occasion, Page, RevealNote } from '@/lib/extras';
+import type { JourneyExtra, Occasion, Page, RevealNote } from '@/lib/extras';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 
 type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string };
+type ChapterRef = { id: string; title: string };
 type Slot = { slot: string; kind: 'photo' | 'video' | 'voice' | 'music'; label: string; chapter: string; mediaId: string | null };
 type Activity = {
   lastSeen: string | null;
@@ -50,7 +51,7 @@ const START: { id: Section; icon: string; title: string; sub: string }[] = [
   { id: 'note', icon: '✉️', title: 'Edit the reveal note', sub: 'the card at the end of the gift' },
 ];
 
-export default function Admin(props: { friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity; keepsakes: Keepsake[] }) {
+export default function Admin(props: { me: string; journeyChapters: ChapterRef[]; extras: JourneyExtra[]; friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity; keepsakes: Keepsake[] }) {
   const [section, setSection] = useState<Section>('activity');
   const open = (id: Section) => {
     setSection(id);
@@ -79,10 +80,10 @@ export default function Admin(props: { friends: Friend[]; occasions: Occasion[];
         ))}
       </div>
       {section === 'activity' && <ActivityView a={props.activity} />}
-      {section === 'friends' && <Friends initial={props.friends} />}
+      {section === 'friends' && <Friends initial={props.friends} me={props.me} />}
       {section === 'occasions' && <Occasions initial={props.occasions} />}
       {section === 'pages' && <Pages initial={props.pages} />}
-      {section === 'journey' && <Journey initial={props.slots} />}
+      {section === 'journey' && <Journey initial={props.slots} chapterRefs={props.journeyChapters} extras={props.extras} />}
       {section === 'keepsakes' && <Keepsakes initial={props.keepsakes} />}
       {section === 'note' && <NoteEditor initial={props.note} />}
     </>
@@ -128,10 +129,11 @@ function useErr() {
   return { err, run };
 }
 
-function Friends({ initial }: { initial: Friend[] }) {
+function Friends({ initial, me }: { initial: Friend[]; me: string }) {
   const [list, setList] = useState(initial);
   const [name, setName] = useState('');
   const [copied, setCopied] = useState('');
+  const [done, setDone] = useState('');
   const { err, run } = useErr();
 
   const copy = async (f: Friend) => {
@@ -163,6 +165,7 @@ function Friends({ initial }: { initial: Friend[] }) {
         </button>
       </form>
       {err && <p className="h-err">{err}</p>}
+      {done && <p className="atl-note">{done}</p>}
       <ul className="atl-list">
         {list.map((f) => (
           <li key={f.id}>
@@ -171,20 +174,23 @@ function Friends({ initial }: { initial: Friend[] }) {
               <small>
                 {f.role === 'saanika' ? 'Saanika' : 'friend'}
                 {f.admin ? ' · admin' : ''}
-                {f.managed ? ' · added here' : ' · in Vercel settings'}
+                {f.managed ? ' · added here' : ''}{f.id === me ? ' · you' : ''}
               </small>
             </span>
             <button className="pc-btn" onClick={() => copy(f)}>
               {copied === f.id ? 'Copied ✓' : 'Copy link'}
             </button>
-            {f.managed && (
+            {f.role !== 'saanika' && f.id !== me && (
               <button
                 className="pc-btn atl-danger"
                 onClick={() =>
-                  confirm(`Remove ${f.name}? Their link stops working straight away.`) &&
+                  confirm(
+                    `Remove ${f.name}?\n\nTheir link stops working straight away, and everything they’ve shared (messages, photos, videos, voice notes, letters, jar notes, songs, tips, nudges, scrapbook pieces) is deleted for good.`,
+                  ) &&
                   run(async () => {
-                    await api(`/api/admin/friends/${f.id}`, 'DELETE');
+                    const r = await api<{ removed: number }>(`/api/admin/friends/${f.id}`, 'DELETE');
                     setList((l) => l.filter((x) => x.id !== f.id));
+                    setDone(`${f.name} is removed${r.removed ? `, along with ${r.removed} ${r.removed === 1 ? 'thing' : 'things'} they’d shared` : ''}.`);
                   })
                 }
               >
@@ -329,12 +335,14 @@ function Pages({ initial }: { initial: Page[] }) {
   );
 }
 
-function Journey({ initial }: { initial: Slot[] }) {
+function Journey({ initial, chapterRefs, extras: initialExtras }: { initial: Slot[]; chapterRefs: ChapterRef[]; extras: JourneyExtra[] }) {
   const [slots, setSlots] = useState(initial);
+  const [extras, setExtras] = useState(initialExtras);
   const [busy, setBusy] = useState<string | null>(null);
   const [pct, setPct] = useState(0);
   const { err, run } = useErr();
-  const chapters = [...new Set(slots.map((s) => s.chapter))];
+  // every chapter (even one with no fixed slots, so extras can go anywhere), then the music
+  const chapters = [...new Set([...chapterRefs.map((r) => r.title), ...slots.map((s) => s.chapter)])];
   const accept = (k: Slot['kind']) => (k === 'photo' ? 'image/*' : k === 'video' ? 'video/*' : 'audio/*');
 
   const upload = (slot: Slot, file: File) =>
@@ -357,7 +365,10 @@ function Journey({ initial }: { initial: Slot[] }) {
 
   return (
     <section className="atl-sec">
-      <p className="atl-note">Upload her real photos, the studio video, voice notes and the music. Each one replaces its placeholder in the journey straight away.</p>
+      <p className="atl-note">
+        Upload her real photos, the studio video, voice notes and the music. Each one replaces its placeholder in the journey straight away. Under each chapter you can also add as many
+        more photos, videos and voice notes as you like.
+      </p>
       {err && <p className="h-err">{err}</p>}
       {chapters.map((c) => (
         <div key={c} className="atl-chapter">
@@ -396,9 +407,97 @@ function Journey({ initial }: { initial: Slot[] }) {
                 </div>
               ))}
           </div>
+          {chapterRefs.find((r) => r.title === c) && (
+            <ChapterExtras
+              chapter={chapterRefs.find((r) => r.title === c)!}
+              items={extras.filter((x) => x.chapter === chapterRefs.find((r) => r.title === c)!.id)}
+              onAdd={(x) => setExtras((l) => [...l, x])}
+              onRemove={(id) => setExtras((l) => l.filter((x) => x.id !== id))}
+            />
+          )}
         </div>
       ))}
     </section>
+  );
+}
+
+/** "Add more to this chapter": any number of photos (four or more become a film strip), a video, or a voice note. */
+function ChapterExtras({ chapter, items, onAdd, onRemove }: { chapter: ChapterRef; items: JourneyExtra[]; onAdd: (x: JourneyExtra) => void; onRemove: (id: string) => void }) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [caption, setCaption] = useState('');
+  const [from, setFrom] = useState('');
+  const [busy, setBusy] = useState('');
+  const { err, run } = useErr();
+  const audio = files.length === 1 && files[0].type.startsWith('audio/');
+
+  const add = () =>
+    run(async () => {
+      try {
+        const ids: string[] = [];
+        for (const [i, f] of files.entries()) {
+          setBusy(`Uploading ${i + 1} of ${files.length}…`);
+          ids.push(await uploadFile(f, (p) => setBusy(`Uploading ${i + 1} of ${files.length} · ${p}%`)));
+        }
+        setBusy('Adding to the journey…');
+        onAdd(await api<JourneyExtra>('/api/admin/journey/extras', 'POST', { chapter: chapter.id, mediaIds: ids, caption, from }));
+        setFiles([]);
+        setCaption('');
+        setFrom('');
+      } finally {
+        setBusy('');
+      }
+    });
+
+  return (
+    <div className="atl-extras">
+      <b className="atl-extras-title">More in “{chapter.title}”</b>
+      {items.length > 0 && (
+        <ul className="atl-extra-list">
+          {items.map((x) => (
+            <li key={x.id}>
+              <span className="atl-extra-thumb">
+                {x.kind === 'photo' ? <img src={mediaUrl(x.mediaIds[0])} alt="" /> : <span aria-hidden="true">{x.kind === 'video' ? '🎬' : '🎙️'}</span>}
+              </span>
+              <span className="atl-main">
+                <b>{x.caption || (x.kind === 'photo' ? 'photos' : x.kind === 'video' ? 'a video' : 'a voice note')}</b>
+                <small>
+                  {x.kind === 'photo' ? `${x.mediaIds.length} ${x.mediaIds.length === 1 ? 'photo' : 'photos'}${x.mediaIds.length >= 4 ? ' · film strip' : ''}` : x.kind}
+                  {x.from ? ` · from ${x.from}` : ''}
+                </small>
+              </span>
+              <button
+                className="pc-btn atl-danger"
+                onClick={() =>
+                  confirm('Take this out of the journey?') &&
+                  run(async () => {
+                    await api(`/api/admin/journey/extras/${x.id}`, 'DELETE');
+                    onRemove(x.id);
+                  })
+                }
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="atl-extra-add">
+        <label className="pc-btn atl-upload">
+          {files.length ? `${files.length} ${files.length === 1 ? 'file' : 'files'} chosen` : '+ Choose photos, a video or a voice note'}
+          <input type="file" multiple accept="image/*,video/*,audio/*" hidden disabled={Boolean(busy)} onChange={(e) => (setFiles([...(e.target.files ?? [])]), (e.target.value = ''))} />
+        </label>
+        {files.length > 0 && (
+          <>
+            <input className="h-input" value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={120} placeholder={audio ? 'Title, e.g. “Good luck, beta”' : 'Caption (optional)'} aria-label="Caption" />
+            {audio && <input className="h-input" value={from} onChange={(e) => setFrom(e.target.value)} maxLength={40} placeholder="From (e.g. Mum & Dad)" aria-label="From" />}
+            <button className="cta h-small-btn" disabled={Boolean(busy)} onClick={add}>
+              {busy || 'Add to the journey'}
+            </button>
+          </>
+        )}
+      </div>
+      {err && <p className="h-err">{err}</p>}
+    </div>
   );
 }
 

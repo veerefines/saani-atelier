@@ -1,4 +1,5 @@
 import * as db from './db';
+import type { Nudge } from '@/content/nudges';
 import type { Session } from './session';
 
 /**
@@ -55,6 +56,10 @@ export type Song = {
   provider: 'spotify' | 'youtube' | 'apple';
   embed: string;
   note: string;
+  /** the song's name and cover art, looked up once from Spotify / YouTube / Apple Music */
+  title?: string;
+  cover?: string;
+  artChecked?: boolean;
 };
 
 /** Turn a share link into an embeddable player, or null if it isn't one we support. */
@@ -80,11 +85,43 @@ export function songEmbed(raw: string): { provider: Song['provider']; embed: str
   return null;
 }
 
-export const listSongs = () => db.list<Song>('songs');
+/** Song name and cover art from each service's public oEmbed (no key needed), or the Apple Music page's preview tags. */
+async function songArt(e: { provider: Song['provider']; url: string; embed: string }): Promise<{ title?: string; cover?: string }> {
+  const get = (u: string) => fetch(u, { signal: AbortSignal.timeout(4000), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SaanisAtelier/1.0)' } });
+  try {
+    if (e.provider === 'spotify' || e.provider === 'youtube') {
+      const api = e.provider === 'spotify' ? `https://open.spotify.com/oembed?url=${encodeURIComponent(e.url)}` : `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(e.url)}`;
+      const r = await get(api);
+      const id = e.embed.split('/').pop();
+      const fallback = e.provider === 'youtube' && id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : undefined;
+      if (!r.ok) return { cover: fallback };
+      const j = (await r.json()) as { title?: string; thumbnail_url?: string };
+      return { title: j.title?.slice(0, 120), cover: j.thumbnail_url ?? fallback };
+    }
+    const html = await (await get(e.url)).text();
+    const meta = (p: string) => html.match(new RegExp(`<meta[^>]+property=["']og:${p}["'][^>]+content=["']([^"']+)`))?.[1];
+    return { title: meta('title')?.replace(/ (on|-) Apple Music$/, '').slice(0, 120), cover: meta('image') };
+  } catch {
+    return {};
+  }
+}
+
+/** Songs, filling in any cover art not looked up yet (older dedications) and saving it. */
+export async function listSongs() {
+  const songs = await db.list<Song>('songs');
+  return Promise.all(
+    songs.map(async (x) => {
+      if (x.artChecked) return x;
+      const next = { ...x, ...(await songArt(x)), artChecked: true };
+      await db.put<Song>('songs', next).catch(() => {});
+      return next;
+    }),
+  );
+}
 export async function addSong(s: Session, link: string, note: string) {
   const e = songEmbed(link);
   if (!e) return null;
-  return db.put<Song>('songs', { id: db.newId('s_'), createdAt: now(), authorId: s.id, authorName: s.name, ...e, note: note.slice(0, 280) });
+  return db.put<Song>('songs', { id: db.newId('s_'), createdAt: now(), authorId: s.id, authorName: s.name, ...e, note: note.slice(0, 280), ...(await songArt(e)), artChecked: true });
 }
 export async function deleteSong(s: Session, id: string) {
   const x = await db.get<Song>('songs', id);
@@ -212,6 +249,25 @@ export const listSlotMedia = () => db.list<SlotMedia>('journeyMedia');
 export const setSlotMedia = (slot: string, mediaId: string, mime: string) => db.put<SlotMedia>('journeyMedia', { id: slotId(slot), createdAt: now(), slot, mediaId, mime });
 export const clearSlotMedia = (slot: string) => db.remove('journeyMedia', slotId(slot));
 
+/**
+ * Extra photos, videos and voice notes added to a journey chapter from /admin, beyond the fixed
+ * slots. A few photos show as polaroids; four or more become a film strip.
+ */
+export type JourneyExtra = {
+  id: string;
+  createdAt: string;
+  chapter: string;
+  kind: 'photo' | 'video' | 'voice';
+  mediaIds: string[];
+  caption?: string;
+  /** who a voice note is from */
+  from?: string;
+};
+export const listJourneyExtras = async () => (await db.list<JourneyExtra>('journeyExtras')).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+export const addJourneyExtra = (x: Omit<JourneyExtra, 'id' | 'createdAt'>) => db.put<JourneyExtra>('journeyExtras', { id: db.newId('jx_'), createdAt: now(), ...x });
+export const getJourneyExtra = (id: string) => db.get<JourneyExtra>('journeyExtras', id);
+export const removeJourneyExtra = (id: string) => db.remove('journeyExtras', id);
+
 /** Keepsake images (sunglasses, peonies…) uploaded from /admin, by name; they win over public/her/<name>.png. */
 export type KeepsakeMedia = { id: string; createdAt: string; name: string; mediaId: string };
 export const listKeepsakeMedia = () => db.list<KeepsakeMedia>('keepsakeMedia');
@@ -231,3 +287,22 @@ export const getPresence = () => db.get<Presence>('state', 'presence');
 export type DailyState = { id: 'daily'; createdAt: string; lastRun: string };
 export const getDaily = () => db.get<DailyState>('state', 'daily');
 export const setDaily = (lastRun: string) => db.put<DailyState>('state', { id: 'daily', createdAt: now(), lastRun });
+
+/* ---------- nudges: "thinking of you" from a friend, with her reaction and reply ---------- */
+
+export { NUDGE_EMOJI, REACT_EMOJI, type Nudge } from '@/content/nudges';
+
+export async function listNudges() {
+  return (await db.list<Nudge>('nudges')).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+export async function addNudge(s: Session, emoji: string, text: string) {
+  return db.put<Nudge>('nudges', { id: db.newId('n_'), createdAt: now(), authorId: s.id, authorName: s.name, emoji, ...(text ? { text: text.slice(0, 80) } : {}) });
+}
+export async function answerNudge(id: string, a: { reaction?: string; reply?: string }) {
+  return db.update<Nudge>('nudges', id, (n) => ({
+    ...n,
+    ...(a.reaction ? { reaction: a.reaction } : {}),
+    ...(a.reply ? { reply: a.reply.slice(0, 200) } : {}),
+    answeredAt: now(),
+  }));
+}

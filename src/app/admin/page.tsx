@@ -2,19 +2,22 @@ import { headers } from 'next/headers';
 import PageHead from '@/components/home/Back';
 import Admin from '@/components/admin/Admin';
 import { getInvites } from '@/lib/invites';
+import { getSession } from '@/lib/auth';
 import { getBingo, listJar, listLetters, listPosts } from '@/lib/data';
-import { getChecklist, getContent, getPresence, listKeepsakeMedia, listOccasions, listPages, listSlotMedia, listStamps } from '@/lib/extras';
+import { getChecklist, getContent, getPresence, listJourneyExtras, listKeepsakeMedia, listOccasions, listPages, listSlotMedia, listStamps } from '@/lib/extras';
 import { keepsakeFiles } from '@/content/keepsakes';
 import { journeySlots } from '@/lib/journey-slots';
 import { site } from '@/content/site';
 import { bingo } from '@/content/home';
 import { checklist } from '@/content/checklist';
 import { places } from '@/content/milano';
+import { chapters } from '@/content/journey';
 
 export default async function AdminPage() {
   const h = await headers();
+  const me = (await getSession())?.id ?? '';
   const origin = `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}`;
-  const [invites, occasions, pages, slotMedia, content, letters, jar, posts, board, stamps, check, presence, keepsakeMedia] = await Promise.all([
+  const [invites, occasions, pages, slotMedia, content, letters, jar, posts, board, stamps, check, presence, keepsakeMedia, extras] = await Promise.all([
     getInvites(),
     listOccasions(),
     listPages(),
@@ -28,6 +31,7 @@ export default async function AdminPage() {
     getChecklist(),
     getPresence(),
     listKeepsakeMedia(),
+    listJourneyExtras(),
   ]);
   const now = Date.now();
   const fromPeople = (a: { authorId: string }) => a.authorId !== 'seed';
@@ -35,6 +39,9 @@ export default async function AdminPage() {
     <main className="h-page h-page-wide">
       <PageHead back="/wall" kicker="behind the scenes" title="Atelier admin" sub="Friends, special days, scrapbook pages, the journey and the reveal note, and how she’s getting on." />
       <Admin
+        me={me}
+        journeyChapters={chapters.map((c) => ({ id: c.id, title: c.title }))}
+        extras={extras}
         friends={invites.map((i) => ({ id: i.id, name: i.name, role: i.role, admin: Boolean(i.admin), managed: Boolean(i.managed), link: `${origin}/hello/${i.code}` }))}
         occasions={occasions}
         pages={pages}

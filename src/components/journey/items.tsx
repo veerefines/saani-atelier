@@ -132,7 +132,7 @@ export function Voice({ item }: { item: Of<'voice'> }) {
       <div className={`cassette${playing ? ' playing' : ''}`}>
         <div className="cassette-label">
           <span className="hand">{item.title}</span>
-          <small className="whisper">from {item.from}</small>
+          {item.from && <small className="whisper">from {item.from}</small>}
         </div>
         <div className="cassette-window">
           <span className="reel" />
@@ -152,7 +152,7 @@ export function Voice({ item }: { item: Of<'voice'> }) {
           className="voice-play"
           onClick={toggle}
           disabled={item.missing}
-          aria-label={playing ? `Pause voice note from ${item.from}` : `Play voice note from ${item.from}`}
+          aria-label={`${playing ? 'Pause' : 'Play'} voice note${item.from ? ` from ${item.from}` : ''}`}
         >
           {playing ? (
             <svg viewBox="0 0 24 24" aria-hidden="true">
