@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { keepsakeSets, type Spot } from '@/content/keepsakes';
+import { listKeepsakeMedia } from '@/lib/extras';
 
 const DIR = path.join(process.cwd(), 'public', 'her');
 const exists = (name: string) => fs.existsSync(path.join(DIR, `${name}.png`));
@@ -24,17 +25,22 @@ function vars(s: Spot, i: number): React.CSSProperties {
   return v as React.CSSProperties;
 }
 
-/** Little things she loves, tucked around a section. Server-side so missing files never render. */
-export default function Keepsakes({ set }: { set: keyof typeof keepsakeSets }) {
+/**
+ * Little things she loves, tucked around a section. Server-side so missing images never render.
+ * An image uploaded from /admin wins; otherwise public/her/<name>.png if it exists.
+ */
+export default async function Keepsakes({ set }: { set: keyof typeof keepsakeSets }) {
   const dev = process.env.NODE_ENV !== 'production';
-  const spots = keepsakeSets[set].map((s, i) => ({ s, i, ok: exists(s.name) })).filter((x) => x.ok || dev);
+  const uploaded = new Map((await listKeepsakeMedia().catch(() => [])).map((k) => [k.name, k.mediaId]));
+  const srcFor = (name: string) => (uploaded.has(name) ? `/api/media/${uploaded.get(name)}` : exists(name) ? `/her/${name}.png` : null);
+  const spots = keepsakeSets[set].map((s, i) => ({ s, i, src: srcFor(s.name) })).filter((x) => x.src || dev);
   if (!spots.length) return null;
   return (
     <div className="ks-layer" aria-hidden="true">
-      {spots.map(({ s, i, ok }) => {
+      {spots.map(({ s, i, src }) => {
         const cls = `ks${s.left !== undefined ? ' ks-l' : ' ks-r'}${s.phone ? (s.phone.left !== undefined ? ' ks-pl' : ' ks-pr') : ' ks-wide'}`;
-        return ok ? (
-          <img key={`${s.name}${i}`} src={`/her/${s.name}.png`} alt="" className={cls} style={vars(s, i)} loading="lazy" decoding="async" />
+        return src ? (
+          <img key={`${s.name}${i}`} src={src} alt="" className={cls} style={vars(s, i)} loading="lazy" decoding="async" />
         ) : (
           <span key={`${s.name}${i}`} className={`${cls} ks-empty`} style={vars(s, i)}>
             her/{s.name}.png

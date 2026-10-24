@@ -3240,3 +3240,62 @@ a.pc-rating:hover {
     filter: none;
   }
 }
+
+/* admin: the big "what would you like to do?" buttons */
+.ad-start {
+  margin: 0 0 18px;
+}
+.ad-start > h2 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  text-align: center;
+  color: var(--berry);
+}
+.ad-start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.ad-start-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 96px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1.5px solid rgba(178, 48, 95, 0.18);
+  background: linear-gradient(160deg, #fde3ea, #fffaf6 80%);
+  box-shadow: 0 12px 22px -18px rgba(107, 30, 58, 0.55);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.ad-start-btn:hover {
+  transform: translateY(-2px);
+}
+.ad-start-btn.on {
+  border-color: var(--berry);
+}
+.ad-start-btn span {
+  font-size: 24px;
+}
+.ad-start-btn b {
+  font: 600 15px var(--font-body);
+  color: var(--burgundy);
+}
+.ad-start-btn small {
+  font-size: 12.5px;
+  color: #6b5160;
+}
+.ad-checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #f1e6ea 25%, transparent 25%, transparent 75%, #f1e6ea 75%),
+    linear-gradient(45deg, #f1e6ea 25%, transparent 25%, transparent 75%, #f1e6ea 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+.ad-checker img {
+  object-fit: contain !important;
+}

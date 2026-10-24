@@ -6,10 +6,11 @@ const MAX_SIDE = 2560;
 
 /**
  * Phone photos are often 5–15 MB; shrink them to at most 2560px on the long side as JPEG.
- * Anything the browser can't decode (or a GIF) goes up untouched.
+ * PNG/WebP/GIF (which may be transparent) and anything the browser can't decode go up untouched.
  */
 export async function shrinkImage(file: Blob): Promise<Blob> {
-  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  // PNG, WebP and GIF may have transparency (keepsakes, stickers) that a JPEG would lose
+  if (!file.type.startsWith('image/') || ['image/gif', 'image/png', 'image/webp'].includes(file.type)) return file;
   try {
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' } as ImageBitmapOptions);
     const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));

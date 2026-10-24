@@ -199,6 +199,12 @@ export const listSlotMedia = () => db.list<SlotMedia>('journeyMedia');
 export const setSlotMedia = (slot: string, mediaId: string, mime: string) => db.put<SlotMedia>('journeyMedia', { id: slotId(slot), createdAt: now(), slot, mediaId, mime });
 export const clearSlotMedia = (slot: string) => db.remove('journeyMedia', slotId(slot));
 
+/** Keepsake images (sunglasses, peonies…) uploaded from /admin, by name; they win over public/her/<name>.png. */
+export type KeepsakeMedia = { id: string; createdAt: string; name: string; mediaId: string };
+export const listKeepsakeMedia = () => db.list<KeepsakeMedia>('keepsakeMedia');
+export const setKeepsakeMedia = (name: string, mediaId: string) => db.put<KeepsakeMedia>('keepsakeMedia', { id: `ks_${name}`, createdAt: now(), name, mediaId });
+export const clearKeepsakeMedia = (name: string) => db.remove('keepsakeMedia', `ks_${name}`);
+
 /* ---------- presence and the daily job ---------- */
 
 export type Presence = { id: 'presence'; createdAt: string; lastSeen: string };

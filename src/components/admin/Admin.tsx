@@ -17,13 +17,15 @@ type Activity = {
   fromPeople: number;
 };
 
-type Section = 'activity' | 'friends' | 'occasions' | 'pages' | 'journey' | 'note';
+type Section = 'activity' | 'friends' | 'occasions' | 'pages' | 'journey' | 'keepsakes' | 'note';
+type Keepsake = { name: string; what: string; mediaId: string | null };
 const SECTIONS: [Section, string][] = [
   ['activity', '💗 How she’s doing'],
   ['friends', '👯 Friends'],
   ['occasions', '🗓️ Special days'],
   ['pages', '📒 Scrapbook pages'],
   ['journey', '🎞️ Journey media'],
+  ['keepsakes', '🌸 Keepsake images'],
   ['note', '✉️ Reveal note'],
 ];
 
@@ -38,11 +40,38 @@ const ago = (iso: string | null) => {
 };
 const fmtDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-export default function Admin(props: { friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity }) {
+/** The big buttons at the top: what Vee most often comes here to do. */
+const START: { id: Section; icon: string; title: string; sub: string }[] = [
+  { id: 'journey', icon: '🎞️', title: 'Upload journey photos, video & music', sub: 'replace the placeholders in her story' },
+  { id: 'keepsakes', icon: '🌸', title: 'Upload keepsake PNGs', sub: 'sunglasses, iced coffee, peonies…' },
+  { id: 'friends', icon: '👯', title: 'Add or remove a friend', sub: 'and copy their sign-in links' },
+  { id: 'occasions', icon: '🗓️', title: 'Add her birthday & special days', sub: 'friends get reminded before' },
+  { id: 'pages', icon: '📒', title: 'Start a scrapbook page', sub: 'everyone adds to it' },
+  { id: 'note', icon: '✉️', title: 'Edit the reveal note', sub: 'the card at the end of the gift' },
+];
+
+export default function Admin(props: { friends: Friend[]; occasions: Occasion[]; pages: Page[]; slots: Slot[]; note: RevealNote; activity: Activity; keepsakes: Keepsake[] }) {
   const [section, setSection] = useState<Section>('activity');
+  const open = (id: Section) => {
+    setSection(id);
+    requestAnimationFrame(() => document.getElementById('ad-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
   return (
     <>
-      <div className="w-tabs ad-tabs" role="tablist" aria-label="Admin sections">
+      <section className="ad-start" aria-label="What would you like to do?">
+        <h2 className="hand">what would you like to do?</h2>
+        <div className="ad-start-grid">
+          {START.map((x) => (
+            <button key={x.id} className={`ad-start-btn${section === x.id ? ' on' : ''}`} onClick={() => open(x.id)}>
+              <span aria-hidden="true">{x.icon}</span>
+              <b>{x.title}</b>
+              <small>{x.sub}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div id="ad-section" className="w-tabs ad-tabs" role="tablist" aria-label="Admin sections">
         {SECTIONS.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={section === id} className="w-tab" onClick={() => setSection(id)}>
             {label}
@@ -54,6 +83,7 @@ export default function Admin(props: { friends: Friend[]; occasions: Occasion[];
       {section === 'occasions' && <Occasions initial={props.occasions} />}
       {section === 'pages' && <Pages initial={props.pages} />}
       {section === 'journey' && <Journey initial={props.slots} />}
+      {section === 'keepsakes' && <Keepsakes initial={props.keepsakes} />}
       {section === 'note' && <NoteEditor initial={props.note} />}
     </>
   );
@@ -368,6 +398,61 @@ function Journey({ initial }: { initial: Slot[] }) {
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+function Keepsakes({ initial }: { initial: Keepsake[] }) {
+  const [items, setItems] = useState(initial);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [pct, setPct] = useState(0);
+  const { err, run } = useErr();
+
+  const upload = (k: Keepsake, file: File) =>
+    run(async () => {
+      setBusy(k.name);
+      setPct(0);
+      try {
+        const mediaId = await uploadFile(file, setPct);
+        await api('/api/admin/keepsakes', 'POST', { name: k.name, mediaId });
+        setItems((xs) => xs.map((x) => (x.name === k.name ? { ...x, mediaId } : x)));
+      } finally {
+        setBusy(null);
+      }
+    });
+  const remove = (k: Keepsake) =>
+    run(async () => {
+      await api('/api/admin/keepsakes', 'DELETE', { name: k.name });
+      setItems((xs) => xs.map((x) => (x.name === k.name ? { ...x, mediaId: null } : x)));
+    });
+
+  return (
+    <section className="ad-sec">
+      <p className="ad-note">
+        The little things she loves, tucked around her desk, the journey and Milano corner. Transparent PNGs look best (about 800px on the long side). Each one goes live
+        on every page it belongs to as soon as it’s uploaded. {items.filter((k) => k.mediaId).length} of {items.length} uploaded.
+      </p>
+      {err && <p className="h-err">{err}</p>}
+      <div className="ad-slots">
+        {items.map((k) => (
+          <div key={k.name} className={`ad-slot${k.mediaId ? ' has' : ''}`}>
+            <div className="ad-slot-preview ad-checker">{k.mediaId ? <img src={mediaUrl(k.mediaId)} alt="" style={{ objectFit: 'contain' }} /> : <span>🌸 empty</span>}</div>
+            <b>{k.what}</b>
+            <small>{k.name}.png</small>
+            <div className="ad-slot-actions">
+              <label className="pc-btn ad-upload">
+                {busy === k.name ? `Uploading ${pct}%` : k.mediaId ? 'Replace' : 'Upload'}
+                <input type="file" accept="image/png,image/webp,image/gif,image/jpeg" hidden disabled={busy !== null} onChange={(e) => (e.target.files?.[0] && upload(k, e.target.files[0]), (e.target.value = ''))} />
+              </label>
+              {k.mediaId && (
+                <button className="w-link" onClick={() => remove(k)}>
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
