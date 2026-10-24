@@ -24,11 +24,24 @@ const DEFAULT_OCCASIONS: Omit<Occasion, 'id' | 'createdAt'>[] = [
   { date: '2027-08-16', title: 'Raksha Bandhan', emoji: '🧵', remindDays: 5 },
 ];
 
+/** Added after the first set went live, so it's seeded on its own (once). */
+const DEPARTURE: Omit<Occasion, 'id' | 'createdAt'> = {
+  date: '2026-10-27',
+  title: 'Departure day',
+  emoji: '✈️',
+  remindDays: 2,
+  note: 'Buon viaggio! Every one of us is on that plane with you.',
+};
+
 export async function listOccasions(): Promise<Occasion[]> {
   const seeded = await db.get('state', 'occasions-seeded');
   if (!seeded) {
     for (const o of DEFAULT_OCCASIONS) await db.put<Occasion>('occasions', { id: db.newId('o_'), createdAt: now(), ...o });
     await db.put('state', { id: 'occasions-seeded', createdAt: now() });
+  }
+  if (!(await db.get('state', 'departure-seeded'))) {
+    await db.put<Occasion>('occasions', { id: 'o_departure', createdAt: now(), ...DEPARTURE });
+    await db.put('state', { id: 'departure-seeded', createdAt: now() });
   }
   return (await db.list<Occasion>('occasions')).sort((a, b) => (a.date < b.date ? -1 : 1));
 }
@@ -322,3 +335,8 @@ export async function setMood(mood: MoodId, note: string) {
   return db.put<MoodDoc>('state', { id: 'mood', createdAt: cur?.createdAt ?? now(), mood, ...(note ? { note: note.slice(0, 100) } : {}), at: now(), day, ...(cur?.alerted === day ? { alerted: day } : {}) });
 }
 export const markMoodAlerted = (day: string) => db.update<MoodDoc>('state', 'mood', (m) => ({ ...m, alerted: day }));
+
+/** Her "thinking of you all", sent back to everyone at once. */
+export type HerNudge = { id: 'her-nudge'; createdAt: string; emoji: string; at: string };
+export const getHerNudge = () => db.get<HerNudge>('state', 'her-nudge');
+export const setHerNudge = (emoji: string) => db.put<HerNudge>('state', { id: 'her-nudge', createdAt: now(), emoji, at: now() });

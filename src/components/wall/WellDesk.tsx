@@ -53,6 +53,7 @@ export default function WellDesk({
   milano,
   decor,
   admin = false,
+  soon = null,
 }: {
   name: string;
   counts: Counts;
@@ -61,6 +62,8 @@ export default function WellDesk({
   milano: MilanoInfo;
   decor?: React.ReactNode;
   admin?: boolean;
+  /** her next special day, when it's close */
+  soon?: { title: string; emoji: string; days: number } | null;
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -83,6 +86,22 @@ export default function WellDesk({
         <p className="whisper w-desk-sub">psst, it’s a surprise. Leave her something to find.</p>
       </header>
 
+      {soon && (
+        <Link href="/wall/letters" className="w-soon">
+          <span aria-hidden="true">{soon.emoji}</span>
+          <span>
+            {soon.days === 0 ? (
+              <>
+                It’s <b>{soon.title}</b> for Saanika today. Send her something.
+              </>
+            ) : (
+              <>
+                <b>{soon.title}</b> is {soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}. Seal her a letter for the day →
+              </>
+            )}
+          </span>
+        </Link>
+      )}
       <MoodStatus />
       <NudgeSend />
 

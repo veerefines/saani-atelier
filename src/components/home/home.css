@@ -4364,3 +4364,45 @@ a.pc-rating:hover {
 .memory-body video {
   max-width: 100%;
 }
+
+/* friend's desk: her special day is close */
+.w-soon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #fff1c7, #fde3ea);
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 10px 20px -16px rgba(107, 30, 58, 0.6);
+}
+.w-soon > span:first-child {
+  font-size: 24px;
+}
+.w-soon b {
+  color: var(--burgundy);
+}
+
+/* her "thinking of my people" */
+.love-back-row {
+  display: flex;
+  justify-content: center;
+  margin: -8px 0 20px;
+}
+.love-back {
+  padding: 7px 16px;
+  border: 1.5px solid rgba(178, 48, 95, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.85);
+  color: var(--burgundy);
+  font: 600 13px var(--font-body);
+  cursor: pointer;
+}
+.love-back:disabled {
+  opacity: 0.85;
+  cursor: default;
+}

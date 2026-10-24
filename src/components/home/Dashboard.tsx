@@ -8,7 +8,7 @@ import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
 import WorldClocks from './WorldClocks';
-import { NudgeInbox } from './Nudges';
+import { LoveBack, NudgeInbox } from './Nudges';
 import { MoodPicker } from './Mood';
 import Memory from './Memory';
 import AtelierMark from './AtelierMark';
@@ -139,6 +139,9 @@ export default function Dashboard({
 
       {occasion && <OccasionBanner occasion={occasion} />}
       <MoodPicker />
+      <div className="love-back-row">
+        <LoveBack />
+      </div>
       <NudgeInbox />
       <TodayCard />
 

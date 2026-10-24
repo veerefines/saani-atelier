@@ -51,6 +51,8 @@ export async function runDaily(at = new Date()) {
     if (o) {
       out.occasion = o.title;
       await notifySaanika({ title: `${o.emoji} ${o.title}`, body: o.note || 'Your people left you something for today.', url: '/home' });
+      // and her people, so the day doesn't slip by
+      await notifyFriends({ title: `${o.emoji} It’s ${o.title} for Saanika today`, body: 'A nudge, a voice note or a photo would make her day.', url: '/wall' });
     }
 
     // nudge friends a few days before

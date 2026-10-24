@@ -4,7 +4,7 @@
  *   so the guide, letters and wall still open in the metro.
  */
 
-const VERSION = 'atelier-v2';
+const VERSION = 'atelier-v3';
 const STATIC = `${VERSION}-static`;
 const PAGES = `${VERSION}-pages`;
 const MEDIA = `${VERSION}-media`;
@@ -112,19 +112,30 @@ self.addEventListener('push', (event) => {
   }
   const title = data.title || 'Saani’s Atelier';
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: data.body || 'Something new is waiting for you.',
-      icon: data.icon || '/icons/icon-192.png',
-      badge: data.badge || '/icons/favicon-48.png',
-      data: { url: data.url || '/home' },
-      tag: data.url || 'atelier',
-      renotify: true,
-    }),
+    self.registration
+      .showNotification(title, {
+        body: data.body || 'Something new is waiting for you.',
+        icon: data.icon || '/icons/icon-192.png',
+        badge: data.badge || '/icons/favicon-48.png',
+        data: { url: data.url || '/home' },
+        // each one stays (two friends' nudges shouldn't replace each other) unless the server groups them
+        tag: data.tag || `atelier-${Date.now()}`,
+        renotify: true,
+      })
+      .then(updateBadge),
   );
 });
 
+/** The home-screen icon shows how many notifications are waiting (where the device supports it). */
+function updateBadge() {
+  if (!self.navigator.setAppBadge) return;
+  return self.registration.getNotifications().then((n) => (n.length ? self.navigator.setAppBadge(n.length) : self.navigator.clearAppBadge())).catch(() => {});
+}
+self.addEventListener('notificationclose', (event) => event.waitUntil(updateBadge()));
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  updateBadge();
   const url = new URL((event.notification.data && event.notification.data.url) || '/home', self.location.origin).href;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {

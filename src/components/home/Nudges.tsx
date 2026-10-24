@@ -65,6 +65,13 @@ export function NudgeSend() {
   }
 
   const answered = list?.find((n) => n.reaction || n.reply);
+  const [hers, setHers] = useState<{ emoji: string; at: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/nudges/back')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((h) => h && Date.now() - new Date(h.at).getTime() < 3 * 86_400_000 && setHers(h))
+      .catch(() => {});
+  }, []);
 
   return (
     <section className="nudge-mini" id="nudges" aria-label="Thinking of her">
@@ -116,6 +123,11 @@ export function NudgeSend() {
         </div>
       )}
       {err && <p className="h-err">{err}</p>}
+      {hers && (
+        <p className="nm-back">
+          <span className="hand">Saanika</span> is thinking of you all {hers.emoji} <small>· {ago(hers.at)}</small>
+        </p>
+      )}
       {answered && (
         <p className="nm-back">
           <span className="hand">Saanika</span> {answered.reaction} {answered.reply && `“${answered.reply}”`}
@@ -168,6 +180,27 @@ function Answer({ n, onDone }: { n: Nudge; onDone: (n: Nudge) => void }) {
       </form>
       {err && <p className="h-err">{err}</p>}
     </>
+  );
+}
+
+/** On her desk: one tap sends all her people a "thinking of you all". */
+export function LoveBack() {
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState('');
+  const send = async () => {
+    setBusy(true);
+    try {
+      await api('/api/nudges/back', 'POST', { emoji: '💗' });
+      setDone('Sent to everyone 💗');
+    } catch (e) {
+      setDone((e as Error).message);
+    }
+    setBusy(false);
+  };
+  return (
+    <button type="button" className="love-back" onClick={send} disabled={busy || Boolean(done)}>
+      {done || 'Thinking of my people 💗'}
+    </button>
   );
 }
 
