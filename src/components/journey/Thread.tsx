@@ -9,41 +9,7 @@ const LIGHT_DEG = -32;
 /** the needle's own little layer: room for the needle and its sparkle at any angle */
 const BOX = 300;
 
-/** `hug`: a point beside a block of text; the thread runs straight between two of them, so it skirts the words */
-type Pt = { x: number; y: number; hug?: boolean };
-
-/** Top-left of an element within the root, plus its size. */
-function boxIn(el: HTMLElement, root: HTMLElement) {
-  let x = 0;
-  let y = 0;
-  let n: HTMLElement | null = el;
-  while (n && n !== root) {
-    x += n.offsetLeft;
-    y += n.offsetTop;
-    n = n.offsetParent as HTMLElement | null;
-  }
-  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
-}
-
-/**
- * Chapter titles and quotes sit in the middle of the page; the thread goes down one side of each
- * (alternating) instead of straight through the words, and the needle follows it there.
- */
-function skirts(root: HTMLElement, w: number): Pt[] {
-  const blocks = Array.from(root.querySelectorAll<HTMLElement>('.j-chapter-head, .j-quote'));
-  return blocks.flatMap((el, i) => {
-    const b = boxIn(el, root);
-    // the words themselves can be narrower than their box; measure the widest line
-    const inner = Array.from(el.children).reduce((m, c) => Math.max(m, (c as HTMLElement).offsetWidth || 0), 0) || b.w;
-    const half = Math.min(b.w, inner) / 2;
-    const mid = b.x + b.w / 2;
-    const x = i % 2 ? Math.min(w - 10, mid + half + 22) : Math.max(10, mid - half - 22);
-    return [
-      { x, y: b.y - 14, hug: true },
-      { x, y: b.y + b.h + 14, hug: true },
-    ];
-  });
-}
+type Pt = { x: number; y: number };
 
 function offsetIn(el: HTMLElement, root: HTMLElement): Pt {
   let x = el.offsetWidth / 2;
@@ -87,11 +53,9 @@ function buildThread(pts: Pt[], width: number): { d: string; segs: Seg[]; sample
     const a = pts[i];
     const b = pts[i + 1];
     const dy = b.y - a.y;
-    // straight down the side of a title or quote; elsewhere a gentle swing, kept on screen
-    const swing = (a.hug && b.hug) || i === 0 ? 0 : (i % 2 ? -1 : 1) * Math.min(width * 0.22, 160);
-    const onScreen = (x: number) => Math.min(width - 8, Math.max(8, x));
-    const c1 = { x: onScreen(a.x + swing), y: a.y + dy * 0.45 };
-    const c2 = { x: onScreen(b.x - swing), y: b.y - dy * 0.45 };
+    const swing = (i % 2 ? -1 : 1) * Math.min(width * 0.22, 160);
+    const c1 = { x: a.x + swing, y: a.y + dy * 0.45 };
+    const c2 = { x: b.x - swing, y: b.y - dy * 0.45 };
     d += ` C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`;
     segs.push([a, c1, c2, b]);
   }
@@ -141,7 +105,7 @@ export default function Thread({ rootRef }: { rootRef: React.RefObject<HTMLDivEl
         const h = root.offsetHeight;
         const pins = Array.from(root.querySelectorAll<HTMLElement>('[data-anchor]'));
         // starts just under "follow the thread" at the bottom of the opening screen
-        const pts: Pt[] = [{ x: w / 2, y: -18 }, ...pins.map((p) => offsetIn(p, root)), ...skirts(root, w)].sort((a, b) => a.y - b.y);
+        const pts = [{ x: w / 2, y: -18 }, ...pins.map((p) => offsetIn(p, root))].sort((a, b) => a.y - b.y);
         pts.push({ x: w / 2, y: h - 40 });
         const built = buildThread(pts, w);
         const key = `${w}x${h} ${built.d}`;
