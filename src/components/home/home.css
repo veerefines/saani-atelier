@@ -4210,7 +4210,7 @@ a.pc-rating:hover {
 }
 .mil-listbtn {
   position: fixed;
-  left: 16px;
+  right: 16px;
   bottom: calc(18px + env(safe-area-inset-bottom));
   z-index: 60;
   display: grid;
