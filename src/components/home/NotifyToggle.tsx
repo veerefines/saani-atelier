@@ -36,8 +36,14 @@ async function explain(e: unknown) {
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
 
-/** "Tell me when something new arrives": web push for her, on this device. */
-export default function NotifyToggle() {
+/** Web push on this device: for her, "something new arrived"; for friends, reminders and her replies. */
+export default function NotifyToggle({
+  offLabel = 'Tell me when something new arrives',
+  onLabel = 'You’ll get a ping when something new arrives',
+}: {
+  offLabel?: string;
+  onLabel?: string;
+} = {}) {
   const [state, setState] = useState<State>('loading');
   const [err, setErr] = useState('');
 
@@ -100,7 +106,7 @@ export default function NotifyToggle() {
     <div className="h-notify">
       {state === 'install' ? (
         <p>
-          🔔 To get a ping when your people send something: tap <b>Share</b> → <b>Add to Home Screen</b>, open the atelier from there, then turn it on here.
+          🔔 To get notifications on iPhone: tap <b>Share</b> → <b>Add to Home Screen</b>, open the atelier from there, then turn them on here.
         </p>
       ) : state === 'denied' ? (
         <p>🔔 Notifications are blocked for this site. Allow them in your browser or phone settings, then come back.</p>
@@ -114,7 +120,7 @@ export default function NotifyToggle() {
           aria-pressed={state === 'on'}
         >
           <span aria-hidden="true">{state === 'on' ? '🔔' : '🔕'}</span>
-          {state === 'busy' ? 'One moment…' : state === 'on' ? 'You’ll get a ping when something new arrives' : 'Tell me when something new arrives'}
+          {state === 'busy' ? 'One moment…' : state === 'on' ? onLabel : offLabel}
         </button>
       )}
       {err && <p className="h-err">{err}</p>}

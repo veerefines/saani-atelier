@@ -6,6 +6,7 @@ import type { Post } from '@/lib/data';
 import { reactions } from '@/content/home';
 import { api, mediaUrl } from '@/lib/upload-client';
 import { Voice } from '@/components/journey/items';
+import ReplyBox from './ReplyBox';
 
 const TILTS = [-2.5, 1.8, -1, 2.6, -1.8, 1];
 
@@ -79,13 +80,13 @@ export function PostBody({ p }: { p: Post }) {
   );
 }
 
-export default function LoveWall({ posts: initial, seenBefore }: { posts: Post[]; seenBefore: string | null }) {
+export default function LoveWall({ posts: initial, seenBefore, trackSeen = true }: { posts: Post[]; seenBefore: string | null; trackSeen?: boolean }) {
   const [posts, setPosts] = useState(initial);
   const [who, setWho] = useState<string>('all');
 
   useEffect(() => {
-    api('/api/seen', 'POST', { area: 'love' }).catch(() => {});
-  }, []);
+    if (trackSeen) api('/api/seen', 'POST', { area: 'love' }).catch(() => {});
+  }, [trackSeen]);
 
   const people = useMemo(() => Array.from(new Set(initial.map((p) => p.authorName))), [initial]);
   const shown = who === 'all' ? posts : posts.filter((p) => p.authorName === who);
@@ -136,7 +137,7 @@ export default function LoveWall({ posts: initial, seenBefore }: { posts: Post[]
             viewport={{ once: true, margin: '-40px' }}
             transition={{ type: 'spring', stiffness: 110, damping: 15, delay: (i % 4) * 0.05 }}
           >
-            {(!seenBefore || p.createdAt > seenBefore) && <span className="love-badge-new">new</span>}
+            {trackSeen && (!seenBefore || (p.showAt ?? p.createdAt) > seenBefore) && <span className="love-badge-new">new</span>}
             <PostBody p={p} />
             <div className="love-react" role="group" aria-label="React">
               {reactions.map((e) => (
@@ -145,9 +146,10 @@ export default function LoveWall({ posts: initial, seenBefore }: { posts: Post[]
                 </button>
               ))}
               <span className="love-time" style={{ marginLeft: 'auto', alignSelf: 'center' }}>
-                {when(p.createdAt)}
+                {when(p.showAt ?? p.createdAt)}
               </span>
             </div>
+            <ReplyBox post={p} onReplied={(np) => setPosts((ps) => ps.map((x) => (x.id === np.id ? np : x)))} />
           </motion.article>
         ))}
       </div>

@@ -16,7 +16,14 @@ export type Post = {
   mediaIds?: string[];
   reactions: string[];
   look: number; // which paper / tilt style to use
+  /** a scheduled surprise: hidden from her until this moment */
+  showAt?: string;
+  /** made for a group scrapbook page instead of her wall */
+  pageId?: string;
+  /** her thank-yous */
+  replies?: Reply[];
 };
+export type Reply = { at: string; emoji?: string; text?: string; mediaId?: string };
 
 export type Letter = {
   id: string;
@@ -54,7 +61,7 @@ const pick = (n: number) => Math.floor(Math.random() * n);
 
 /* posts */
 export const listPosts = () => db.list<Post>('posts');
-export async function addPost(s: Session, p: { kind: PostKind; text?: string; mediaIds?: string[] }) {
+export async function addPost(s: Session, p: { kind: PostKind; text?: string; mediaIds?: string[]; showAt?: string; pageId?: string }) {
   const post: Post = {
     id: db.newId('p_'),
     createdAt: now(),
@@ -64,11 +71,23 @@ export async function addPost(s: Session, p: { kind: PostKind; text?: string; me
     text: p.text?.slice(0, 4000),
     mediaId: p.mediaIds?.[0],
     ...(p.mediaIds && p.mediaIds.length > 1 ? { mediaIds: p.mediaIds } : {}),
+    ...(p.showAt ? { showAt: p.showAt } : {}),
+    ...(p.pageId ? { pageId: p.pageId } : {}),
     reactions: [],
     look: pick(6),
   };
   return db.put('posts', post);
 }
+/** What she can see on her wall right now: arrived surprises, not group-page pieces. */
+export const isOnWall = (p: Post, at = Date.now()) => !p.pageId && (!p.showAt || new Date(p.showAt).getTime() <= at);
+export const wallPosts = async () => (await listPosts()).filter((p) => isOnWall(p));
+/** Pieces for a group page that have arrived. */
+export const pagePosts = async (pageId: string) =>
+  (await listPosts()).filter((p) => p.pageId === pageId && (!p.showAt || new Date(p.showAt).getTime() <= Date.now()));
+export function addReply(id: string, r: Reply) {
+  return db.update<Post>('posts', id, (p) => ({ ...p, replies: [...(p.replies ?? []), r].slice(-20) }));
+}
+
 /** Every file a post points at (albums have several). */
 export const postMedia = (p: Post) => p.mediaIds ?? (p.mediaId ? [p.mediaId] : []);
 export async function deletePost(s: Session, id: string) {

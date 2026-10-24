@@ -1,16 +1,16 @@
 import { pushReady, removeSubscription, saveSubscription, vapidPublicKey } from '@/lib/push';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
-/** The public key her browser needs to subscribe. */
+/** The public key a browser needs to subscribe. Saanika and friends can both subscribe. */
 export async function GET() {
-  const s = await requireSession('saanika');
+  const s = await requireSession();
   if (isResponse(s)) return s;
   return json({ enabled: pushReady, publicKey: vapidPublicKey() });
 }
 
 /** Save this device's subscription. */
 export async function POST(req: Request) {
-  const s = await requireSession('saanika');
+  const s = await requireSession();
   if (isResponse(s)) return s;
   if (!pushReady) return fail('Notifications aren’t set up on this site yet.', 503);
   const { subscription } = await req.json().catch(() => ({}));
@@ -19,13 +19,13 @@ export async function POST(req: Request) {
   if (typeof endpoint !== 'string' || !/^https:\/\//.test(endpoint) || typeof keys?.p256dh !== 'string' || typeof keys?.auth !== 'string') {
     return fail('That doesn’t look like a notification subscription.');
   }
-  await saveSubscription({ endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } });
+  await saveSubscription({ endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } }, s.id);
   return json({ ok: true }, 201);
 }
 
 /** Turn notifications off for this device. */
 export async function DELETE(req: Request) {
-  const s = await requireSession('saanika');
+  const s = await requireSession();
   if (isResponse(s)) return s;
   const { endpoint } = await req.json().catch(() => ({}));
   if (typeof endpoint !== 'string') return fail('Missing subscription.');

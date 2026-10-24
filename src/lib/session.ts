@@ -5,7 +5,8 @@ export const SESSION_COOKIE = 'sa_session';
 export const SEEN_COOKIE = 'sa_seen';
 const MAX_AGE = 60 * 60 * 24 * 45;
 
-export type Session = { id: string; name: string; role: Role };
+/** admin comes from the person's current invite (see getSession), never from the token */
+export type Session = { id: string; name: string; role: Role; admin?: boolean };
 
 function secret() {
   const s =

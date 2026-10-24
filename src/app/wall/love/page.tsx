@@ -10,7 +10,7 @@ export default async function WallLove() {
     <main className="h-page w-page">
       <Keepsakes set="love" />
       <PageHead back="/wall" kicker="pinned up, just for her" title="Her wall of love" sub="A message, a whole photo album, a voice note or a little film." />
-      <Composer mine={mine} only={['message', 'voice', 'video']} />
+      <Composer mine={{ ...mine, posts: mine.posts.filter((p) => !p.pageId) }} only={['message', 'voice', 'video']} />
     </main>
   );
 }

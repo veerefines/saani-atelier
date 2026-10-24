@@ -25,7 +25,7 @@ export type Item =
   | { type: 'postcard'; text: string; signoff: string };
 
 export type Chapter = {
-  id: 'once' | 'spark' | 'designer' | 'leap' | 'milan';
+  id: 'once' | 'spark' | 'designer' | 'leap' | 'milan' | 'mine';
   number: string;
   kicker: string;
   title: string;

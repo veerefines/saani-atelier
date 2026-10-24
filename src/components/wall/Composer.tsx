@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { JarNote, Letter, Post } from '@/lib/data';
 import { letterTitles, moods } from '@/content/home';
-import { api, uploadFile } from '@/lib/upload-client';
+import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 import { PostBody, when } from '@/components/home/LoveWall';
 
 export type Tab = 'message' | 'voice' | 'video' | 'letter' | 'jar';
@@ -123,18 +123,34 @@ function LiveCam({ stream }: { stream: MediaStream }) {
   return <video ref={v} className="w-preview w-live" autoPlay muted playsInline />;
 }
 
+const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+
 export function SentPosts({ posts, onDelete }: { posts: Post[]; onDelete: (id: string) => void }) {
   return (
     <>
-      {posts.map((p) => (
-        <article key={p.id} className="love-card">
-          <PostBody p={p} />
-          <div className="w-mine-meta">
-            <span>{p.reactions.length ? `Saanika sent ${p.reactions.join(' ')}` : when(p.createdAt)}</span>
-            <button onClick={() => onDelete(p.id)}>Delete</button>
-          </div>
-        </article>
-      ))}
+      {posts.map((p) => {
+        const later = p.showAt && new Date(p.showAt).getTime() > Date.now();
+        return (
+          <article key={p.id} className="love-card">
+            <PostBody p={p} />
+            <div className="w-mine-meta">
+              <span>
+                {later ? `🎁 Arrives ${fmtDay(p.showAt!)}` : p.reactions.length ? `Saanika sent ${p.reactions.join(' ')}` : when(p.showAt ?? p.createdAt)}
+                {p.pageId ? ' · on a scrapbook page' : ''}
+              </span>
+              <button onClick={() => onDelete(p.id)}>Delete</button>
+            </div>
+            {p.replies?.map((r) => (
+              <div key={r.at} className="w-reply">
+                <span className="hand">Saanika replied</span>
+                {r.emoji && <span className="w-reply-emoji">{r.emoji}</span>}
+                {r.text && <p>{r.text}</p>}
+                {r.mediaId && <audio controls preload="none" src={mediaUrl(r.mediaId)} />}
+              </div>
+            ))}
+          </article>
+        );
+      })}
     </>
   );
 }
@@ -181,13 +197,32 @@ export function SentJar({ jar, onDelete }: { jar: JarNote[]; onDelete: (id: stri
 }
 
 /** Delete one of your own things, after a quick check. */
-export async function deleteMine(kind: 'posts' | 'letters' | 'jar' | 'dares' | 'tips', id: string) {
+export async function deleteMine(kind: 'posts' | 'letters' | 'jar' | 'dares' | 'tips' | 'songs', id: string) {
   if (!confirm('Delete this? She won’t see it any more.')) return false;
   await api(`/api/${kind}/${id}`, 'DELETE');
   return true;
 }
 
-export default function Composer({ mine: initial, only, children }: { mine: Mine; only: Tab[]; children?: React.ReactNode }) {
+type OccasionChip = { date: string; title: string; emoji: string };
+
+/** "YYYY-MM-DD" for tomorrow, so a scheduled delivery is always in the future. */
+const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
+export default function Composer({
+  mine: initial,
+  only,
+  children,
+  pageId,
+  occasions = [],
+}: {
+  mine: Mine;
+  only: Tab[];
+  children?: React.ReactNode;
+  /** everything sent here goes onto this group scrapbook page */
+  pageId?: string;
+  /** upcoming festivals and special days, for "seal it for…" */
+  occasions?: OccasionChip[];
+}) {
   const tabs = TABS.filter((t) => only.includes(t.id));
   const [tab, setTab] = useState<Tab>(tabs[0].id);
   const [mine, setMine] = useState(initial);
@@ -196,6 +231,8 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
   const [title, setTitle] = useState(letterTitles[0]);
   const [customTitle, setCustomTitle] = useState('');
   const [unlock, setUnlock] = useState('');
+  /** a scheduled surprise: the day it should reach her */
+  const [deliver, setDeliver] = useState('');
   const [mood, setMood] = useState(moods[0].id);
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(0);
@@ -223,6 +260,7 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
     setFiles([]);
     setCustomTitle('');
     setUnlock('');
+    setDeliver('');
     audio.reset();
     video.reset();
     setPct(0);
@@ -241,6 +279,9 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
     });
   }
 
+  // where a post goes, and when it should reach her
+  const extra = { ...(pageId ? { pageId } : {}), ...(deliver ? { showAt: `${deliver}T05:00:00Z` } : {}) };
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     setErr('');
@@ -253,23 +294,23 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
           if (files.length > 1) setStep(`Photo ${i + 1} of ${files.length}`);
           ids.push(await uploadFile(files[i], (p) => setPct(Math.round(((i + p / 100) / files.length) * 100))));
         }
-        const p = await api<Post>('/api/posts', 'POST', { kind: ids.length ? 'photo' : 'text', text, mediaIds: ids.length ? ids : undefined });
+        const p = await api<Post>('/api/posts', 'POST', { kind: ids.length ? 'photo' : 'text', text, mediaIds: ids.length ? ids : undefined, ...extra });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
-        done(ids.length > 1 ? `Album pinned to her wall 📸` : 'Pinned to her wall 💌');
+        done(deliver ? 'Scheduled for her 🎁' : pageId ? 'Added to the page 📒' : ids.length > 1 ? `Album pinned to her wall 📸` : 'Pinned to her wall 💌');
       } else if (tab === 'voice') {
         const blob = audio.blob ?? file;
         if (!blob) throw new Error('Record or choose a voice note first.');
         const mediaId = await uploadFile(blob, setPct);
-        const p = await api<Post>('/api/posts', 'POST', { kind: 'voice', text: text || 'A voice note', mediaId });
+        const p = await api<Post>('/api/posts', 'POST', { kind: 'voice', text: text || 'A voice note', mediaId, ...extra });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
-        done('Voice note sent 🎙️');
+        done(deliver ? 'Scheduled for her 🎁' : 'Voice note sent 🎙️');
       } else if (tab === 'video') {
         const blob = video.blob ?? file;
         if (!blob) throw new Error('Record or choose a video first.');
         const mediaId = await uploadFile(blob, setPct);
-        const p = await api<Post>('/api/posts', 'POST', { kind: 'video', text, mediaId });
+        const p = await api<Post>('/api/posts', 'POST', { kind: 'video', text, mediaId, ...extra });
         setMine((m) => ({ ...m, posts: [p, ...m.posts] }));
-        done('Video sent 🎬');
+        done(deliver ? 'Scheduled for her 🎁' : 'Video sent 🎬');
       } else if (tab === 'letter') {
         const t = title === 'custom' ? customTitle : title;
         const l = await api<Letter>('/api/letters', 'POST', { title: t, body: text, unlockAt: unlock || null });
@@ -316,7 +357,7 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
 
       <motion.form key={tab} className="w-card" onSubmit={send} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <img className="h-tape" src="/reveal/washi.webp" alt="" />
-        <p className="whisper w-hint">{current.hint}</p>
+        <p className="whisper w-hint">{pageId ? 'A photo, a note, a voice note or a little film for this scrapbook page. She’ll see the whole page; you’ll see your own pieces.' : current.hint}</p>
 
         {tab === 'letter' && (
           <>
@@ -490,8 +531,48 @@ export default function Composer({ mine: initial, only, children }: { mine: Mine
           rows={tab === 'voice' || tab === 'video' ? 1 : 6}
         />
 
+        {(tab === 'message' || tab === 'voice' || tab === 'video') && (
+          <details className="w-later" open={Boolean(deliver)}>
+            <summary>🎁 Make it a surprise for a later day</summary>
+            <label className="w-label" htmlFor="dl">
+              Deliver it on
+            </label>
+            <input id="dl" type="date" className="h-input" min={tomorrow()} value={deliver} onChange={(e) => setDeliver(e.target.value)} />
+            {deliver && (
+              <p className="w-later-note">
+                She won’t see it until the morning of {new Date(`${deliver}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}, and she’ll get a ping when it arrives.{' '}
+                <button type="button" className="w-link" onClick={() => setDeliver('')}>
+                  Send it now instead
+                </button>
+              </p>
+            )}
+          </details>
+        )}
+
         {tab === 'letter' && (
           <>
+            {occasions.length > 0 && (
+              <>
+                <p className="w-label">Seal it for a special day</p>
+                <div className="h-chips" style={{ justifyContent: 'flex-start' }}>
+                  {occasions.map((o) => (
+                    <button
+                      type="button"
+                      key={o.date + o.title}
+                      className="h-chip"
+                      aria-pressed={unlock === o.date}
+                      onClick={() => {
+                        setUnlock(o.date);
+                        setTitle('custom');
+                        setCustomTitle(`Open on ${o.title} ${o.emoji}`);
+                      }}
+                    >
+                      {o.emoji} {o.title}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <label className="w-label" htmlFor="ul">
               Keep it sealed until (optional)
             </label>

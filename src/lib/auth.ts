@@ -1,14 +1,18 @@
 import { cookies } from 'next/headers';
-import { isActiveInvite } from './invites';
+import { inviteById } from './invites';
 import { readSessionToken, SESSION_COOKIE, SEEN_COOKIE, type Session } from './session';
 
-/** Current signed-in person, or null. Also null if their invite was removed. */
+/**
+ * Current signed-in person, or null. Also null if their invite was removed.
+ * Name and admin rights come from their invite as it is now, so changes apply without signing in again.
+ */
 export async function getSession(): Promise<Session | null> {
   const jar = await cookies();
   const session = await readSessionToken(jar.get(SESSION_COOKIE)?.value);
   if (!session) return null;
-  if (!isActiveInvite(session.id)) return null;
-  return session;
+  const invite = await inviteById(session.id);
+  if (!invite || invite.role !== session.role) return null;
+  return { id: invite.id, name: invite.name, role: invite.role, ...(invite.admin ? { admin: true } : {}) };
 }
 
 export async function hasSeenReveal(): Promise<boolean> {

@@ -18,12 +18,23 @@ export default function GiftScene({
   error,
 }: {
   initialStage: 'locked' | 'tied';
-  note: Note;
+  /** only sent when she's signed in; otherwise fetched once she unlocks the tag */
+  note: Note | null;
   error?: string;
 }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [stage, setStage] = useState<Stage>(initialStage);
+  const [noteData, setNoteData] = useState<Note | null>(note);
+
+  // the note isn't in the page for signed-out visitors; fetch it as soon as she's signed in
+  useEffect(() => {
+    if (noteData || stage === 'locked') return;
+    fetch('/api/note')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((n) => n && setNoteData(n))
+      .catch(() => {});
+  }, [stage, noteData]);
   const [petals, setPetals] = useState(false);
   const [threadPts, setThreadPts] = useState<{ from: Pt; to: Pt } | null>(null);
   const bouquetBox = useRef<HTMLDivElement>(null);
@@ -127,7 +138,7 @@ export default function GiftScene({
             )}
           </AnimatePresence>
 
-          {stage === 'note' && <NoteCard note={note} onContinue={finish} />}
+          {stage === 'note' && noteData && <NoteCard note={noteData} onContinue={finish} />}
         </div>
 
         <AnimatePresence>

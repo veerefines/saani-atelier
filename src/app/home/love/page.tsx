@@ -1,10 +1,10 @@
 import PageHead from '@/components/home/Back';
 import Keepsakes from '@/components/Keepsakes';
 import LoveWall from '@/components/home/LoveWall';
-import { getSeen, listPosts } from '@/lib/data';
+import { getSeen, wallPosts } from '@/lib/data';
 
 export default async function LovePage() {
-  const [posts, seen] = await Promise.all([listPosts(), getSeen()]);
+  const [posts, seen] = await Promise.all([wallPosts(), getSeen()]);
   return (
     <main className="h-page">
       <Keepsakes set="love" />

@@ -12,4 +12,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/journey/:path*', '/wall/:path*', '/home/:path*', '/home'] };
+export const config = { matcher: ['/journey/:path*', '/wall/:path*', '/home/:path*', '/home', '/admin/:path*', '/admin'] };

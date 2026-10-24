@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { site } from '@/content/site';
 import { mediaUrl } from '@/lib/upload-client';
 import { ClockStamp, dayInfo, hourIn, useNow } from '@/components/home/Clock';
+import Link from 'next/link';
 import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
+import NotifyToggle from '@/components/home/NotifyToggle';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -19,6 +21,10 @@ type Counts = {
   dares: number;
   tips: number;
   tipsDone: number;
+  songs: number;
+  pages: number;
+  herShared: number;
+  stamps: number;
 };
 type MilanoInfo = { arrival: string; homeCity: string; homeZone: string; milanZone: string };
 
@@ -40,6 +46,7 @@ export default function WellDesk({
   preview,
   milano,
   decor,
+  admin = false,
 }: {
   name: string;
   counts: Counts;
@@ -47,6 +54,7 @@ export default function WellDesk({
   preview: Preview[];
   milano: MilanoInfo;
   decor?: React.ReactNode;
+  admin?: boolean;
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -202,6 +210,28 @@ export default function WellDesk({
           </div>
         </Tile>
       </motion.section>
+
+      <section className="corners" aria-label="More">
+        <h2 className="hand corners-title">more ways to show up</h2>
+        <div className="corners-grid">
+          {[
+            { href: '/wall/songs', icon: '🎶', title: 'Dedicate a song', sub: counts.songs ? `${counts.songs} from you` : 'for her playlist', tint: '#e6dcf7' },
+            { href: '/wall/scrapbooks', icon: '📒', title: 'Scrapbook pages', sub: counts.pages ? `${counts.pages} to add to` : 'made together', tint: '#ffe0c4' },
+            { href: '/wall/her', icon: '🛂', title: 'Her Milano life', sub: `${counts.stamps} stamps · ${counts.herShared} shared`, tint: '#d3e9f6' },
+            ...(admin ? [{ href: '/admin', icon: '🧵', title: 'Atelier admin', sub: 'friends, dates, journey', tint: '#f8ebbf' }] : []),
+          ].map((k) => (
+            <Link key={k.href} href={k.href} className="corner" style={{ ['--tint' as string]: k.tint }}>
+              <span className="corner-icon" aria-hidden="true">
+                {k.icon}
+              </span>
+              <b>{k.title}</b>
+              <small>{k.sub}</small>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <NotifyToggle offLabel="Remind me before her special days" onLabel="You’ll get reminders and her replies" />
 
       <footer className="h-foot">
         <a href="/api/logout">Sign out</a>

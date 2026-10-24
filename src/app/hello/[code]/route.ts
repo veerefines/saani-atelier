@@ -5,7 +5,7 @@ import { createSession, SESSION_COOKIE, sessionCookieOptions } from '@/lib/sessi
 /** Personal magic link: /hello/<code> signs the person in and sends them on. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const invite = findInvite(decodeURIComponent(code));
+  const invite = await findInvite(decodeURIComponent(code));
   const url = req.nextUrl.clone();
   url.search = '';
 

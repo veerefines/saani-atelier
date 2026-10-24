@@ -6,6 +6,7 @@ import '@fontsource-variable/figtree/index.css';
 import '@fontsource-variable/caveat/index.css';
 import './globals.css';
 import { site } from '@/content/site';
+import RegisterSW from '@/components/RegisterSW';
 
 export const metadata: Metadata = {
   title: site.title,
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="aura" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
         {children}
+        <RegisterSW />
       </body>
     </html>
   );

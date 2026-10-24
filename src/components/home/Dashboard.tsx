@@ -6,6 +6,9 @@ import { ClockStamp, dayInfo, hourIn, useNow } from './Clock';
 import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
+import TodayCard from './TodayCard';
+import Corners, { type CornerCounts } from './Corners';
+import OccasionBanner from './OccasionBanner';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string; authorName: string };
 type Counts = { posts: number; newPosts: number; ready: number; sealed: number; jar: number; bingoDone: number; bingoTotal: number };
@@ -99,12 +102,17 @@ export default function Dashboard({
   preview,
   milano,
   decor,
+  corners,
+  occasion,
 }: {
   counts: Counts;
   bingoDone: boolean[];
   preview: Preview[];
   milano: MilanoInfo;
   decor?: React.ReactNode;
+  corners: CornerCounts;
+  /** today's festival or special day, if any */
+  occasion?: { title: string; emoji: string; note?: string; letters: number } | null;
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -132,6 +140,15 @@ export default function Dashboard({
           {day.label || ' '}
         </p>
       </header>
+
+      {occasion && <OccasionBanner occasion={occasion} />}
+      <TodayCard
+        zones={[
+          { city: 'Milano', zone: milano.milanZone },
+          { city: milano.homeCity, zone: milano.homeZone },
+          { city: milano.laCity, zone: milano.laZone },
+        ]}
+      />
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">
         {/* wall of love */}
@@ -255,6 +272,8 @@ export default function Dashboard({
           </div>
         </Tile>
       </motion.section>
+
+      <Corners counts={corners} />
 
       <NotifyToggle />
 

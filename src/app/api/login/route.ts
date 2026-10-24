@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     /* empty body */
   }
 
-  const invite = findInvite(code);
+  const invite = await findInvite(code);
   if (!invite) {
     // Slow wrong guesses down so codes can't be brute-forced.
     await new Promise((r) => setTimeout(r, 800));

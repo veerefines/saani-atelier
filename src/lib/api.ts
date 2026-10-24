@@ -13,3 +13,11 @@ export async function requireSession(role?: Session['role']): Promise<Session | 
   return s;
 }
 export const isResponse = (x: unknown): x is NextResponse => x instanceof NextResponse;
+
+/** The signed-in admin, or a 401/403 response. */
+export async function requireAdmin(): Promise<Session | NextResponse> {
+  const s = await getSession();
+  if (!s) return fail('Sign in again to continue.', 401);
+  if (!s.admin) return fail('This is only for the atelier’s admin.', 403);
+  return s;
+}

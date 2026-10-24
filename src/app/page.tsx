@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import GiftScene from '@/components/GiftScene';
 import { getSession, hasSeenReveal } from '@/lib/auth';
 import { site } from '@/content/site';
+import { getContent } from '@/lib/extras';
 
 export default async function Home({
   searchParams,
@@ -17,7 +18,7 @@ export default async function Home({
   return (
     <GiftScene
       initialStage={session?.role === 'saanika' ? 'tied' : 'locked'}
-      note={site.note}
+      note={session?.role === 'saanika' ? ((await getContent()).note ?? site.note) : null}
       error={sp.e}
     />
   );
