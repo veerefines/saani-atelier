@@ -711,11 +711,22 @@
   color: #3a2230;
   filter: drop-shadow(0 22px 26px rgba(20, 5, 15, 0.45));
 }
+/* The ticket and its stub share a zig-zag edge (--tooth wide teeth), so they interlock while
+   whole and show a real torn edge as the stub pulls away on scroll. */
+.ticket {
+  --tooth: 7px;
+}
 .ticket-main {
   flex: 1;
   background: linear-gradient(135deg, #fff7f0, #fde9ee);
   border-radius: 14px 0 0 14px;
-  padding: 18px 18px 16px;
+  padding: 18px calc(18px + var(--tooth)) 16px 18px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) left / calc(100% - var(--tooth)) 100% no-repeat,
+    conic-gradient(from -135deg at right, #000 90deg, #0000 0) right / var(--tooth) calc(2 * var(--tooth)) repeat-y;
+  mask:
+    linear-gradient(#000 0 0) left / calc(100% - var(--tooth)) 100% no-repeat,
+    conic-gradient(from -135deg at right, #000 90deg, #0000 0) right / var(--tooth) calc(2 * var(--tooth)) repeat-y;
 }
 .ticket-airline {
   font-size: 24px;
@@ -757,16 +768,44 @@
   font-weight: 650;
 }
 .ticket-stub {
+  position: relative;
   width: 30%;
   min-width: 96px;
+  margin-left: calc(-1 * var(--tooth));
   background: linear-gradient(135deg, #fde9ee, #f8d4df);
   border-radius: 0 14px 14px 0;
-  border-left: 2px dashed rgba(178, 48, 95, 0.35);
-  padding: 16px 12px;
+  padding: 16px 12px 16px calc(12px + var(--tooth));
   display: grid;
   align-content: space-between;
   justify-items: center;
   transform-origin: 0% 100%;
+  will-change: transform;
+  -webkit-mask:
+    linear-gradient(#000 0 0) right / calc(100% - var(--tooth)) 100% no-repeat,
+    conic-gradient(from -135deg at right, #0000 90deg, #000 0) left / var(--tooth) calc(2 * var(--tooth)) repeat-y;
+  mask:
+    linear-gradient(#000 0 0) right / calc(100% - var(--tooth)) 100% no-repeat,
+    conic-gradient(from -135deg at right, #0000 90deg, #000 0) left / var(--tooth) calc(2 * var(--tooth)) repeat-y;
+}
+/* perforation holes along the tear line */
+.ticket-stub::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: calc(var(--tooth) + 3px);
+  width: 4px;
+  background: radial-gradient(circle, rgba(178, 48, 95, 0.4) 1.4px, transparent 1.8px) 0 0 / 4px 8px repeat-y;
+}
+/* "torn" note that appears once the stub has come away */
+.ticket-torn {
+  position: absolute;
+  left: 6%;
+  bottom: -34px;
+  white-space: nowrap;
+  font-size: 20px;
+  color: var(--berry);
+  opacity: 0;
 }
 .ticket-stub .hand {
   font-size: 22px;

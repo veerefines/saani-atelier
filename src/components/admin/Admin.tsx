@@ -54,15 +54,15 @@ export default function Admin(props: { friends: Friend[]; occasions: Occasion[];
   const [section, setSection] = useState<Section>('activity');
   const open = (id: Section) => {
     setSection(id);
-    requestAnimationFrame(() => document.getElementById('ad-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    requestAnimationFrame(() => document.getElementById('atl-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
   return (
     <>
-      <section className="ad-start" aria-label="What would you like to do?">
+      <section className="atl-start" aria-label="What would you like to do?">
         <h2 className="hand">what would you like to do?</h2>
-        <div className="ad-start-grid">
+        <div className="atl-start-grid">
           {START.map((x) => (
-            <button key={x.id} className={`ad-start-btn${section === x.id ? ' on' : ''}`} onClick={() => open(x.id)}>
+            <button key={x.id} className={`atl-start-btn${section === x.id ? ' on' : ''}`} onClick={() => open(x.id)}>
               <span aria-hidden="true">{x.icon}</span>
               <b>{x.title}</b>
               <small>{x.sub}</small>
@@ -71,7 +71,7 @@ export default function Admin(props: { friends: Friend[]; occasions: Occasion[];
         </div>
       </section>
 
-      <div id="ad-section" className="w-tabs ad-tabs" role="tablist" aria-label="Admin sections">
+      <div id="atl-section" className="w-tabs atl-tabs" role="tablist" aria-label="Admin sections">
         {SECTIONS.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={section === id} className="w-tab" onClick={() => setSection(id)}>
             {label}
@@ -103,14 +103,14 @@ function ActivityView({ a }: { a: Activity }) {
     ['Things from her people', String(a.fromPeople)],
   ];
   return (
-    <section className="ad-stats">
+    <section className="atl-stats">
       {stats.map(([k, v]) => (
-        <div key={k} className="ad-stat">
+        <div key={k} className="atl-stat">
           <b>{v}</b>
           <span>{k}</span>
         </div>
       ))}
-      <p className="ad-note">Only what she’s done is shown here, never the contents of her private lookbook, diary or list.</p>
+      <p className="atl-note">Only what she’s done is shown here, never the contents of her private lookbook, diary or list.</p>
     </section>
   );
 }
@@ -145,9 +145,9 @@ function Friends({ initial }: { initial: Friend[] }) {
   };
 
   return (
-    <section className="ad-sec">
+    <section className="atl-sec">
       <form
-        className="ad-form"
+        className="atl-form"
         onSubmit={(e) => {
           e.preventDefault();
           run(async () => {
@@ -163,10 +163,10 @@ function Friends({ initial }: { initial: Friend[] }) {
         </button>
       </form>
       {err && <p className="h-err">{err}</p>}
-      <ul className="ad-list">
+      <ul className="atl-list">
         {list.map((f) => (
           <li key={f.id}>
-            <span className="ad-main">
+            <span className="atl-main">
               <b>{f.name}</b>
               <small>
                 {f.role === 'saanika' ? 'Saanika' : 'friend'}
@@ -179,7 +179,7 @@ function Friends({ initial }: { initial: Friend[] }) {
             </button>
             {f.managed && (
               <button
-                className="pc-btn ad-danger"
+                className="pc-btn atl-danger"
                 onClick={() =>
                   confirm(`Remove ${f.name}? Their link stops working straight away.`) &&
                   run(async () => {
@@ -208,9 +208,9 @@ function Occasions({ initial }: { initial: Occasion[] }) {
   const set = (k: keyof typeof EMPTY_OCC) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: k === 'remindDays' ? Number(e.target.value) : e.target.value }));
 
   return (
-    <section className="ad-sec">
+    <section className="atl-sec">
       <form
-        className="ad-grid-form"
+        className="atl-grid-form"
         onSubmit={(e) => {
           e.preventDefault();
           run(async () => {
@@ -222,14 +222,14 @@ function Occasions({ initial }: { initial: Occasion[] }) {
       >
         <input className="h-input" type="date" value={form.date} onChange={set('date')} aria-label="Date" required />
         <input className="h-input" value={form.emoji} onChange={set('emoji')} aria-label="Emoji" maxLength={8} />
-        <input className="h-input ad-wide" value={form.title} onChange={set('title')} placeholder="e.g. Saanika’s birthday, First exam" aria-label="Title" required />
-        <label className="ad-inline">
+        <input className="h-input atl-wide" value={form.title} onChange={set('title')} placeholder="e.g. Saanika’s birthday, First exam" aria-label="Title" required />
+        <label className="atl-inline">
           remind friends
           <input className="h-input" type="number" min={0} max={30} value={form.remindDays} onChange={set('remindDays')} aria-label="Days before" />
           days before
         </label>
-        <input className="h-input ad-wide" value={form.note} onChange={set('note')} placeholder="A line for her on the day (optional)" aria-label="Note" maxLength={280} />
-        <div className="ad-actions">
+        <input className="h-input atl-wide" value={form.note} onChange={set('note')} placeholder="A line for her on the day (optional)" aria-label="Note" maxLength={280} />
+        <div className="atl-actions">
           <button className="cta h-small-btn">{form.id ? 'Save changes' : 'Add special day'}</button>
           {form.id && (
             <button type="button" className="w-link" onClick={() => setForm(EMPTY_OCC)}>
@@ -239,10 +239,10 @@ function Occasions({ initial }: { initial: Occasion[] }) {
         </div>
       </form>
       {err && <p className="h-err">{err}</p>}
-      <ul className="ad-list">
+      <ul className="atl-list">
         {sorted.map((o) => (
           <li key={o.id}>
-            <span className="ad-main">
+            <span className="atl-main">
               <b>
                 {o.emoji} {o.title}
               </b>
@@ -254,7 +254,7 @@ function Occasions({ initial }: { initial: Occasion[] }) {
               Edit
             </button>
             <button
-              className="pc-btn ad-danger"
+              className="pc-btn atl-danger"
               onClick={() =>
                 confirm(`Remove ${o.title}?`) &&
                 run(async () => {
@@ -279,9 +279,9 @@ function Pages({ initial }: { initial: Page[] }) {
   const [note, setNote] = useState('');
   const { err, run } = useErr();
   return (
-    <section className="ad-sec">
+    <section className="atl-sec">
       <form
-        className="ad-grid-form"
+        className="atl-grid-form"
         onSubmit={(e) => {
           e.preventDefault();
           run(async () => {
@@ -293,24 +293,24 @@ function Pages({ initial }: { initial: Page[] }) {
         }}
       >
         <input className="h-input" value={emoji} onChange={(e) => setEmoji(e.target.value)} aria-label="Emoji" maxLength={8} />
-        <input className="h-input ad-wide" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Her first week in Milano" aria-label="Page title" required />
-        <input className="h-input ad-wide" value={note} onChange={(e) => setNote(e.target.value)} placeholder="What should friends add? (optional)" aria-label="Note" maxLength={200} />
-        <div className="ad-actions">
+        <input className="h-input atl-wide" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Her first week in Milano" aria-label="Page title" required />
+        <input className="h-input atl-wide" value={note} onChange={(e) => setNote(e.target.value)} placeholder="What should friends add? (optional)" aria-label="Note" maxLength={200} />
+        <div className="atl-actions">
           <button className="cta h-small-btn">Create page</button>
         </div>
       </form>
       {err && <p className="h-err">{err}</p>}
-      <ul className="ad-list">
+      <ul className="atl-list">
         {list.map((p) => (
           <li key={p.id}>
-            <span className="ad-main">
+            <span className="atl-main">
               <b>
                 {p.emoji} {p.title}
               </b>
               <small>{p.note || 'friends add from Scrapbook pages on their desk'}</small>
             </span>
             <button
-              className="pc-btn ad-danger"
+              className="pc-btn atl-danger"
               onClick={() =>
                 confirm(`Remove “${p.title}”? Friends keep their pieces in their sent box.`) &&
                 run(async () => {
@@ -324,7 +324,7 @@ function Pages({ initial }: { initial: Page[] }) {
           </li>
         ))}
       </ul>
-      {!list.length && <p className="ad-note">No pages yet. Create one and friends will see it under Scrapbook pages.</p>}
+      {!list.length && <p className="atl-note">No pages yet. Create one and friends will see it under Scrapbook pages.</p>}
     </section>
   );
 }
@@ -356,18 +356,18 @@ function Journey({ initial }: { initial: Slot[] }) {
     });
 
   return (
-    <section className="ad-sec">
-      <p className="ad-note">Upload her real photos, the studio video, voice notes and the music. Each one replaces its placeholder in the journey straight away.</p>
+    <section className="atl-sec">
+      <p className="atl-note">Upload her real photos, the studio video, voice notes and the music. Each one replaces its placeholder in the journey straight away.</p>
       {err && <p className="h-err">{err}</p>}
       {chapters.map((c) => (
-        <div key={c} className="ad-chapter">
+        <div key={c} className="atl-chapter">
           <h3 className="hand">{c}</h3>
-          <div className="ad-slots">
+          <div className="atl-slots">
             {slots
               .filter((s) => s.chapter === c)
               .map((s) => (
-                <div key={s.slot} className={`ad-slot${s.mediaId ? ' has' : ''}`}>
-                  <div className="ad-slot-preview">
+                <div key={s.slot} className={`atl-slot${s.mediaId ? ' has' : ''}`}>
+                  <div className="atl-slot-preview">
                     {s.mediaId ? (
                       s.kind === 'photo' ? (
                         <img src={mediaUrl(s.mediaId)} alt="" />
@@ -382,8 +382,8 @@ function Journey({ initial }: { initial: Slot[] }) {
                   </div>
                   <b>{s.label}</b>
                   <small>{s.slot.split('/').pop()}</small>
-                  <div className="ad-slot-actions">
-                    <label className="pc-btn ad-upload">
+                  <div className="atl-slot-actions">
+                    <label className="pc-btn atl-upload">
                       {busy === s.slot ? `Uploading ${pct}%` : s.mediaId ? 'Replace' : 'Upload'}
                       <input type="file" accept={accept(s.kind)} hidden disabled={busy !== null} onChange={(e) => (e.target.files?.[0] && upload(s, e.target.files[0]), (e.target.value = ''))} />
                     </label>
@@ -427,20 +427,20 @@ function Keepsakes({ initial }: { initial: Keepsake[] }) {
     });
 
   return (
-    <section className="ad-sec">
-      <p className="ad-note">
+    <section className="atl-sec">
+      <p className="atl-note">
         The little things she loves, tucked around her desk, the journey and Milano corner. Transparent PNGs look best (about 800px on the long side). Each one goes live
         on every page it belongs to as soon as it’s uploaded. {items.filter((k) => k.mediaId).length} of {items.length} uploaded.
       </p>
       {err && <p className="h-err">{err}</p>}
-      <div className="ad-slots">
+      <div className="atl-slots">
         {items.map((k) => (
-          <div key={k.name} className={`ad-slot${k.mediaId ? ' has' : ''}`}>
-            <div className="ad-slot-preview ad-checker">{k.mediaId ? <img src={mediaUrl(k.mediaId)} alt="" style={{ objectFit: 'contain' }} /> : <span>🌸 empty</span>}</div>
+          <div key={k.name} className={`atl-slot${k.mediaId ? ' has' : ''}`}>
+            <div className="atl-slot-preview atl-checker">{k.mediaId ? <img src={mediaUrl(k.mediaId)} alt="" style={{ objectFit: 'contain' }} /> : <span>🌸 empty</span>}</div>
             <b>{k.what}</b>
             <small>{k.name}.png</small>
-            <div className="ad-slot-actions">
-              <label className="pc-btn ad-upload">
+            <div className="atl-slot-actions">
+              <label className="pc-btn atl-upload">
                 {busy === k.name ? `Uploading ${pct}%` : k.mediaId ? 'Replace' : 'Upload'}
                 <input type="file" accept="image/png,image/webp,image/gif,image/jpeg" hidden disabled={busy !== null} onChange={(e) => (e.target.files?.[0] && upload(k, e.target.files[0]), (e.target.value = ''))} />
               </label>
@@ -464,7 +464,7 @@ function NoteEditor({ initial }: { initial: RevealNote }) {
   const [saved, setSaved] = useState(false);
   const { err, run } = useErr();
   return (
-    <section className="ad-sec">
+    <section className="atl-sec">
       <form
         className="w-card"
         onSubmit={(e) => {

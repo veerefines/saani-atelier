@@ -239,7 +239,7 @@ export default function Milano({
   guideDecor,
   beachDecor,
 }: {
-  info: { arrival: string; homeCity: string; homeZone: string; milanZone: string };
+  info: { arrival: string; homeCity: string; homeZone: string; milanZone: string; laCity: string; laZone: string };
   wishes: Wish[];
   heroDecor?: React.ReactNode;
   guideDecor?: React.ReactNode;
@@ -378,6 +378,7 @@ export default function Milano({
         <div className="mil-clocks" aria-label="Clocks">
           <Face now={now} zone={info.milanZone} city="Milano" />
           <Face now={now} zone={info.homeZone} city={info.homeCity} />
+          <Face now={now} zone={info.laZone} city={info.laCity} />
         </div>
       </section>
 

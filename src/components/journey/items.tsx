@@ -281,6 +281,9 @@ export function Ticket({ item }: { item: Of<'ticket'> }) {
           <div className="barcode" aria-hidden="true" />
         </div>
       </div>
+      <span className="ticket-torn hand" data-torn aria-hidden="true">
+        no going back now ✂︎
+      </span>
     </figure>
   );
 }

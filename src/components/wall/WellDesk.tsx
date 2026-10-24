@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
 import NotifyToggle from '@/components/home/NotifyToggle';
 import AtelierMark from '@/components/home/AtelierMark';
+import CallPlanner from '@/components/home/CallPlanner';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -27,11 +28,12 @@ type Counts = {
   herShared: number;
   stamps: number;
 };
-type MilanoInfo = { arrival: string; homeCity: string; homeZone: string; milanZone: string };
+type MilanoInfo = { arrival: string; homeCity: string; homeZone: string; milanZone: string; laCity: string; laZone: string };
 
-function hello(now: Date | null, zone: string) {
+/** Greets each friend in their own time, wherever they're signed in from. */
+function hello(now: Date | null, fallbackZone: string) {
   if (!now) return 'Ciao';
-  const h = hourIn(now, zone);
+  const h = hourIn(now, Intl.DateTimeFormat().resolvedOptions().timeZone || fallbackZone);
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
@@ -70,6 +72,7 @@ export default function WellDesk({
         <div className="h-stamps">
           <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
           <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />
+          <ClockStamp city={milano.laCity} zone={milano.laZone} now={now} />
         </div>
         <p className="whisper h-greet" suppressHydrationWarning>
           {hello(now, milano.homeZone)},
@@ -80,6 +83,10 @@ export default function WellDesk({
         </p>
         <p className="whisper w-desk-sub">psst, it’s a surprise. Leave her something to find.</p>
       </header>
+
+      <section className="today call-card" aria-label="Good time to call Saanika">
+        <CallPlanner firstName={first} />
+      </section>
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Things to leave for Saanika">
         {/* wall of love */}

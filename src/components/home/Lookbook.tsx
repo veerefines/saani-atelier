@@ -69,27 +69,35 @@ export default function Lookbook({ items: initial }: { items: LookItem[] }) {
     <>
       <form className="w-card lk-form" onSubmit={add}>
         <img className="h-tape" src="/reveal/washi.webp" alt="" />
-        <div className="w-tabs" role="tablist" aria-label="Add">
-          <button type="button" role="tab" aria-selected={mode === 'photo'} className="w-tab" onClick={() => setMode('photo')}>
-            👗 A look or sketch
+        <div className="lk-switch" role="tablist" aria-label="What are you adding?">
+          <button type="button" role="tab" aria-selected={mode === 'photo'} className="lk-opt" onClick={() => setMode('photo')}>
+            <span aria-hidden="true">👗</span>
+            <b>A look or sketch</b>
+            <small>a photo from your phone</small>
           </button>
-          <button type="button" role="tab" aria-selected={mode === 'pin'} className="w-tab" onClick={() => setMode('pin')}>
-            📌 From Pinterest
+          <button type="button" role="tab" aria-selected={mode === 'pin'} className="lk-opt" onClick={() => setMode('pin')}>
+            <span aria-hidden="true">📌</span>
+            <b>From Pinterest</b>
+            <small>a pin or a whole board</small>
           </button>
         </div>
         {mode === 'photo' ? (
-          <div className="w-drop">
-            {preview && <img src={preview} alt="" className="w-preview" />}
-            <button type="button" className="ghost-btn" style={{ padding: '0 18px' }} onClick={() => fileRef.current?.click()}>
-              {file ? 'Choose a different photo' : 'Choose a photo'}
+          <>
+            <button type="button" className={`lk-drop${preview ? ' has' : ''}`} onClick={() => fileRef.current?.click()}>
+              {preview ? <img src={preview} alt="" /> : <span aria-hidden="true">📸</span>}
+              <b>{file ? 'Choose a different photo' : 'Tap to choose a photo'}</b>
+              {!file && <small>an outfit, a sketch, a fabric swatch…</small>}
             </button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => (setFile(e.target.files?.[0] ?? null), (e.target.value = ''))} />
-          </div>
-        ) : (
-          <>
-            <input className="h-input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://pinterest.com/pin/… or a board link" aria-label="Pinterest link" inputMode="url" />
-            <p className="lk-help">In Pinterest, tap Share → Copy link on any pin or board, then paste it here.</p>
           </>
+        ) : (
+          <div className="lk-pin">
+            <label className="lk-link">
+              <span aria-hidden="true">📌</span>
+              <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Paste a pin or board link" aria-label="Pinterest link" inputMode="url" />
+            </label>
+            <p className="lk-help">In Pinterest, tap Share → Copy link on any pin or board, then paste it here.</p>
+          </div>
         )}
         <input className="h-input" style={{ marginTop: 10 }} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="A caption (optional)" aria-label="Caption" maxLength={200} />
         <input className="h-input" style={{ marginTop: 8 }} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags, e.g. autumn, studio, inspo" aria-label="Tags" />

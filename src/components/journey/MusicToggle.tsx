@@ -38,7 +38,10 @@ export default function MusicToggle({ music }: { music: Music }) {
     const start = () => {
       if (chose.current || !a.paused) return Promise.resolve();
       a.volume = 0;
-      return a.play().then(() => ramp(0.55));
+      return a.play().then(() => {
+        if (chose.current) return; // she paused while it was starting
+        ramp(0.55);
+      });
     };
     const onGesture = (e: Event) => {
       // a tap on the record is handled by the record itself
@@ -53,31 +56,37 @@ export default function MusicToggle({ music }: { music: Music }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music.missing]);
 
-  function ramp(to: number, done?: () => void) {
+  /** Fade the volume. iPhone and iPad ignore volume changes from a page, so there it just jumps. */
+  function ramp(to: number) {
     const a = audio.current;
     if (!a) return;
     cancelAnimationFrame(fade.current);
     const step = () => {
-      const v = a.volume + (to - a.volume) * 0.08;
+      const before = a.volume;
+      const v = before + (to - before) * 0.08;
       a.volume = Math.abs(v - to) < 0.01 ? to : v;
+      if (a.volume === before) return; // read-only volume: nothing to fade
       if (a.volume !== to) fade.current = requestAnimationFrame(step);
-      else done?.();
     };
     fade.current = requestAnimationFrame(step);
   }
 
+  /** Tapping the record: pause straight away, or start again with a soft fade in. */
   function toggle() {
     const a = audio.current;
     if (!a) return;
     chose.current = true;
     disarm.current();
-    if (on) {
+    cancelAnimationFrame(fade.current);
+    if (!a.paused) {
+      a.pause();
       setOn(false);
-      ramp(0, () => a.pause());
     } else {
       a.volume = 0;
       setOn(true);
-      a.play().then(() => ramp(0.55)).catch(() => setOn(false));
+      a.play()
+        .then(() => (a.volume === 0 ? ramp(0.55) : undefined))
+        .catch(() => setOn(false));
     }
   }
 

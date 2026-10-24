@@ -4,8 +4,8 @@
 import type { Mood } from '@/lib/data';
 
 export const milano = {
-  /** The day she lands. Before it: a countdown. After it: "Day N in Milano". */
-  arrival: '2026-10-28',
+  /** The day she flies Mumbai → Milano (and lands the same day). Before it: a countdown. From it: "Day N in Milano". */
+  arrival: '2026-10-27',
   homeCity: 'Mumbai',
   homeZone: 'Asia/Kolkata',
   milanZone: 'Europe/Rome',

@@ -138,13 +138,7 @@ export default function Dashboard({
       </header>
 
       {occasion && <OccasionBanner occasion={occasion} />}
-      <TodayCard
-        zones={[
-          { city: 'Milano', zone: milano.milanZone },
-          { city: milano.homeCity, zone: milano.homeZone },
-          { city: milano.laCity, zone: milano.laZone },
-        ]}
-      />
+      <TodayCard />
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">
         {/* wall of love */}

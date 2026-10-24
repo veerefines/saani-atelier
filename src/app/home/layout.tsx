@@ -5,6 +5,7 @@ import { touchPresence } from '@/lib/extras';
 import { seedJar, seedLetters } from '@/content/home';
 import '@/components/journey/journey.css';
 import '@/components/home/home.css';
+import '@/components/wall/wall.css';
 
 export const dynamic = 'force-dynamic';
 

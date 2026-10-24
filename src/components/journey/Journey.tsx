@@ -210,15 +210,18 @@ export default function Journey({
           );
         });
 
-        // ticket stub tears away
+        // ticket stub tears away as she scrolls: it strains, rips from the top down, then drops off
         gsap.utils.toArray<HTMLElement>('[data-stub]').forEach((el) => {
-          gsap.to(el, {
-            rotate: 9,
-            x: 18,
-            y: 10,
-            ease: 'power2.inOut',
-            scrollTrigger: { trigger: el, start: 'top 55%', end: 'top 35%', scrub: 0.6 },
-          });
+          const fig = el.closest('figure');
+          const main = fig?.querySelector<HTMLElement>('.ticket-main');
+          const note = fig?.querySelector<HTMLElement>('[data-torn]');
+          const tl = gsap.timeline({ scrollTrigger: { trigger: fig ?? el, start: 'top 85%', end: 'top 25%', scrub: 0.5 } });
+          tl.to(el, { x: 2, rotate: 1.5, duration: 0.2, ease: 'sine.inOut' })
+            .to(el, { x: 1, rotate: 0.5, duration: 0.05 })
+            .to(el, { x: 8, rotate: 14, duration: 0.35, ease: 'power1.in' })
+            .to(main ?? {}, { rotate: -1.2, x: -3, duration: 0.35, ease: 'power1.out' }, '<')
+            .to(el, { x: 34, y: 110, rotate: 24, opacity: 0.92, duration: 0.4, ease: 'power2.in' })
+            .to(note ?? {}, { opacity: 1, y: -6, duration: 0.15 }, '-=0.1');
         });
 
         // drifting scraps (parallax)
@@ -256,6 +259,8 @@ export default function Journey({
             scrub: 0.6,
             invalidateOnRefresh: true,
             anticipatePin: 1,
+            // measured first: its pin spacing moves everything below it (the ticket's tear among them)
+            refreshPriority: 1,
           },
         });
       });
@@ -268,6 +273,7 @@ export default function Journey({
         onEnter: () => setCelebrated(true),
       });
 
+      ScrollTrigger.sort();
       const refresh = () => ScrollTrigger.refresh();
       window.addEventListener('load', refresh);
       document.fonts?.ready.then(refresh);
