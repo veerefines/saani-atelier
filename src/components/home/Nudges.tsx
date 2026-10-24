@@ -16,22 +16,35 @@ function ago(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+/** Nudges, kept fresh: checked again every 20 seconds and whenever the page comes back into view. */
 function useNudges() {
   const [list, setList] = useState<Nudge[] | null>(null);
   useEffect(() => {
-    fetch('/api/nudges')
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setList)
-      .catch(() => setList([]));
+    let alive = true;
+    const load = () =>
+      fetch('/api/nudges')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((l: Nudge[] | null) => alive && l && setList(l))
+        .catch(() => {});
+    load();
+    const id = setInterval(() => document.visibilityState === 'visible' && load(), 20_000);
+    const onShow = () => document.visibilityState === 'visible' && load();
+    document.addEventListener('visibilitychange', onShow);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onShow);
+    };
   }, []);
   return [list, setList] as const;
 }
 
-/** On a friend's desk: one tap to tell her you're thinking of her, with an emoji and a few words. */
+/** On a friend's desk: a small, one-tap "thinking of you", with an emoji and a few words if they like. */
 export function NudgeSend() {
   const [list, setList] = useNudges();
   const [emoji, setEmoji] = useState(NUDGE_EMOJI[0]);
   const [text, setText] = useState('');
+  const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(0);
   const [err, setErr] = useState('');
@@ -43,6 +56,7 @@ export function NudgeSend() {
       const n = await api<Nudge>('/api/nudges', 'POST', { emoji, text });
       setList((l) => [n, ...(l ?? [])]);
       setText('');
+      setMore(false);
       setSent((k) => k + 1);
     } catch (e) {
       setErr((e as Error).message);
@@ -50,21 +64,31 @@ export function NudgeSend() {
     setBusy(false);
   }
 
+  const answered = list?.find((n) => n.reaction || n.reply);
+
   return (
-    <section className="nudge" id="nudges" aria-label="Thinking of her">
-      <span className="hand">thinking of her?</span>
-      <div className="nudge-row">
-        <button type="button" className="nudge-big" onClick={send} disabled={busy} aria-label={`Send ${emoji} to Saanika`}>
+    <section className="nudge-mini" id="nudges" aria-label="Thinking of her">
+      <div className="nm-row">
+        <button type="button" className="nm-send" onClick={send} disabled={busy} aria-label={`Send ${emoji} to Saanika`}>
           <span>{emoji}</span>
           <AnimatePresence>
             {sent > 0 && (
-              <motion.i key={sent} initial={{ opacity: 1, y: 0, scale: 0.8 }} animate={{ opacity: 0, y: -70, scale: 1.6 }} transition={{ duration: 1.1 }} aria-hidden="true">
+              <motion.i key={sent} initial={{ opacity: 1, y: 0, scale: 0.8 }} animate={{ opacity: 0, y: -46, scale: 1.4 }} transition={{ duration: 1 }} aria-hidden="true">
                 {emoji}
               </motion.i>
             )}
           </AnimatePresence>
         </button>
-        <div className="nudge-pick">
+        <span className="nm-text">
+          <b>{sent ? 'Sent. She’ll feel it.' : 'Thinking of her?'}</b>
+          <small>{sent ? 'Tap again any time.' : 'Tap to send her a little ' + emoji}</small>
+        </span>
+        <button type="button" className="nm-more" onClick={() => setMore(!more)} aria-expanded={more} aria-label="Pick an emoji or add a few words">
+          {more ? '×' : '✎'}
+        </button>
+      </div>
+      {more && (
+        <div className="nm-extra">
           <div className="nudge-emoji" role="radiogroup" aria-label="Emoji">
             {NUDGE_EMOJI.map((e) => (
               <button key={e} type="button" role="radio" aria-checked={emoji === e} onClick={() => setEmoji(e)}>
@@ -72,39 +96,34 @@ export function NudgeSend() {
               </button>
             ))}
           </div>
-          <input className="h-input" value={text} onChange={(e) => setText(e.target.value)} maxLength={80} placeholder="A few words (optional)" aria-label="A few words" />
-          <div className="nudge-lines">
-            {LINES.map((l) => (
-              <button key={l} type="button" onClick={() => setText(l)}>
-                {l}
-              </button>
-            ))}
-          </div>
+          <form
+            className="nudge-reply"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+          >
+            <input className="h-input" value={text} onChange={(e) => setText(e.target.value)} maxLength={80} placeholder="A few words (optional)" aria-label="A few words" list="nudge-lines" />
+            <datalist id="nudge-lines">
+              {LINES.map((l) => (
+                <option key={l} value={l} />
+              ))}
+            </datalist>
+            <button className="cta h-small-btn" disabled={busy}>
+              Send {emoji}
+            </button>
+          </form>
         </div>
-      </div>
-      <button type="button" className="cta nudge-send" onClick={send} disabled={busy}>
-        {busy ? 'Sending…' : sent ? `Sent ${emoji} Send another` : `Send ${emoji} to Saanika`}
-      </button>
+      )}
       {err && <p className="h-err">{err}</p>}
-      {sent > 0 && !err && <p className="nudge-ok">She’ll get a little buzz on her phone.</p>}
-
-      {list && list.length > 0 && (
-        <ul className="nudge-mine" aria-label="Your nudges">
-          {list.slice(0, 4).map((n) => (
-            <li key={n.id}>
-              <span className="nudge-e">{n.emoji}</span>
-              <span className="nudge-body">
-                {n.text ? <b>{n.text}</b> : <b>thinking of you</b>}
-                <small>{ago(n.createdAt)}</small>
-                {(n.reaction || n.reply) && (
-                  <span className="nudge-back">
-                    <span className="hand">Saanika</span> {n.reaction} {n.reply && `“${n.reply}”`}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {answered && (
+        <p className="nm-back">
+          <span className="hand">Saanika</span> {answered.reaction} {answered.reply && `“${answered.reply}”`}
+          <small>
+            {' '}
+            to your {answered.emoji} · {ago(answered.answeredAt ?? answered.createdAt)}
+          </small>
+        </p>
       )}
     </section>
   );

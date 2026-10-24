@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNow } from './Clock';
+import { usePeople, type Other } from './usePeople';
 
-type Other = { name: string; tz: string; city: string; known: boolean };
 type Group = { tz: string; city: string; names: string[] };
 
 const AWAKE = { from: 8 * 60, to: 23 * 60 }; // 08:00–23:00, when people are happy to pick up
@@ -107,17 +107,9 @@ function Row({ now, me, g, me1 }: { now: Date; me: string; g: Group; me1: string
  */
 export default function CallPlanner({ firstName }: { firstName: string }) {
   const now = useNow(60_000);
-  const [me, setMe] = useState<string | null>(null);
-  const [others, setOthers] = useState<Other[] | null>(null);
-
-  useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    setMe(tz);
-    fetch('/api/zone', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tz }) })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { others: Other[] }) => setOthers(d.others))
-      .catch(() => setOthers([]));
-  }, []);
+  const people = usePeople();
+  const me = people?.tz ?? null;
+  const others: Other[] | null = people?.others ?? null;
 
   const groups = useMemo(() => {
     const by = new Map<string, Group>();

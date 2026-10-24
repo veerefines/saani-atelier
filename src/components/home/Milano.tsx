@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Wish } from '@/lib/data';
 import { api } from '@/lib/upload-client';
@@ -232,6 +233,47 @@ function Wishlist({
   );
 }
 
+/** Once her list has scrolled out of view, a small button floats in to take her back up to it. */
+function ListButton({ target, left }: { target: React.RefObject<HTMLDivElement | null>; left: number }) {
+  const [show, setShow] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const el = target.current;
+    if (!el) return;
+    // only once she's gone past it (not before she's reached it)
+    const io = new IntersectionObserver(([e]) => setShow(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [target]);
+  if (!mounted) return null;
+  // on the page itself: the animated page wrapper would otherwise trap a fixed button
+  return createPortal(
+    <AnimatePresence>
+      {show && (
+        <motion.button
+          type="button"
+          className="mil-listbtn"
+          initial={{ opacity: 0, y: 16, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 16, scale: 0.9 }}
+          onClick={() => target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          aria-label={`Back to my list${left ? `, ${left} to do` : ''}`}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6h11M9 12h11M9 18h11" />
+            <circle cx="4.5" cy="6" r="1.4" />
+            <circle cx="4.5" cy="12" r="1.4" />
+            <circle cx="4.5" cy="18" r="1.4" />
+          </svg>
+          {left > 0 && <span>{left}</span>}
+        </motion.button>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
+
 export default function Milano({
   info,
   wishes: initial,
@@ -254,6 +296,7 @@ export default function Milano({
   const [rolling, setRolling] = useState<string | null>(null);
   const recent = useRef<string[]>([]);
   const guideRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const here = useHere();
   const [near, setNear] = useState(false);
   const wantNear = useRef(false);
@@ -381,6 +424,11 @@ export default function Milano({
           <Face now={now} zone={info.laZone} city={info.laCity} />
         </div>
       </section>
+
+      <div className="mil-list-top" id="my-list" ref={listRef}>
+        <Wishlist wishes={wishes} setWishes={setWishes} onOpen={openPlace} />
+      </div>
+      <ListButton target={listRef} left={wishes.filter((w) => !w.done).length} />
 
       <div className="mil-layout">
         <div className="mil-main">
@@ -514,10 +562,6 @@ export default function Milano({
             })}
           </section>
         </div>
-
-        <aside className="mil-side">
-          <Wishlist wishes={wishes} setWishes={setWishes} onOpen={openPlace} />
-        </aside>
       </div>
     </>
   );

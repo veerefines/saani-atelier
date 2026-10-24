@@ -1352,19 +1352,6 @@
   display: grid;
   gap: 28px;
 }
-@media (min-width: 980px) {
-  .mil-layout {
-    grid-template-columns: minmax(0, 1fr) 330px;
-    align-items: start;
-  }
-  .mil-side {
-    position: sticky;
-    top: 18px;
-  }
-  .mil-side .wish {
-    max-width: none;
-  }
-}
 .mil-main {
   display: grid;
   gap: 44px;
@@ -3874,58 +3861,6 @@ a.pc-rating:hover {
   font-size: 20px;
   color: var(--berry);
 }
-.nudge-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 6px;
-}
-.nudge-big {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 92px;
-  height: 92px;
-  border: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #fbd6e2 70%);
-  box-shadow:
-    0 0 0 6px rgba(255, 255, 255, 0.6),
-    0 16px 26px -14px rgba(178, 48, 95, 0.7);
-  font-size: 44px;
-  cursor: pointer;
-  animation: nudge-beat 2.4s ease-in-out infinite;
-}
-.nudge-big:active {
-  transform: scale(0.92);
-}
-.nudge-big i {
-  position: absolute;
-  font-style: normal;
-  pointer-events: none;
-}
-@keyframes nudge-beat {
-  0%,
-  100% {
-    scale: 1;
-  }
-  12% {
-    scale: 1.07;
-  }
-  24% {
-    scale: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .nudge-big {
-    animation: none;
-  }
-}
-.nudge-pick {
-  flex: 1;
-  min-width: 0;
-}
 .nudge-emoji {
   display: flex;
   flex-wrap: wrap;
@@ -3947,31 +3882,6 @@ a.pc-rating:hover {
   border-color: var(--berry);
   background: #fff;
 }
-.nudge-lines {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.nudge-lines button {
-  padding: 4px 10px;
-  border: 1.5px solid rgba(178, 48, 95, 0.22);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--burgundy);
-  font: 600 12px var(--font-body);
-  cursor: pointer;
-}
-.nudge-send {
-  display: block;
-  margin: 14px auto 0;
-}
-.nudge-ok {
-  margin: 8px 0 0;
-  text-align: center;
-  font-size: 13px;
-  color: #2f7a55;
-}
 .nudge ul {
   display: grid;
   gap: 10px;
@@ -3984,7 +3894,6 @@ a.pc-rating:hover {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.75);
 }
-.nudge-mine li,
 .nudge-head {
   display: flex;
   align-items: flex-start;
@@ -4037,16 +3946,6 @@ a.pc-rating:hover {
   margin-top: 8px;
 }
 @media (max-width: 460px) {
-  .nudge-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .nudge-big {
-    align-self: center;
-  }
-  .nudge-emoji {
-    justify-content: center;
-  }
   .nudge-react,
   .nudge-reply {
     margin-left: 0;
@@ -4107,4 +4006,361 @@ a.pc-rating:hover {
 .atl-extra-add .h-input {
   flex: 1 1 200px;
   min-width: 0;
+}
+
+/* ---------- desk clocks: who's where ---------- */
+.wc-row {
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 5;
+}
+.wc {
+  position: relative;
+  display: inline-flex;
+}
+.wc:nth-child(2n) .wc-stamp {
+  rotate: 2deg;
+}
+.wc:nth-child(3n) .wc-stamp {
+  rotate: -1deg;
+}
+.wc-stamp {
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+.wc-stamp:hover,
+.wc-stamp.open {
+  background: rgba(255, 250, 244, 0.95);
+  transform: translateY(-2px);
+}
+.wc-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+.wc-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(107, 30, 58, 0.35);
+}
+.wc-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(260px, 80vw);
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #fffaf6;
+  box-shadow: 0 16px 30px -14px rgba(70, 25, 45, 0.55);
+  animation: wc-in 0.18s ease-out;
+}
+.wc-pop::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: #fffaf6;
+}
+.wc-pop small {
+  font-size: 12.5px;
+  color: #8a6a7b;
+}
+@keyframes wc-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.wc-face {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 44px;
+}
+.wc-face i {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--tint);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 4px 8px -4px rgba(70, 25, 45, 0.5);
+  font: 700 15px var(--font-body);
+  font-style: normal;
+  color: var(--burgundy);
+}
+.wc-face.her i {
+  background: linear-gradient(160deg, #fde3ea, #f4a6c0);
+  font-size: 17px;
+}
+.wc-face b {
+  font: 600 11.5px var(--font-body);
+  color: var(--ink);
+}
+
+/* the friend's small "thinking of her?" */
+.nudge-mini {
+  max-width: 520px;
+  margin: 0 auto 18px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.82);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 12px 22px -18px rgba(107, 30, 58, 0.6);
+}
+.nudge-mini:has(.nm-extra),
+.nudge-mini:has(.nm-back) {
+  border-radius: 22px;
+}
+.nm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nm-send {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #fbd6e2 75%);
+  box-shadow: 0 6px 12px -8px rgba(178, 48, 95, 0.8);
+  font-size: 21px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.nm-send:active {
+  transform: scale(0.88);
+}
+.nm-send i {
+  position: absolute;
+  font-style: normal;
+  pointer-events: none;
+}
+.nm-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.nm-text b {
+  font: 650 14px var(--font-body);
+  color: var(--burgundy);
+}
+.nm-text small {
+  font-size: 12px;
+  color: #8a6a7b;
+}
+.nm-more {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(178, 48, 95, 0.22);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--burgundy);
+  font-size: 15px;
+  cursor: pointer;
+}
+.nm-extra {
+  padding: 10px 4px 4px;
+}
+.nm-extra .nudge-reply {
+  margin: 8px 0 0;
+}
+.nm-back {
+  margin: 8px 6px 2px;
+  font-size: 13.5px;
+  color: var(--burgundy);
+  overflow-wrap: anywhere;
+}
+.nm-back .hand {
+  font-size: 17px;
+}
+.nm-back small {
+  color: #8a6a7b;
+}
+
+/* her list sits at the top of Milano corner; a small button brings her back to it */
+.mil-list-top {
+  margin: 0 auto 36px;
+  scroll-margin-top: 16px;
+}
+.mil-listbtn {
+  position: fixed;
+  left: 16px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: #fffaf6;
+  color: var(--burgundy);
+  box-shadow:
+    0 0 0 1.5px rgba(178, 48, 95, 0.25),
+    0 12px 22px -10px rgba(70, 25, 45, 0.55);
+  cursor: pointer;
+}
+.mil-listbtn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.mil-listbtn span {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--berry);
+  color: #fff;
+  font: 700 11px/20px var(--font-body);
+}
+
+/* ---------- her mood today ---------- */
+.mood {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  max-width: 520px;
+  margin: -6px auto 20px;
+  text-align: center;
+}
+.mood > .hand {
+  font-size: 20px;
+  color: var(--berry);
+}
+.mood-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.mood-row button {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid rgba(178, 48, 95, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 250, 246, 0.8);
+  font-size: 21px;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    background 0.2s;
+}
+.mood-row button:hover {
+  transform: translateY(-2px);
+}
+.mood-row button[aria-checked='true'] {
+  border-color: var(--berry);
+  background: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 8px 14px -8px rgba(178, 48, 95, 0.7);
+}
+.mood-note {
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  font: 600 13px var(--font-body);
+  cursor: pointer;
+}
+.mood .nudge-reply {
+  width: 100%;
+  margin: 0;
+}
+.mood-who {
+  font-size: 12px;
+  color: #8a6a7b;
+}
+.mood-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: rgba(255, 250, 246, 0.7);
+  font-size: 14px;
+  color: var(--ink);
+}
+.mood-status > span:first-child {
+  font-size: 24px;
+}
+.mood-status.low {
+  background: rgba(253, 227, 234, 0.85);
+}
+.mood-status small {
+  color: var(--burgundy);
+  font-weight: 600;
+}
+
+/* ---------- a little memory ---------- */
+.memory {
+  max-width: 560px;
+  margin: 26px auto 8px;
+  padding: 14px 16px 16px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(255, 252, 246, 0.92), rgba(240, 230, 251, 0.85));
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 18px 30px -22px rgba(107, 30, 58, 0.55);
+  text-align: center;
+}
+.memory-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-bottom: 10px;
+}
+.memory-head .hand {
+  font-size: 21px;
+  color: var(--berry);
+}
+.memory-head small {
+  font-size: 12.5px;
+  color: #8a6a7b;
+}
+.memory-body {
+  max-width: 420px;
+  margin: 0 auto 10px;
+  text-align: left;
+  animation: wc-in 0.3s ease-out;
+}
+.memory-body .j-polaroid,
+.memory-body img,
+.memory-body video {
+  max-width: 100%;
 }

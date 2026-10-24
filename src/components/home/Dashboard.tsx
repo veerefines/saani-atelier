@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { motion, type Variants } from 'framer-motion';
-import { ClockStamp, dayInfo, hourIn, useNow } from './Clock';
+import { dayInfo, hourIn, useNow } from './Clock';
 import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
+import WorldClocks from './WorldClocks';
 import { NudgeInbox } from './Nudges';
+import { MoodPicker } from './Mood';
+import Memory from './Memory';
 import AtelierMark from './AtelierMark';
 import Corners, { type CornerCounts } from './Corners';
 import OccasionBanner from './OccasionBanner';
@@ -124,11 +127,7 @@ export default function Dashboard({
       {decor}
       <header className="h-hello">
         <AtelierMark />
-        <div className="h-stamps">
-          <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
-          <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />
-          <ClockStamp city={milano.laCity} zone={milano.laZone} now={now} />
-        </div>
+        <WorldClocks />
         <p className="whisper h-greet" suppressHydrationWarning>
           {greeting(now, milano.milanZone)},
         </p>
@@ -139,6 +138,7 @@ export default function Dashboard({
       </header>
 
       {occasion && <OccasionBanner occasion={occasion} />}
+      <MoodPicker />
       <NudgeInbox />
       <TodayCard />
 
@@ -265,6 +265,7 @@ export default function Dashboard({
         </Tile>
       </motion.section>
 
+      <Memory />
       <Corners counts={corners} />
 
       <NotifyToggle />

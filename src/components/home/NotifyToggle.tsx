@@ -56,6 +56,8 @@ export default function NotifyToggle({
         const reg = await navigator.serviceWorker.getRegistration('/');
         const sub = await reg?.pushManager.getSubscription();
         setState(sub ? 'on' : 'off');
+        // this device's notifications go to whoever is signed in now (a shared laptop, or testing both sides)
+        if (sub) api('/api/push', 'POST', { subscription: sub.toJSON() }).catch(() => {});
       } catch {
         setState('off');
       }

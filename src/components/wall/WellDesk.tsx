@@ -3,13 +3,15 @@
 import { motion } from 'framer-motion';
 import { site } from '@/content/site';
 import { mediaUrl } from '@/lib/upload-client';
-import { ClockStamp, dayInfo, hourIn, useNow } from '@/components/home/Clock';
+import { dayInfo, hourIn, useNow } from '@/components/home/Clock';
 import Link from 'next/link';
 import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
 import NotifyToggle from '@/components/home/NotifyToggle';
+import WorldClocks from '@/components/home/WorldClocks';
 import AtelierMark from '@/components/home/AtelierMark';
 import CallPlanner from '@/components/home/CallPlanner';
 import { NudgeSend } from '@/components/home/Nudges';
+import { MoodStatus } from '@/components/home/Mood';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -70,11 +72,7 @@ export default function WellDesk({
       {decor}
       <header className="h-hello">
         <AtelierMark />
-        <div className="h-stamps">
-          <ClockStamp city="Milano" zone={milano.milanZone} now={now} />
-          <ClockStamp city={milano.homeCity} zone={milano.homeZone} now={now} />
-          <ClockStamp city={milano.laCity} zone={milano.laZone} now={now} />
-        </div>
+        <WorldClocks />
         <p className="whisper h-greet" suppressHydrationWarning>
           {hello(now, milano.homeZone)},
         </p>
@@ -85,6 +83,7 @@ export default function WellDesk({
         <p className="whisper w-desk-sub">psst, it’s a surprise. Leave her something to find.</p>
       </header>
 
+      <MoodStatus />
       <NudgeSend />
 
       <section className="today call-card" aria-label="Good time to call Saanika">

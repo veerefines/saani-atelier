@@ -1,5 +1,6 @@
 import * as db from './db';
 import type { Nudge } from '@/content/nudges';
+import type { MoodId } from '@/content/mood';
 import type { Session } from './session';
 
 /**
@@ -306,3 +307,18 @@ export async function answerNudge(id: string, a: { reaction?: string; reply?: st
     answeredAt: now(),
   }));
 }
+
+/* ---------- her mood today ---------- */
+
+export type MoodDoc = { id: 'mood'; createdAt: string; mood: MoodId; note?: string; at: string; day: string; alerted?: string };
+/** Today's mood (Milano day), or null if she hasn't said yet today. */
+export async function getMood(): Promise<MoodDoc | null> {
+  const m = await db.get<MoodDoc>('state', 'mood');
+  return m && m.day === milanDay() ? m : null;
+}
+export async function setMood(mood: MoodId, note: string) {
+  const cur = await db.get<MoodDoc>('state', 'mood');
+  const day = milanDay();
+  return db.put<MoodDoc>('state', { id: 'mood', createdAt: cur?.createdAt ?? now(), mood, ...(note ? { note: note.slice(0, 100) } : {}), at: now(), day, ...(cur?.alerted === day ? { alerted: day } : {}) });
+}
+export const markMoodAlerted = (day: string) => db.update<MoodDoc>('state', 'mood', (m) => ({ ...m, alerted: day }));
