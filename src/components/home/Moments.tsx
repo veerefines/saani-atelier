@@ -106,6 +106,7 @@ export function ShareMoment({ friends, onSent }: { friends: Friend[]; onSent?: (
         </Link>
       </div>
 
+      {!kind && <p className="mo-hint">A photo, a little video or a voice note, for everyone or just a few.</p>}
       {!kind && (
         <div className="mo-pick">
           <label className="mo-btn">

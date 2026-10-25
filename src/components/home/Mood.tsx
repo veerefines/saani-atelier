@@ -66,7 +66,9 @@ export function MoodPicker() {
             {mood?.note ? `“${mood.note}” ✎` : '+ add a few words'}
           </button>
         ))}
-      {current && <small className="mood-who">Your people can see this on their desks{current.low ? ', and they’ve had a little nudge to check in' : ''}.</small>}
+      <small className="mood-who">
+        {current ? `Your people can see this on their desks${current.low ? ', and they’ve had a little nudge to check in' : ''}.` : 'Pick one and your people will see it on their desks.'}
+      </small>
       {err && <p className="h-err">{err}</p>}
     </section>
   );

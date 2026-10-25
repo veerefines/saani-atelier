@@ -4831,3 +4831,123 @@ a.pc-rating:hover {
     max-height: 300px;
   }
 }
+
+/* share a moment: a quiet line under the heading */
+.mo-hint {
+  margin: -2px 0 10px;
+  font-size: 13px;
+  color: #8a6a7b;
+}
+.mo-share-head .w-link {
+  font-size: 13px;
+}
+
+@media (min-width: 1024px) {
+  /* her mood card, laid out like the cards beside it: title and action on top, then the content, left-aligned */
+  .desk-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    align-content: start;
+    gap: 10px 12px;
+    text-align: left;
+  }
+  .desk-col > .mood {
+    display: contents;
+  }
+  .desk-col .mood > .hand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .desk-col > .love-back-row {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+  .desk-col .love-back {
+    padding: 6px 12px;
+    font-size: 12.5px;
+  }
+  .desk-col .mood-row {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .desk-col .mood-note,
+  .desk-col .mood .nudge-reply,
+  .desk-col .mood-who,
+  .desk-col .mood .h-err {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin: 0;
+  }
+  .desk-col .mood-note {
+    padding: 0;
+  }
+  .desk-col .mood .nudge-reply {
+    justify-self: stretch;
+  }
+  /* both cards: same padding, heading on the same line, content from the top */
+  .desk-left > .mo-share,
+  .desk-col {
+    padding: 16px 18px;
+  }
+  .desk-left > .mo-share .mo-share-head {
+    margin-bottom: 6px;
+  }
+}
+@media (min-width: 1024px) {
+  /* same header height in both cards so the titles line up */
+  .desk-col .mood > .hand {
+    justify-self: start;
+    margin: 0;
+    text-align: left;
+    line-height: 34px;
+  }
+  .desk-col > .love-back-row,
+  .desk-left > .mo-share .mo-share-head {
+    min-height: 34px;
+  }
+  .desk-left > .mo-share .mo-share-head {
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .desk-left > .mo-share .mo-share-head .hand {
+    line-height: 34px;
+  }
+  .desk-left > .mo-share .mo-hint {
+    margin: 0 0 12px;
+  }
+  .desk-col .mood-who {
+    font-size: 13px;
+  }
+}
+@media (min-width: 1024px) {
+  .desk-left > .mo-share .mo-share-head > * {
+    margin: 0;
+    line-height: 34px;
+  }
+}
+@media (min-width: 1024px) {
+  .desk-left > .mo-share .mo-share-head {
+    height: 34px;
+  }
+  .desk-left > .mo-share .mo-share-head .w-link {
+    padding: 0;
+  }
+}
+.mo-share-head {
+  align-items: center;
+  margin-bottom: 4px;
+}
+.mo-share-head .w-link {
+  padding: 0;
+  line-height: 1.4;
+}
+.mo-share-head .hand {
+  line-height: 1.2;
+}
+@media (min-width: 1024px) {
+  .desk-left > .mo-share .mo-share-head .hand {
+    line-height: 34px;
+  }
+}
