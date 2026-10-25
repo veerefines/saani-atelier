@@ -3744,6 +3744,83 @@ a.pc-rating:hover {
 .today-call small.call-now.yes {
   color: #2f7a55;
 }
+/* folded by default: a title row with a word per person; ▾ opens the timelines */
+.call-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.call-peek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.call-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(178, 48, 95, 0.16);
+  font: 600 12.5px var(--font-body);
+  color: #6b5160;
+  white-space: nowrap;
+}
+.call-chip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e2c3cf;
+}
+.call-chip.yes {
+  color: #2f7a55;
+  border-color: rgba(47, 122, 85, 0.25);
+}
+.call-chip.yes i {
+  background: #6fbf8f;
+}
+.call-caret {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  border-radius: 50%;
+  border: 1.5px solid rgba(178, 48, 95, 0.3);
+  background: #fff;
+  color: var(--berry);
+  font-size: 14px;
+  transition: transform 0.25s ease;
+}
+.today-call.open .call-caret {
+  transform: rotate(180deg);
+}
+.call-toggle:hover .call-caret,
+.call-toggle:focus-visible .call-caret {
+  background: #fde3ea;
+}
+#call-details {
+  animation: call-open 0.25s ease;
+}
+@keyframes call-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 /* on a friend's desk the planner sits in its own card */
 .call-card {
   margin: 0 0 22px;

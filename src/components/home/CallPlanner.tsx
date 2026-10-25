@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNow } from './Clock';
 import { usePeople, type Other } from './usePeople';
 
@@ -61,8 +61,16 @@ function plan(now: Date, me: string, g: Group) {
   };
 }
 
-function Row({ now, me, g, me1 }: { now: Date; me: string; g: Group; me1: string }) {
-  const p = useMemo(() => plan(now, me, g), [now, me, g]);
+type Plan = ReturnType<typeof plan>;
+
+/** The folded view: a word per person (or group) on whether now is good. */
+function status(p: Plan) {
+  if (p.goodNow) return { text: 'good now', yes: true };
+  if (p.next !== null) return { text: `from ${hhmm(p.next)}`, yes: false };
+  return { text: 'tomorrow', yes: false };
+}
+
+function Row({ p, g, me1 }: { p: Plan; g: Group; me1: string }) {
   const who = names(g.names);
   const mine = p.windows.map(([a, b]) => `${hhmm(a)}–${hhmm(b)}`);
   return (
@@ -121,14 +129,53 @@ export default function CallPlanner({ firstName }: { firstName: string }) {
     return [...by.values()];
   }, [others]);
 
+  const plans = useMemo(() => (now && me ? groups.map((g) => plan(now, me, g)) : []), [now, me, groups]);
+
+  // folded by default to save room on the desk; remembered on this device
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try {
+      setOpen(localStorage.getItem('call-open') === '1');
+    } catch {}
+  }, []);
+  const toggle = () =>
+    setOpen((o) => {
+      try {
+        localStorage.setItem('call-open', o ? '0' : '1');
+      } catch {}
+      return !o;
+    });
+
   if (!now || !me || !others) return null;
   return (
-    <div className="today-call">
-      <span className="hand">good time to call</span>
-      {groups.map((g) => (
-        <Row key={g.tz} now={now} me={me} g={g} me1={firstName} />
-      ))}
-      {!groups.length && <small>Nobody to call yet.</small>}
+    <div className={`today-call${open ? ' open' : ''}`}>
+      <button type="button" className="call-toggle" aria-expanded={open} aria-controls="call-details" onClick={toggle}>
+        <span className="hand">good time to call</span>
+        {!open && groups.length > 0 && (
+          <span className="call-peek">
+            {groups.map((g, i) => {
+              const st = status(plans[i]);
+              return (
+                <span key={g.tz} className={`call-chip${st.yes ? ' yes' : ''}`}>
+                  <i aria-hidden="true" />
+                  {g.names.length > 2 ? `${g.names[0]} +${g.names.length - 1}` : names(g.names)} · {st.text}
+                </span>
+              );
+            })}
+          </span>
+        )}
+        <span className="call-caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div id="call-details">
+          {groups.map((g, i) => (
+            <Row key={g.tz} p={plans[i]} g={g} me1={firstName} />
+          ))}
+          {!groups.length && <small>Nobody to call yet.</small>}
+        </div>
+      )}
     </div>
   );
 }
