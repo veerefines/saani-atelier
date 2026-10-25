@@ -36,7 +36,7 @@ trap cleanup EXIT
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$TEST_TMP/push-test.key" -out "$TEST_TMP/push-test.crt" -days 1 -subj "/CN=localhost" 2>/dev/null
 
 # the push library must trust that certificate; nothing else here talks to anything private
-NODE_TLS_REJECT_UNAUTHORIZED=0 npx next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
+NODE_TLS_REJECT_UNAUTHORIZED=0 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
 SERVER=$!
 for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
 curl -s -o /dev/null "$BASE_URL/" || { echo "server didn't start"; cat "$TEST_TMP/server.log"; exit 1; }
@@ -61,9 +61,11 @@ run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Claude server
 kill "$SERVER" 2>/dev/null; wait "$SERVER" 2>/dev/null
+# make sure the first server has let go of the port before starting the keyed one
+for i in $(seq 1 30); do curl -s -o /dev/null "$BASE_URL/" || break; sleep 1; done
 node tests/fake-claude.js 4610 "$TEST_TMP" &
 FAKE=$!
-ANTHROPIC_API_KEY=test-key-not-real ANTHROPIC_BASE_URL=http://localhost:4610 npx next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
+ANTHROPIC_API_KEY=test-key-not-real ANTHROPIC_BASE_URL=http://localhost:4610 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
 SERVER=$!
 for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
 run "assistant (fake Claude)" bash tests/assistant.sh
