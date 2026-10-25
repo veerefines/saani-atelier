@@ -3,13 +3,14 @@
 import { mediaUrl } from '@/lib/upload-client';
 import { FileButton, Status, fileSize, shortDate, uploadCorner, useAction, type Ctx } from './shared';
 
-const KIND: Record<string, { label: string; icon: string }> = {
-  'application/pdf': { label: 'PDF', icon: '📕' },
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { label: 'Word', icon: '📘' },
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': { label: 'PowerPoint', icon: '📙' },
-  'text/plain': { label: 'Text', icon: '📄' },
+const KIND: Record<string, { label: string; tag: string }> = {
+  'application/pdf': { label: 'PDF', tag: 'PDF' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { label: 'Word', tag: 'DOCX' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': { label: 'PowerPoint', tag: 'PPTX' },
+  'text/plain': { label: 'Text', tag: 'TXT' },
 };
-const ACCEPT = '.pdf,.docx,.pptx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation';
+const ACCEPT =
+  '.pdf,.docx,.pptx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
 /** Documents: PDFs, Word, PowerPoint and text files, up to 25 MB each. */
 export default function Documents({ ctx }: { ctx: Ctx }) {
@@ -30,20 +31,22 @@ export default function Documents({ ctx }: { ctx: Ctx }) {
   };
   return (
     <div className="cn-panel">
-      <div className="cn-row">
-        <FileButton label={busy || '+ Upload a document'} accept={ACCEPT} disabled={Boolean(busy)} onFile={upload} />
-        <small className="cn-hint">PDF, DOCX, PPTX or TXT · up to 25 MB · private to you</small>
+      <div className="cn-adder">
+        <div className="cn-row">
+          <FileButton label={busy || '+ Upload a document'} accept={ACCEPT} disabled={Boolean(busy)} onFile={upload} />
+          <small className="cn-hint">PDF, DOCX, PPTX or TXT · up to 25 MB · only you can open them</small>
+        </div>
+        <Status err={err} ok={ok} />
       </div>
-      <Status err={err} ok={ok} />
       {!docs.length && <p className="cn-empty-note">No documents yet. Briefs, trend reports, research and slides all belong here.</p>}
       <ul className="cn-docs">
         {docs.map((d) => {
           if (d.kind !== 'doc') return null;
-          const k = KIND[d.mime] ?? { label: 'File', icon: '📄' };
+          const k = KIND[d.mime] ?? { label: 'File', tag: 'FILE' };
           return (
             <li key={d.id}>
               <span className="cn-doc-icon" aria-hidden="true">
-                {k.icon}
+                {k.tag}
               </span>
               <span className="cn-doc-main">
                 <b>{d.filename}</b>
@@ -51,17 +54,14 @@ export default function Documents({ ctx }: { ctx: Ctx }) {
                   {k.label} · {fileSize(d.size)} · added {shortDate(d.createdAt)}
                 </small>
               </span>
-              <a className="pc-btn" href={`${mediaUrl(d.mediaId)}?download=1`} download={d.filename}>
-                Download
-              </a>
-              <button
-                type="button"
-                className="pc-btn atl-danger"
-                onClick={() => confirm(`Delete ${d.filename}?`) && run('Deleting…', () => ctx.removeItem(d.id))}
-                aria-label={`Delete ${d.filename}`}
-              >
-                Delete
-              </button>
+              <span className="cn-doc-actions">
+                <a className="cn-btn" href={`${mediaUrl(d.mediaId)}?download=1`} download={d.filename}>
+                  Download
+                </a>
+                <button type="button" className="cn-btn danger" onClick={() => confirm(`Delete ${d.filename}?`) && run('Deleting…', () => ctx.removeItem(d.id))} aria-label={`Delete ${d.filename}`}>
+                  Delete
+                </button>
+              </span>
             </li>
           );
         })}

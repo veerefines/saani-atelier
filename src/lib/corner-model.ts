@@ -77,3 +77,10 @@ export function costingSummary(c: Costing) {
   };
 }
 
+
+/** Readable text on a colour: dark ink on light colours, white on dark ones. */
+export function inkOn(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return 0.299 * r + 0.587 * g + 0.114 * b > 170 ? { color: '#3a2a32', textShadow: 'none' } : { color: '#fff' };
+}

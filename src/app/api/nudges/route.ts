@@ -8,7 +8,8 @@ export async function GET() {
   const s = await requireSession();
   if (isResponse(s)) return s;
   const all = await listNudges();
-  return json((s.role === 'saanika' ? all : all.filter((n) => n.authorId === s.id)).slice(0, 40));
+  // her desk shows only the ones she hasn't cleared; a friend sees all of their own
+  return json((s.role === 'saanika' ? all.filter((n) => !n.dismissedAt) : all.filter((n) => n.authorId === s.id)).slice(0, 40));
 }
 
 /** A friend taps "thinking of you": an emoji and maybe a few words, sent to her as a notification. */

@@ -57,6 +57,18 @@ check "she replies" 200 -b "$SA" -X POST "${J[@]}" -d '{"reply":"REPLY-BACK"}' $
 expect "keeps the reaction" '"reaction":"🥹"'
 check "friend sees her answer" 200 -b "$FR" $B/api/nudges
 expect "reply visible" "REPLY-BACK"
+check "clear: friend can't 403" 403 -b "$FR" -X POST "${J[@]}" -d "{\"ids\":[\"$NUD\"]}" $B/api/nudges/dismiss
+check "clear: nothing given 400" 400 -b "$SA" -X POST "${J[@]}" -d '{}' $B/api/nudges/dismiss
+check "she clears one" 200 -b "$SA" -X POST "${J[@]}" -d "{\"ids\":[\"$NUD\"]}" $B/api/nudges/dismiss
+expect "one cleared" '"cleared":1'
+check "gone from her desk" 200 -b "$SA" $B/api/nudges
+expect "cleared nudge hidden" "NUDGE-ONE" absent
+expect "the other stays" "ENV-NUDGE"
+check "the friend still sees theirs" 200 -b "$FR" $B/api/nudges
+expect "friend keeps it" "NUDGE-ONE"
+check "she clears all" 200 -b "$SA" -X POST "${J[@]}" -d '{"all":true}' $B/api/nudges/dismiss
+check "her inbox is empty" 200 -b "$SA" $B/api/nudges
+expect "empty" '^\[\]$'
 check "her desk renders" 200 -b "$SA" $B/home
 check "friend desk renders" 200 -b "$FR" $B/wall
 

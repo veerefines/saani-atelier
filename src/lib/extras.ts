@@ -313,6 +313,18 @@ export async function listNudges() {
 export async function addNudge(s: Session, emoji: string, text: string) {
   return db.put<Nudge>('nudges', { id: db.newId('n_'), createdAt: now(), authorId: s.id, authorName: s.name, emoji, ...(text ? { text: text.slice(0, 80) } : {}) });
 }
+/** She clears nudges from her desk (some, or every one). */
+export async function dismissNudges(ids: string[] | 'all') {
+  const all = await listNudges();
+  const at = now();
+  let n = 0;
+  for (const x of all) {
+    if (x.dismissedAt || (ids !== 'all' && !ids.includes(x.id))) continue;
+    await db.put<Nudge>('nudges', { ...x, dismissedAt: at });
+    n++;
+  }
+  return n;
+}
 export async function answerNudge(id: string, a: { reaction?: string; reply?: string }) {
   return db.update<Nudge>('nudges', id, (n) => ({
     ...n,

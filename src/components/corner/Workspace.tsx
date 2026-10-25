@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import type { Item, Project } from '@/lib/corner-model';
-import { api } from '@/lib/upload-client';
+import { api, mediaUrl } from '@/lib/upload-client';
 import { CATEGORY_LOOK, edited } from './CornerHome';
-import type { Ctx, Tab } from './shared';
+import { FileButton, Status, uploadCorner, useAction, type Ctx, type Tab } from './shared';
 import Overview from './Overview';
 import Documents from './Documents';
 import Inspiration from './Inspiration';
@@ -63,18 +63,47 @@ export default function Workspace({ initial, aiReady }: { initial: { project: Pr
   };
 
   const look = CATEGORY_LOOK[project.category];
+  const head = useAction();
   return (
     <>
       <header className="cn-head">
-        <span className="cn-chip" style={{ ['--tint' as string]: look.tint }}>
-          {look.emoji} {project.category}
-        </span>
-        <h1 className="whisper cn-h1">{project.title}</h1>
-        <small>
-          {edited(project.updatedAt)}
-          {project.favourite ? ' · ♥ favourite' : ''}
-          {project.archived ? ' · archived' : ''}
-        </small>
+        <div className="cn-head-cover" style={{ ['--tint' as string]: look.tint }}>
+          {project.coverMediaId ? <img src={mediaUrl(project.coverMediaId)} alt="" /> : <span aria-hidden="true">{look.emoji}</span>}
+          {project.coverMediaId && (
+            <button type="button" className="cn-x" onClick={() => head.run('Removing…', () => ctx.patchProject({ coverMediaId: null }))} aria-label="Remove cover" title="Remove cover">
+              ×
+            </button>
+          )}
+        </div>
+        <div className="cn-head-main">
+          <span className="cn-chip" style={{ ['--tint' as string]: look.tint }}>
+            {look.emoji} {project.category}
+          </span>
+          <h1 className="cn-h1">{project.title}</h1>
+          <small>
+            {edited(project.updatedAt)}
+            {project.archived ? ' · archived' : ''}
+          </small>
+        </div>
+        <div className="cn-head-actions">
+          <button
+            type="button"
+            className={`cn-btn${project.favourite ? ' on' : ''}`}
+            aria-pressed={project.favourite}
+            onClick={() => head.run('', () => ctx.patchProject({ favourite: !project.favourite }))}
+          >
+            {project.favourite ? '♥ Favourite' : '♡ Favourite'}
+          </button>
+          <FileButton
+            label={head.busy === 'Uploading…' ? 'Uploading…' : project.coverMediaId ? 'Change cover' : 'Add cover'}
+            accept="image/*"
+            disabled={Boolean(head.busy)}
+            onFile={(f) => head.run('Uploading…', async () => ctx.patchProject({ coverMediaId: await uploadCorner(f) }))}
+          />
+        </div>
+        <div className="cn-head-status">
+          <Status err={head.err} ok={head.ok} />
+        </div>
       </header>
       <nav className="cn-tabs" role="tablist" aria-label="Project sections">
         {TABS.map((t) => (

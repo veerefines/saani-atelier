@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CATEGORIES, type Category, type Project } from '@/lib/corner-model';
@@ -32,47 +33,55 @@ function CreateForm({ onDone, onCancel }: { onDone: (p: Project) => void; onCanc
   const [category, setCategory] = useState<Category>('Fashion Collection');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
   return (
-    <form
-      className="cn-create"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setErr('');
-        try {
-          onDone(await api<Project>('/api/corner/projects', 'POST', { title, description, category }));
-        } catch (x) {
-          setErr((x as Error).message);
-          setBusy(false);
-        }
-      }}
-    >
-      <h2 className="whisper">A new project</h2>
-      <label>
-        <span>Title</span>
-        <input className="h-input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder="e.g. SS27 capsule: Navigli at dusk" autoFocus required />
-      </label>
-      <label>
-        <span>Description</span>
-        <textarea className="h-input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} rows={3} placeholder="What is it, and what should it become?" />
-      </label>
-      <div className="cn-cats" role="radiogroup" aria-label="Category">
-        {CATEGORIES.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={category === c} onClick={() => setCategory(c)} style={{ ['--tint' as string]: CATEGORY_LOOK[c].tint }}>
-            {CATEGORY_LOOK[c].emoji} {c}
+    <div className="cn-dialog" role="dialog" aria-modal="true" aria-label="New project" onClick={onCancel}>
+      <form
+        className="cn-create"
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setErr('');
+          try {
+            onDone(await api<Project>('/api/corner/projects', 'POST', { title, description, category }));
+          } catch (x) {
+            setErr((x as Error).message);
+            setBusy(false);
+          }
+        }}
+      >
+        <h2 className="cn-h2">New project</h2>
+        <label>
+          <span>Title</span>
+          <input className="h-input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder="e.g. SS27 capsule: Navigli at dusk" autoFocus required />
+        </label>
+        <label>
+          <span>Description</span>
+          <textarea className="h-input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} rows={3} placeholder="What is it, and what should it become?" />
+        </label>
+        <div className="cn-cats" role="radiogroup" aria-label="Category">
+          {CATEGORIES.map((c) => (
+            <button key={c} type="button" role="radio" aria-checked={category === c} onClick={() => setCategory(c)} style={{ ['--tint' as string]: CATEGORY_LOOK[c].tint }}>
+              {CATEGORY_LOOK[c].emoji} {c}
+            </button>
+          ))}
+        </div>
+        {err && <p className="h-err">{err}</p>}
+        <div className="cn-row">
+          <button className="cn-btn primary" disabled={busy || !title.trim()}>
+            {busy ? 'Creating…' : 'Create project'}
           </button>
-        ))}
-      </div>
-      {err && <p className="h-err">{err}</p>}
-      <div className="cn-row">
-        <button className="cta" disabled={busy || !title.trim()}>
-          {busy ? 'Creating…' : 'Create project'}
-        </button>
-        <button type="button" className="w-link" onClick={onCancel}>
-          Cancel
-        </button>
-      </div>
-    </form>
+          <button type="button" className="cn-btn ghost" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
@@ -81,7 +90,18 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
   const [renaming, setRenaming] = useState(false);
   const [title, setTitle] = useState(p.title);
   const [err, setErr] = useState('');
+  const box = useRef<HTMLElement>(null);
   const look = CATEGORY_LOOK[p.category];
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: Event) => (e instanceof KeyboardEvent ? e.key === 'Escape' && setMenu(false) : !box.current?.contains(e.target as Node) && setMenu(false));
+    window.addEventListener('pointerdown', close);
+    window.addEventListener('keydown', close);
+    return () => {
+      window.removeEventListener('pointerdown', close);
+      window.removeEventListener('keydown', close);
+    };
+  }, [menu]);
   const patch = async (body: Record<string, unknown>) => {
     setErr('');
     try {
@@ -100,7 +120,7 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
     }
   };
   return (
-    <article className={`cn-card${p.archived ? ' archived' : ''}`}>
+    <article ref={box} className={`cn-card${p.archived ? ' archived' : ''}`}>
       <Link href={`/home/corner/${p.id}`} className="cn-cover" style={{ ['--tint' as string]: look.tint }} aria-label={`Open ${p.title}`}>
         {p.coverMediaId ? <img src={mediaUrl(p.coverMediaId)} alt="" loading="lazy" /> : <span aria-hidden="true">{look.emoji}</span>}
         {p.favourite && (
@@ -108,6 +128,9 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
             ♥
           </i>
         )}
+        <span className="cn-chip cn-cover-chip" style={{ ['--tint' as string]: look.tint }}>
+          {look.emoji} {p.category}
+        </span>
       </Link>
       <div className="cn-body">
         {renaming ? (
@@ -120,7 +143,7 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
             }}
           >
             <input className="h-input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} autoFocus aria-label="Project title" />
-            <button className="cta h-small-btn">Save</button>
+            <button className="cn-btn primary">Save</button>
           </form>
         ) : (
           <Link href={`/home/corner/${p.id}`} className="cn-title">
@@ -129,10 +152,8 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
         )}
         {p.description && <p className="cn-desc">{p.description}</p>}
         <p className="cn-meta">
-          <span className="cn-chip" style={{ ['--tint' as string]: look.tint }}>
-            {look.emoji} {p.category}
-          </span>
           <small>{edited(p.updatedAt)}</small>
+          {p.archived && <small>· archived</small>}
         </p>
         {err && <p className="h-err">{err}</p>}
       </div>
@@ -189,7 +210,14 @@ export default function CornerHome({ initial }: { initial: Project[] }) {
       .filter((p) => !needle || p.title.toLowerCase().includes(needle))
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }, [list, q, filter]);
-  const recent = useMemo(() => [...list].filter((p) => !p.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3), [list]);
+  const recent = useMemo(
+    () =>
+      [...list]
+        .filter((p) => !p.archived)
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        .slice(0, 3),
+    [list],
+  );
 
   const change = (p: Project) => setList((l) => l.map((x) => (x.id === p.id ? p : x)));
   const remove = (id: string) => setList((l) => l.filter((x) => x.id !== id));
@@ -198,12 +226,12 @@ export default function CornerHome({ initial }: { initial: Project[] }) {
   return (
     <>
       <div className="cn-tools">
-        <button type="button" className="cta" onClick={() => setCreating(true)}>
+        <button type="button" className="cn-btn primary" onClick={() => setCreating(true)}>
           + Create New Project
         </button>
         <input className="h-input cn-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects by title" aria-label="Search projects by title" />
       </div>
-      {creating && <CreateForm onCancel={() => setCreating(false)} onDone={(p) => router.push(`/home/corner/${p.id}`)} />}
+      {creating && createPortal(<CreateForm onCancel={() => setCreating(false)} onDone={(p) => router.push(`/home/corner/${p.id}`)} />, document.body)}
 
       {list.length === 0 && !creating && (
         <div className="cn-empty">
@@ -214,7 +242,7 @@ export default function CornerHome({ initial }: { initial: Project[] }) {
 
       {recent.length > 0 && !q && filter === 'all' && (
         <section className="cn-recent" aria-label="Recently edited">
-          <h2 className="hand">recently edited</h2>
+          <h2 className="cn-label">Recently edited</h2>
           <div className="cn-recent-row">
             {recent.map((p) => (
               <Link key={p.id} href={`/home/corner/${p.id}`} className="cn-recent-item" style={{ ['--tint' as string]: CATEGORY_LOOK[p.category].tint }}>
@@ -242,7 +270,9 @@ export default function CornerHome({ initial }: { initial: Project[] }) {
           ))}
         </div>
       )}
-      {list.length > 0 && !shown.length && <p className="h-empty whisper">{q ? `No projects called “${q}”.` : filter === 'archived' ? 'Nothing archived.' : 'No favourites yet. Tap ⋯ on a project to add one.'}</p>}
+      {list.length > 0 && !shown.length && (
+        <p className="h-empty whisper">{q ? `No projects called “${q}”.` : filter === 'archived' ? 'Nothing archived.' : 'No favourites yet. Tap ⋯ on a project to add one.'}</p>
+      )}
       <div className="cn-grid">
         {shown.map((p) => (
           <Card key={p.id} p={p} onChange={change} onRemove={remove} onCopy={copy} />

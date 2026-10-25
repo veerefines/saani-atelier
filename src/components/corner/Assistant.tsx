@@ -23,7 +23,12 @@ function Answer({ text }: { text: string }) {
         const t = line.trim();
         if (!t) return null;
         if (/^#{1,4}\s/.test(t)) return <h4 key={i}>{bold(t.replace(/^#{1,4}\s/, ''))}</h4>;
-        if (/^[-*•]\s/.test(t)) return <p key={i} className="cn-bullet">• {bold(t.replace(/^[-*•]\s/, ''))}</p>;
+        if (/^[-*•]\s/.test(t))
+          return (
+            <p key={i} className="cn-bullet">
+              • {bold(t.replace(/^[-*•]\s/, ''))}
+            </p>
+          );
         return <p key={i}>{bold(t)}</p>;
       })}
     </div>
@@ -41,11 +46,13 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
     return (
       <div className="cn-panel">
         <section className="cn-section cn-setup">
-          <h3 className="hand">the assistant isn’t switched on yet</h3>
+          <h3 className="cn-h">The assistant isn’t switched on yet</h3>
           <p>It reads this project (the brief, notes, links, palettes, fabrics, moodboard, PDFs and images) and helps you think it through. Everything else in My Corner works without it.</p>
           <ol>
             <li>Create an API key at console.anthropic.com (Settings → API keys).</li>
-            <li>In Vercel, open the project → Settings → Environment Variables, and add <code>ANTHROPIC_API_KEY</code> with that key.</li>
+            <li>
+              In Vercel, open the project → Settings → Environment Variables, and add <code>ANTHROPIC_API_KEY</code> with that key.
+            </li>
             <li>Redeploy (or push any change). This tab then turns into the assistant.</li>
           </ol>
         </section>
@@ -68,7 +75,7 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
   return (
     <div className="cn-panel">
       <section className="cn-section">
-        <h3 className="hand">ask about this project</h3>
+        <h3 className="cn-h">Ask about this project</h3>
         <div className="cn-quick">
           {QUICK.map((x) => (
             <button key={x.mode} type="button" disabled={Boolean(busy)} onClick={() => ask(x.mode, x.label)}>
@@ -84,7 +91,7 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
           }}
         >
           <input className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder="Or ask anything about what’s saved here…" aria-label="Your question" />
-          <button className="cta h-small-btn" disabled={Boolean(busy) || !q.trim()}>
+          <button className="cn-btn primary" disabled={Boolean(busy) || !q.trim()}>
             Ask
           </button>
         </form>

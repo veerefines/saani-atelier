@@ -3867,8 +3867,7 @@ a.pc-rating:hover {
   gap: 4px;
   margin-bottom: 8px;
 }
-.nudge-emoji button,
-.nudge-react button {
+.nudge-emoji button {
   width: 38px;
   height: 38px;
   border: 1.5px solid transparent;
@@ -3877,8 +3876,7 @@ a.pc-rating:hover {
   font-size: 19px;
   cursor: pointer;
 }
-.nudge-emoji button[aria-checked='true'],
-.nudge-react button[aria-pressed='true'] {
+.nudge-emoji button[aria-checked='true'] {
   border-color: var(--berry);
   background: #fff;
 }
@@ -3894,62 +3892,14 @@ a.pc-rating:hover {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.75);
 }
-.nudge-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
 .nudge-e {
   flex: none;
   font-size: 26px;
   line-height: 1;
 }
-.nudge-body {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 14px;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-.nudge-body small {
-  font-size: 12px;
-  color: #8a6a7b;
-}
-.nudge-back {
-  margin-top: 4px;
-  font-size: 13.5px;
-  color: var(--burgundy);
-}
-.nudge-back .hand {
-  font-size: 17px;
-}
-.nudge-react {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 8px 0 6px 36px;
-}
-.nudge-reply {
-  display: flex;
-  gap: 8px;
-  margin-left: 36px;
-}
 .nudge-reply .h-input {
   flex: 1;
   min-width: 0;
-}
-.nudge-in li.answered {
-  opacity: 0.85;
-}
-.nudge-in .w-link {
-  margin-top: 8px;
-}
-@media (max-width: 460px) {
-  .nudge-react,
-  .nudge-reply {
-    margin-left: 0;
-  }
 }
 
 /* admin: extras added to a journey chapter */
@@ -4440,7 +4390,8 @@ a.pc-rating:hover {
 }
 
 /* ---------- laptop and desktop: a compact desk top (phones and iPads keep the stacked layout) ---------- */
-.desk-col {
+.desk-col,
+.desk-left {
   display: contents;
 }
 @media (min-width: 1024px) {
@@ -4499,7 +4450,7 @@ a.pc-rating:hover {
   .desk-top {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    align-items: stretch;
+    align-items: start;
     gap: 14px;
     margin: 0 0 22px;
   }
@@ -4511,7 +4462,7 @@ a.pc-rating:hover {
   .desk-col {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 12px;
     padding: 16px 14px;
     border-radius: 24px;
@@ -4713,5 +4664,170 @@ a.pc-rating:hover {
   }
   .desk-top > .mo-tile .mo-img {
     max-height: 360px;
+  }
+}
+
+/* her "thinking of you" inbox: compact rows she can clear */
+.nudge-reply {
+  display: flex;
+  gap: 8px;
+}
+.nudge-reply .h-input {
+  flex: 1;
+  min-width: 0;
+}
+.ni-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ni-head .hand {
+  font-size: 20px;
+  color: var(--berry);
+}
+.nudge-in ul {
+  gap: 8px;
+  margin-top: 8px;
+}
+.nudge-in li {
+  padding: 10px 10px 10px 12px;
+}
+.nudge-in li.answered {
+  background: rgba(255, 255, 255, 0.55);
+}
+.ni-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ni-top .nudge-e {
+  font-size: 22px;
+}
+.ni-who {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.ni-who small {
+  color: #8a6a7b;
+}
+.ni-text {
+  display: block;
+  color: #4e3a45;
+  overflow-wrap: anywhere;
+}
+.ni-x {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(107, 30, 58, 0.06);
+  color: #8a6a7b;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ni-x:hover {
+  background: rgba(107, 30, 58, 0.12);
+  color: var(--burgundy);
+}
+.ni-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin: 6px 0 0 30px;
+}
+.ni-actions button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 17px;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.12s;
+}
+.ni-actions button:hover {
+  background: #fff;
+  transform: scale(1.12);
+}
+.ni-actions .ni-reply {
+  width: auto;
+  margin-left: 4px;
+  padding: 0 12px;
+  border: 1.5px solid rgba(178, 48, 95, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--burgundy);
+  font: 600 12.5px var(--font-body);
+}
+.ni-actions .ni-reply:hover {
+  transform: none;
+}
+.ni-sent {
+  margin: 4px 0 0 32px;
+  font-size: 13px;
+  color: var(--burgundy);
+  overflow-wrap: anywhere;
+}
+.nudge-in .nudge-reply {
+  margin: 8px 0 0 32px;
+}
+.ni-more {
+  margin-top: 8px;
+}
+@media (max-width: 460px) {
+  .ni-actions,
+  .ni-sent,
+  .nudge-in .nudge-reply {
+    margin-left: 0;
+  }
+}
+@media (min-width: 1024px) {
+  /* on a laptop the inbox scrolls inside its card instead of stretching the row */
+  .desk-top > .nudge-in ul {
+    max-height: 330px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+}
+@media (min-width: 1024px) {
+  /* six moods on one line inside the narrower card */
+  .desk-top .mood-row {
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  .desk-top .mood-row button {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+}
+@media (min-width: 1024px) {
+  /* her desk: mood and moments stacked on the left, and the inbox (when there is one) on the right */
+  .desk-top-her {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .desk-top-her:not(:has(> .nudge-in)) > .desk-left {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .desk-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .desk-left > .mo-share {
+    max-width: none;
+    margin: 0;
+  }
+  .desk-top-her > .nudge-in ul {
+    max-height: 300px;
   }
 }

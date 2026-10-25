@@ -10,6 +10,8 @@ export type Nudge = {
   reaction?: string;
   reply?: string;
   answeredAt?: string;
+  /** she's seen it and cleared it from her desk (the friend still sees it in theirs) */
+  dismissedAt?: string;
 };
 export const NUDGE_EMOJI = ['💗', '🫶', '🌸', '🤗', '☕', '✨', '🍝', '🥹'];
 export const REACT_EMOJI = ['💗', '🥹', '🫶', '😘', '😂', '🌸'];

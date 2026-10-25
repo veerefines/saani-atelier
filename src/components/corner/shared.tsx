@@ -59,7 +59,7 @@ export const uploadCorner = (f: File, onProgress?: (pct: number) => void) => upl
 /** A button that opens the file picker. */
 export function FileButton({ label, accept, disabled, onFile }: { label: string; accept: string; disabled?: boolean; onFile: (f: File) => void }) {
   return (
-    <label className={`pc-btn cn-file${disabled ? ' disabled' : ''}`}>
+    <label className={`cn-btn${disabled ? ' disabled' : ''}`}>
       {label}
       <input type="file" accept={accept} hidden disabled={disabled} onChange={(e) => (e.target.files?.[0] && onFile(e.target.files[0]), (e.target.value = ''))} />
     </label>

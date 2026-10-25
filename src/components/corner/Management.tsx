@@ -33,23 +33,23 @@ export default function Management({ ctx }: { ctx: Ctx }) {
   const costChanged = (Object.keys(nums) as (keyof Costing)[]).some((k) => nums[k] !== p.costing[k]);
 
   return (
-    <div className="cn-panel cn-mgmt">
+    <div className="cn-panel cn-two cn-mgmt">
       <section className="cn-section">
-        <h3 className="hand">project brief</h3>
+        <h3 className="cn-h">Project brief</h3>
         {BRIEF.map((f) => (
           <label key={f.key} className="cn-field">
             <span>{f.label}</span>
             <textarea className="h-input" rows={2} value={brief[f.key]} onChange={(e) => setBrief({ ...brief, [f.key]: e.target.value })} maxLength={2000} placeholder={f.hint} />
           </label>
         ))}
-        <button type="button" className="cta h-small-btn" disabled={Boolean(b.busy) || !briefChanged} onClick={() => b.run('Saving…', () => ctx.patchProject({ brief }), 'Brief saved ✓')}>
+        <button type="button" className="cn-btn primary" disabled={Boolean(b.busy) || !briefChanged} onClick={() => b.run('Saving…', () => ctx.patchProject({ brief }), 'Brief saved ✓')}>
           {b.busy || 'Save brief'}
         </button>
         <Status err={b.err} ok={b.ok} />
       </section>
 
       <section className="cn-section">
-        <h3 className="hand">product costing</h3>
+        <h3 className="cn-h">Product costing</h3>
         <p className="cn-hint">Per unit, in euros.</p>
         <div className="cn-costs">
           {COSTS.map((f) => (
@@ -60,7 +60,16 @@ export default function Management({ ctx }: { ctx: Ctx }) {
           ))}
           <label className="cn-field">
             <span>Selling price</span>
-            <input className="h-input" type="number" inputMode="decimal" min={0} step="0.01" value={cost.sellingPrice} onChange={(e) => setCost({ ...cost, sellingPrice: e.target.value })} placeholder="0" />
+            <input
+              className="h-input"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              value={cost.sellingPrice}
+              onChange={(e) => setCost({ ...cost, sellingPrice: e.target.value })}
+              placeholder="0"
+            />
           </label>
         </div>
         <dl className="cn-sum" aria-live="polite">
@@ -87,7 +96,7 @@ export default function Management({ ctx }: { ctx: Ctx }) {
         <p className="cn-assume">
           <b>Estimates only.</b> Gross margin = selling price − unit cost. These figures leave out duties, shipping, VAT, retailer margins and overheads, so the real margin will be lower.
         </p>
-        <button type="button" className="cta h-small-btn" disabled={Boolean(c.busy) || !costChanged} onClick={() => c.run('Saving…', () => ctx.patchProject({ costing: nums }), 'Costing saved ✓')}>
+        <button type="button" className="cn-btn primary" disabled={Boolean(c.busy) || !costChanged} onClick={() => c.run('Saving…', () => ctx.patchProject({ costing: nums }), 'Costing saved ✓')}>
           {c.busy || 'Save costing'}
         </button>
         <Status err={c.err} ok={c.ok} />

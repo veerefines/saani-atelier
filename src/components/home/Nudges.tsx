@@ -141,7 +141,9 @@ export function NudgeSend() {
   );
 }
 
-function Answer({ n, onDone }: { n: Nudge; onDone: (n: Nudge) => void }) {
+/** One nudge on her desk, kept small: a quick emoji back, a reply only if she wants one, and clear. */
+function InboxItem({ n, onDone, onClear }: { n: Nudge; onDone: (n: Nudge) => void; onClear: () => void }) {
+  const [replying, setReplying] = useState(false);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -152,34 +154,57 @@ function Answer({ n, onDone }: { n: Nudge; onDone: (n: Nudge) => void }) {
     try {
       onDone(await api<Nudge>(`/api/nudges/${n.id}`, 'POST', body));
       setText('');
+      setReplying(false);
     } catch (e) {
       setErr((e as Error).message);
     }
     setBusy(false);
   };
   return (
-    <>
-      <div className="nudge-react" role="group" aria-label={`React to ${first}`}>
-        {REACT_EMOJI.map((e) => (
-          <button key={e} type="button" disabled={busy} aria-pressed={n.reaction === e} onClick={() => send({ reaction: e })}>
-            {e}
-          </button>
-        ))}
-      </div>
-      <form
-        className="nudge-reply"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (text.trim()) send({ reply: text });
-        }}
-      >
-        <input className="h-input" value={text} onChange={(e) => setText(e.target.value)} maxLength={200} placeholder={`Reply to ${first}…`} aria-label={`Reply to ${first}`} />
-        <button className="cta h-small-btn" disabled={busy || !text.trim()}>
-          Send
+    <li className={n.answeredAt ? 'answered' : ''}>
+      <div className="ni-top">
+        <span className="nudge-e" aria-hidden="true">
+          {n.emoji}
+        </span>
+        <span className="ni-who">
+          <b>{first}</b> <small>· {ago(n.createdAt)}</small>
+          {n.text && <span className="ni-text">“{n.text}”</span>}
+        </span>
+        <button type="button" className="ni-x" onClick={onClear} aria-label={`Clear ${first}’s nudge`} title="Clear">
+          ×
         </button>
-      </form>
+      </div>
+      {n.answeredAt ? (
+        <p className="ni-sent">
+          you sent {n.reaction} {n.reply && `“${n.reply}”`}
+        </p>
+      ) : replying ? (
+        <form
+          className="nudge-reply"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (text.trim()) send({ reply: text });
+          }}
+        >
+          <input className="h-input" value={text} onChange={(e) => setText(e.target.value)} maxLength={200} placeholder={`Reply to ${first}…`} aria-label={`Reply to ${first}`} autoFocus />
+          <button className="cta h-small-btn" disabled={busy || !text.trim()}>
+            Send
+          </button>
+        </form>
+      ) : (
+        <div className="ni-actions">
+          {REACT_EMOJI.map((e) => (
+            <button key={e} type="button" disabled={busy} onClick={() => send({ reaction: e })} aria-label={`Send ${e} to ${first}`}>
+              {e}
+            </button>
+          ))}
+          <button type="button" className="ni-reply" onClick={() => setReplying(true)}>
+            Reply
+          </button>
+        </div>
+      )}
       {err && <p className="h-err">{err}</p>}
-    </>
+    </li>
   );
 }
 
@@ -204,42 +229,46 @@ export function LoveBack() {
   );
 }
 
-/** On her desk: who's been thinking of her, to react to or answer. */
+/** On her desk: who's been thinking of her. A few at a time; she clears them once she's seen them. */
 export function NudgeInbox() {
   const [list, setList] = useNudges();
   const [all, setAll] = useState(false);
+  const [err, setErr] = useState('');
   if (!list || !list.length) return null;
   const shown = all ? list : list.slice(0, 3);
   const update = (n: Nudge) => setList((l) => (l ?? []).map((x) => (x.id === n.id ? n : x)));
+  const clear = async (ids: string[] | 'all') => {
+    const before = list;
+    setErr('');
+    setList((l) => (ids === 'all' ? [] : (l ?? []).filter((x) => !ids.includes(x.id))));
+    try {
+      await api('/api/nudges/dismiss', 'POST', ids === 'all' ? { all: true } : { ids });
+    } catch (e) {
+      setList(before);
+      setErr((e as Error).message);
+    }
+  };
   return (
     <section className="nudge nudge-in" id="nudges" aria-label="Thinking of you">
-      <span className="hand">thinking of you</span>
+      <div className="ni-head">
+        <span className="hand">thinking of you</span>
+        {list.length > 1 && (
+          <button type="button" className="w-link" onClick={() => clear('all')}>
+            Clear all
+          </button>
+        )}
+      </div>
       <ul>
         {shown.map((n) => (
-          <li key={n.id} className={n.answeredAt ? 'answered' : ''}>
-            <div className="nudge-head">
-              <span className="nudge-e">{n.emoji}</span>
-              <span className="nudge-body">
-                <b>
-                  {n.text ? `${n.authorName.split(' ')[0]}: “${n.text}”` : `${n.authorName.split(' ')[0]} is thinking of you`}
-                </b>
-                <small>{ago(n.createdAt)}</small>
-                {(n.reaction || n.reply) && (
-                  <span className="nudge-back">
-                    you sent {n.reaction} {n.reply && `“${n.reply}”`}
-                  </span>
-                )}
-              </span>
-            </div>
-            <Answer n={n} onDone={update} />
-          </li>
+          <InboxItem key={n.id} n={n} onDone={update} onClear={() => clear([n.id])} />
         ))}
       </ul>
       {list.length > 3 && (
-        <button type="button" className="w-link" onClick={() => setAll(!all)}>
-          {all ? 'Show fewer' : `Show all ${list.length}`}
+        <button type="button" className="w-link ni-more" onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `${list.length - 3} more`}
         </button>
       )}
+      {err && <p className="h-err">{err}</p>}
     </section>
   );
 }

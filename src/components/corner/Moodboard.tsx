@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Item } from '@/lib/corner-model';
+import { inkOn, type Item } from '@/lib/corner-model';
 import { mediaUrl } from '@/lib/upload-client';
 import { FileButton, Status, uploadCorner, useAction, type Ctx } from './shared';
 
@@ -13,7 +13,7 @@ function Piece({ it, i, n, move, remove }: { it: Board; i: number; n: number; mo
       {it.board === 'image' && <img src={mediaUrl(it.mediaId)} alt={it.caption || 'Moodboard image'} draggable={false} />}
       {it.board === 'note' && <p className="hand">{it.text}</p>}
       {it.board === 'swatch' && (
-        <span className="cn-swatch" style={{ background: it.hex }}>
+        <span className="cn-swatch" style={{ background: it.hex, ...inkOn(it.hex) }}>
           <b>{it.label || it.hex.toUpperCase()}</b>
           {it.label && <small>{it.hex.toUpperCase()}</small>}
         </span>
@@ -89,7 +89,7 @@ export default function Moodboard({ ctx }: { ctx: Ctx }) {
           }}
         >
           <input className="h-input" value={text} onChange={(e) => setText(e.target.value)} maxLength={500} placeholder="📝 A note for the board" aria-label="Note" />
-          <button className="pc-btn" disabled={Boolean(busy) || !text.trim()}>
+          <button className="cn-btn" disabled={Boolean(busy) || !text.trim()}>
             Add note
           </button>
         </form>
@@ -102,7 +102,7 @@ export default function Moodboard({ ctx }: { ctx: Ctx }) {
         >
           <input type="color" className="cn-color" value={hex} onChange={(e) => setHex(e.target.value)} aria-label="Colour" />
           <input className="h-input" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Name it (optional), e.g. Navigli rose" aria-label="Colour name" />
-          <button className="pc-btn" disabled={Boolean(busy)}>
+          <button className="cn-btn" disabled={Boolean(busy)}>
             Add swatch
           </button>
         </form>

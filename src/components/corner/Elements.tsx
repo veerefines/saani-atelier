@@ -1,12 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { isHex } from '@/lib/corner-model';
+import { inkOn, isHex } from '@/lib/corner-model';
 import { mediaUrl } from '@/lib/upload-client';
 import { FileButton, Status, uploadCorner, useAction, type Ctx } from './shared';
 
 /** Names that are safe to show in their own font without loading anything (system and web-safe fonts). */
-const LOCAL_FONTS = ['georgia', 'times new roman', 'garamond', 'helvetica', 'arial', 'futura', 'didot', 'bodoni', 'baskerville', 'avenir', 'gill sans', 'palatino', 'verdana', 'courier', 'optima', 'hoefler text'];
+const LOCAL_FONTS = [
+  'georgia',
+  'times new roman',
+  'garamond',
+  'helvetica',
+  'arial',
+  'futura',
+  'didot',
+  'bodoni',
+  'baskerville',
+  'avenir',
+  'gill sans',
+  'palatino',
+  'verdana',
+  'courier',
+  'optima',
+  'hoefler text',
+];
 
 function Palettes({ ctx }: { ctx: Ctx }) {
   const palettes = ctx.items.filter((i) => i.kind === 'palette');
@@ -24,7 +41,7 @@ function Palettes({ ctx }: { ctx: Ctx }) {
   };
   return (
     <section className="cn-section">
-      <h3 className="hand">colour palettes</h3>
+      <h3 className="cn-h">Colour palettes</h3>
       <form
         className="cn-adder"
         onSubmit={(e) => {
@@ -35,7 +52,7 @@ function Palettes({ ctx }: { ctx: Ctx }) {
         <input className="h-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Palette name, e.g. Navigli at dusk" aria-label="Palette name" required />
         <div className="cn-hexes">
           {hexes.map((h, i) => (
-            <span key={`${h}${i}`} className="cn-hex" style={{ background: h }}>
+            <span key={`${h}${i}`} className="cn-hex" style={{ background: h, ...inkOn(h) }}>
               <b>{h.toUpperCase()}</b>
               <button type="button" onClick={() => setHexes(hexes.filter((_, k) => k !== i))} aria-label={`Remove ${h}`}>
                 ×
@@ -46,13 +63,13 @@ function Palettes({ ctx }: { ctx: Ctx }) {
             <span className="cn-hex-add">
               <input type="color" className="cn-color" value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Pick a colour" />
               <input className="h-input" value={pick} onChange={(e) => setPick(e.target.value)} maxLength={7} aria-label="HEX value" />
-              <button type="button" className="pc-btn" disabled={!isHex(pick)} onClick={() => setHexes([...hexes, pick.toLowerCase()])}>
+              <button type="button" className="cn-btn" disabled={!isHex(pick)} onClick={() => setHexes([...hexes, pick.toLowerCase()])}>
                 + Add
               </button>
             </span>
           )}
         </div>
-        <button className="cta h-small-btn" disabled={Boolean(busy) || !name.trim() || !hexes.length}>
+        <button className="cn-btn primary" disabled={Boolean(busy) || !name.trim() || !hexes.length}>
           {busy || 'Save palette'}
         </button>
         <Status err={err} ok={ok} />
@@ -68,7 +85,7 @@ function Palettes({ ctx }: { ctx: Ctx }) {
             </div>
             <div className="cn-chips">
               {p.hexes.map((h, i) => (
-                <button key={`${h}${i}`} type="button" className="cn-chipswatch" style={{ background: h }} onClick={() => copy(h)} aria-label={`Copy ${h}`}>
+                <button key={`${h}${i}`} type="button" className="cn-chipswatch" style={{ background: h, ...inkOn(h) }} onClick={() => copy(h)} aria-label={`Copy ${h}`}>
                   <span>{copied === h ? 'copied' : h.toUpperCase()}</span>
                 </button>
               ))}
@@ -87,7 +104,7 @@ function Typography({ ctx }: { ctx: Ctx }) {
   const { busy, err, ok, run } = useAction();
   return (
     <section className="cn-section">
-      <h3 className="hand">typography</h3>
+      <h3 className="cn-h">Typography</h3>
       <form
         className="cn-row"
         onSubmit={(e) => {
@@ -97,7 +114,7 @@ function Typography({ ctx }: { ctx: Ctx }) {
       >
         <input className="h-input" value={font} onChange={(e) => setFont(e.target.value)} maxLength={60} placeholder="Font name, e.g. Didot" aria-label="Font name" required />
         <input className="h-input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Where it's used, why it fits" aria-label="Note" />
-        <button className="cta h-small-btn" disabled={Boolean(busy) || !font.trim()}>
+        <button className="cn-btn primary" disabled={Boolean(busy) || !font.trim()}>
           {busy || 'Save'}
         </button>
       </form>
@@ -129,7 +146,7 @@ function Fabrics({ ctx }: { ctx: Ctx }) {
   const { busy, err, ok, run } = useAction();
   return (
     <section className="cn-section">
-      <h3 className="hand">fabrics &amp; materials</h3>
+      <h3 className="cn-h">Fabrics &amp; materials</h3>
       <form
         className="cn-adder"
         onSubmit={(e) => {
@@ -148,10 +165,18 @@ function Fabrics({ ctx }: { ctx: Ctx }) {
         }}
       >
         <input className="h-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Name, e.g. Washed silk crepe de chine" aria-label="Fabric name" required />
-        <textarea className="h-input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} placeholder="Weight, hand-feel, supplier, price per metre…" aria-label="Description" />
+        <textarea
+          className="h-input"
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={1000}
+          placeholder="Weight, hand-feel, supplier, price per metre…"
+          aria-label="Description"
+        />
         <div className="cn-row">
           <FileButton label={file ? `📷 ${file.name.slice(0, 24)}` : '📷 Add a photo (optional)'} accept="image/*" disabled={Boolean(busy)} onFile={setFile} />
-          <button className="cta h-small-btn" disabled={Boolean(busy) || !name.trim()}>
+          <button className="cn-btn primary" disabled={Boolean(busy) || !name.trim()}>
             {busy || 'Save fabric'}
           </button>
         </div>
@@ -161,7 +186,13 @@ function Fabrics({ ctx }: { ctx: Ctx }) {
         {fabrics.map((f) =>
           f.kind !== 'fabric' ? null : (
             <article key={f.id} className="cn-fabric">
-              {f.mediaId ? <img src={mediaUrl(f.mediaId)} alt={f.name} loading="lazy" /> : <span className="cn-fabric-ph" aria-hidden="true">🧵</span>}
+              {f.mediaId ? (
+                <img src={mediaUrl(f.mediaId)} alt={f.name} loading="lazy" />
+              ) : (
+                <span className="cn-fabric-ph" aria-hidden="true">
+                  🧵
+                </span>
+              )}
               <b>{f.name}</b>
               {f.description && <small>{f.description}</small>}
               <button type="button" className="cn-x" onClick={() => run('Removing…', () => ctx.removeItem(f.id))} aria-label={`Remove ${f.name}`}>
@@ -178,10 +209,12 @@ function Fabrics({ ctx }: { ctx: Ctx }) {
 /** Design elements: named palettes, typography references, and fabrics. */
 export default function Elements({ ctx }: { ctx: Ctx }) {
   return (
-    <div className="cn-panel">
+    <div className="cn-panel cn-elements">
       <Palettes ctx={ctx} />
-      <Typography ctx={ctx} />
-      <Fabrics ctx={ctx} />
+      <div className="cn-two">
+        <Typography ctx={ctx} />
+        <Fabrics ctx={ctx} />
+      </div>
     </div>
   );
 }

@@ -143,14 +143,16 @@ export default function Dashboard({
 
       {occasion && <OccasionBanner occasion={occasion} />}
       {/* on a laptop these sit side by side under the header */}
-      <div className="desk-top">
-        <div className="desk-col">
-          <MoodPicker />
-          <div className="love-back-row">
-            <LoveBack />
+      <div className="desk-top desk-top-her">
+        <div className="desk-left">
+          <div className="desk-col">
+            <MoodPicker />
+            <div className="love-back-row">
+              <LoveBack />
+            </div>
           </div>
+          <ShareMoment friends={friends} />
         </div>
-        <ShareMoment friends={friends} />
         <NudgeInbox />
       </div>
       <TodayCard />

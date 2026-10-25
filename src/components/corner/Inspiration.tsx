@@ -75,9 +75,17 @@ export default function Inspiration({ ctx }: { ctx: Ctx }) {
               addLink();
             }}
           >
-            <input className="h-input" value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" placeholder={mode === 'pinterest' ? 'Paste a Pinterest pin or board link' : 'https://…'} aria-label="Link" required />
+            <input
+              className="h-input"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              inputMode="url"
+              placeholder={mode === 'pinterest' ? 'Paste a Pinterest pin or board link' : 'https://…'}
+              aria-label="Link"
+              required
+            />
             <input className="h-input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder="Why it matters (optional)" aria-label="Note" />
-            <button className="cta h-small-btn" disabled={Boolean(busy) || !url.trim()}>
+            <button className="cn-btn primary" disabled={Boolean(busy) || !url.trim()}>
               {busy || 'Save'}
             </button>
           </form>
@@ -91,7 +99,7 @@ export default function Inspiration({ ctx }: { ctx: Ctx }) {
             }}
           >
             <textarea className="h-input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder="A thought, a reference, a feeling" aria-label="Note" required />
-            <button className="cta h-small-btn" disabled={Boolean(busy) || !note.trim()}>
+            <button className="cn-btn primary" disabled={Boolean(busy) || !note.trim()}>
               {busy || 'Save'}
             </button>
           </form>
