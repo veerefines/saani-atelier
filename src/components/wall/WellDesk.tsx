@@ -12,6 +12,7 @@ import AtelierMark from '@/components/home/AtelierMark';
 import CallPlanner from '@/components/home/CallPlanner';
 import { NudgeSend } from '@/components/home/Nudges';
 import { MoodStatus } from '@/components/home/Mood';
+import { LatestMoment } from '@/components/home/Moments';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -54,6 +55,7 @@ export default function WellDesk({
   decor,
   admin = false,
   soon = null,
+  me = '',
 }: {
   name: string;
   counts: Counts;
@@ -64,6 +66,8 @@ export default function WellDesk({
   admin?: boolean;
   /** her next special day, when it's close */
   soon?: { title: string; emoji: string; days: number } | null;
+  /** the signed-in friend's id (to show their own reactions) */
+  me?: string;
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -86,24 +90,28 @@ export default function WellDesk({
         <p className="whisper w-desk-sub">psst, it’s a surprise. Leave her something to find.</p>
       </header>
 
-      {soon && (
-        <Link href="/wall/letters" className="w-soon">
-          <span aria-hidden="true">{soon.emoji}</span>
-          <span>
-            {soon.days === 0 ? (
-              <>
-                It’s <b>{soon.title}</b> for Saanika today. Send her something.
-              </>
-            ) : (
-              <>
-                <b>{soon.title}</b> is {soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}. Seal her a letter for the day →
-              </>
-            )}
-          </span>
-        </Link>
-      )}
-      <MoodStatus />
-      <NudgeSend />
+      {/* on a laptop these sit side by side under the header */}
+      <div className="desk-top">
+        <LatestMoment me={me} />
+        {soon && (
+          <Link href="/wall/letters" className="w-soon">
+            <span aria-hidden="true">{soon.emoji}</span>
+            <span>
+              {soon.days === 0 ? (
+                <>
+                  It’s <b>{soon.title}</b> for Saanika today. Send her something.
+                </>
+              ) : (
+                <>
+                  <b>{soon.title}</b> is {soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}. Seal her a letter for the day →
+                </>
+              )}
+            </span>
+          </Link>
+        )}
+        <MoodStatus />
+        <NudgeSend />
+      </div>
 
       <section className="today call-card" aria-label="Good time to call Saanika">
         <CallPlanner firstName={first} />
@@ -240,6 +248,7 @@ export default function WellDesk({
         <h2 className="hand corners-title">more ways to show up</h2>
         <div className="corners-grid">
           {[
+            { href: '/journey', icon: '✨', title: 'Her story', sub: 'the journey so far', tint: '#fde3ea' },
             { href: '/wall/songs', icon: '🎶', title: 'Dedicate a song', sub: counts.songs ? `${counts.songs} from you` : 'for her playlist', tint: '#e6dcf7' },
             { href: '/wall/scrapbooks', icon: '📒', title: 'Scrapbook pages', sub: counts.pages ? `${counts.pages} to add to` : 'made together', tint: '#ffe0c4' },
             { href: '/wall/her', icon: '🛂', title: 'Her Milano life', sub: `${counts.stamps} stamps · ${counts.herShared} shared`, tint: '#d3e9f6' },

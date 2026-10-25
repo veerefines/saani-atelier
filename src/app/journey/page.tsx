@@ -63,9 +63,8 @@ const fmtDay = (day: string) => new Date(`${day}T12:00:00Z`).toLocaleDateString(
 export default async function JourneyPage() {
   const session = await getSession();
   if (!session) redirect('/');
-  if (session.role !== 'saanika' && !session.admin) redirect('/wall');
 
-  const [slots, diary, extras, edits] = await Promise.all([listSlotMedia(), session.role === 'saanika' ? listDiary() : Promise.resolve([]), listJourneyExtras(), getJourneyText()]);
+  const [slots, diary, extras, edits] = await Promise.all([listSlotMedia(), listDiary().then((d) => (session.role === 'saanika' ? d : d.filter((x) => x.shared))), listJourneyExtras(), getJourneyText()]);
   // the words, with any edits from /admin laid over the defaults
   const { intro: journeyIntro, chapters } = withJourneyText(edits);
   const resolve = resolver(new Map(slots.map((x) => [x.slot, x.mediaId])));
@@ -94,10 +93,10 @@ export default async function JourneyPage() {
       ...milan,
       id: 'mine',
       number: 'Chapter six',
-      kicker: 'written by you',
-      title: 'Milano, in your words',
+      ...(session.role === 'saanika'
+        ? { kicker: 'written by you', title: 'Milano, in your words', intro: 'Your own days, one line and one photo at a time. This chapter keeps writing itself.' }
+        : { kicker: 'written by her', title: 'Milano, in her words', intro: 'The days she’s chosen to share, one line and one photo at a time.' }),
       years: undefined,
-      intro: 'Your own days, one line and one photo at a time. This chapter keeps writing itself.',
       items,
     } as ResolvedChapter);
   }
@@ -109,6 +108,7 @@ export default async function JourneyPage() {
       chapters={resolved}
       music={music ? { ...journeyMusic, src: `/api/media/${music.mediaId}`, missing: false } : { ...journeyMusic, missing: !exists(journeyMusic.src) }}
       decor={<Keepsakes set="journey" />}
+      forFriend={session.role !== 'saanika'}
     />
   );
 }

@@ -61,10 +61,13 @@ export default function Journey({
   chapters,
   music,
   decor,
+  forFriend = false,
 }: {
   intro: Intro;
   chapters: ResolvedChapter[];
   music: Music;
+  /** a friend is reading her story: the ending sends them back to their own desk */
+  forFriend?: boolean;
   /** keepsakes around the opening title */
   decor?: React.ReactNode;
 }) {
@@ -360,15 +363,31 @@ export default function Journey({
 
         <section className="j-finale" data-chapter>
           <p className="hand j-finale-kicker">and the story keeps going</p>
-          <h2 className="j-finale-title whisper">Your people left you a few things.</h2>
-          <div className="j-finale-actions">
-            <a className="cta" href="/home">
-              Open your desk
-            </a>
-            <a className="j-link" href="/home/love">
-              Go straight to your messages
-            </a>
-          </div>
+          {forFriend ? (
+            <>
+              <h2 className="j-finale-title whisper">And you’re part of the next chapter.</h2>
+              <div className="j-finale-actions">
+                <a className="cta" href="/wall">
+                  Back to your desk
+                </a>
+                <a className="j-link" href="/wall/love">
+                  Pin something to her wall
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="j-finale-title whisper">Your people left you a few things.</h2>
+              <div className="j-finale-actions">
+                <a className="cta" href="/home">
+                  Open your desk
+                </a>
+                <a className="j-link" href="/home/love">
+                  Go straight to your messages
+                </a>
+              </div>
+            </>
+          )}
         </section>
       </div>
 

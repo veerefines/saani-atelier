@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-export type CornerCounts = { look: number; stamps: number; places: number; days: number; songs: number; checklistDone: number; checklistTotal: number; pages: number };
+export type CornerCounts = { look: number; stamps: number; places: number; days: number; songs: number; checklistDone: number; checklistTotal: number; pages: number; moments: number };
 
 /** The smaller corners of her desk, under the big six. */
 export default function Corners({ counts: c }: { counts: CornerCounts }) {
   const corners = [
+    { href: '/home/corner', icon: '🪡', title: 'My Corner', sub: 'your projects & ideas', tint: '#f3e3d3' },
+    { href: '/home/moments', icon: '📸', title: 'Moments', sub: c.moments ? `${c.moments} shared` : 'send your people a peek', tint: '#fde3ea' },
     { href: '/home/lookbook', icon: '👗', title: 'Lookbook', sub: c.look ? `${c.look} looks & pins` : 'outfits, sketches, Pinterest', tint: '#fbd6e2' },
     { href: '/home/passport', icon: '🛂', title: 'Passport', sub: `${c.stamps} of ${c.places} stamps`, tint: '#d3e9f6' },
     { href: '/home/chapter', icon: '📔', title: 'My chapter', sub: c.days ? `${c.days} ${c.days === 1 ? 'day' : 'days'} written` : 'a line a day', tint: '#f8ebbf' },

@@ -29,9 +29,21 @@ export async function shrinkImage(file: Blob): Promise<Blob> {
 
 const mb = (n: number) => (n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 1 : 0);
 
-/** Upload a file or recorded blob. Returns the media id once it's stored. */
-export async function uploadFile(original: Blob, onProgress?: (pct: number) => void): Promise<string> {
+/** Some systems give Office files no type; work it out from the name. */
+const BY_EXT: Record<string, string> = {
+  pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  txt: 'text/plain',
+};
+
+/**
+ * Upload a file or recorded blob. Returns the media id once it's stored.
+ * `purpose: 'corner'` is for My Corner (documents allowed; the file stays private to her).
+ */
+export async function uploadFile(original: Blob, onProgress?: (pct: number) => void, opts: { purpose?: 'corner' } = {}): Promise<string> {
   const file = await shrinkImage(original);
+  const filename = original instanceof File ? original.name : undefined;
   if (file.size > MAX_UPLOAD) {
     throw new Error(
       file.type.startsWith('video/')
@@ -39,11 +51,12 @@ export async function uploadFile(original: Blob, onProgress?: (pct: number) => v
         : `That file is ${mb(file.size)} MB; the limit is 50 MB.`,
     );
   }
-  const mime = file.type || 'application/octet-stream';
+  const ext = filename?.toLowerCase().split('.').pop() ?? '';
+  const mime = (file.type || BY_EXT[ext] || 'application/octet-stream').split(';')[0];
   const res = await fetch('/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mime, size: file.size }),
+    body: JSON.stringify({ mime, size: file.size, ...(opts.purpose ? { purpose: opts.purpose, filename } : {}) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Upload failed.');

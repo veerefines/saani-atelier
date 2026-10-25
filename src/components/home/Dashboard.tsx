@@ -10,6 +10,7 @@ import TodayCard from './TodayCard';
 import WorldClocks from './WorldClocks';
 import { LoveBack, NudgeInbox } from './Nudges';
 import { MoodPicker } from './Mood';
+import { ShareMoment, type Friend } from './Moments';
 import Memory from './Memory';
 import AtelierMark from './AtelierMark';
 import Corners, { type CornerCounts } from './Corners';
@@ -109,6 +110,7 @@ export default function Dashboard({
   decor,
   corners,
   occasion,
+  friends = [],
 }: {
   counts: Counts;
   bingoDone: boolean[];
@@ -118,6 +120,8 @@ export default function Dashboard({
   corners: CornerCounts;
   /** today's festival or special day, if any */
   occasion?: { title: string; emoji: string; note?: string; letters: number } | null;
+  /** her people, for choosing who gets a moment */
+  friends?: Friend[];
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -138,11 +142,17 @@ export default function Dashboard({
       </header>
 
       {occasion && <OccasionBanner occasion={occasion} />}
-      <MoodPicker />
-      <div className="love-back-row">
-        <LoveBack />
+      {/* on a laptop these sit side by side under the header */}
+      <div className="desk-top">
+        <div className="desk-col">
+          <MoodPicker />
+          <div className="love-back-row">
+            <LoveBack />
+          </div>
+        </div>
+        <ShareMoment friends={friends} />
+        <NudgeInbox />
       </div>
-      <NudgeInbox />
       <TodayCard />
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">

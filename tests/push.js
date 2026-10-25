@@ -132,6 +132,17 @@ const ok = (name, cond, extra = '') => {
   ok('on the day: she gets buon viaggio', h.some((m) => m.startsWith('✈️ Departure day | Buon viaggio!')), JSON.stringify(h));
   ok('on the day: friends told', f.some((m) => m.startsWith('✈️ It’s Departure day for Saanika today')), JSON.stringify(f));
 
+  // moments: she shares one, a friend hears; the friend reacts, she hears
+  const png = fs.readFileSync(path.join(process.cwd(), 'public/icons/icon-192.png'));
+  const up = (await call('/api/upload', 'POST', 'sa', { mime: 'image/png', size: png.length })).body;
+  await fetch(B + up.url, { method: 'PUT', headers: { 'Content-Type': 'image/png', cookie: jars.sa }, body: png });
+  const moment = (await call('/api/moments', 'POST', 'sa', { kind: 'photo', mediaId: up.id, caption: 'gelato o’clock' })).body;
+  f = await take('friend');
+  ok('friends hear about her moment', f.some((m) => m.startsWith('📸 Saanika shared a photo | gelato o’clock')), JSON.stringify(f));
+  await call(`/api/moments/${moment.id}/react`, 'POST', 'fr', { emoji: '😍' });
+  h = await take('saanika');
+  ok('she hears the reaction', h.some((m) => m.startsWith('Vee 😍 your moment')), JSON.stringify(h));
+
   // a shared device follows whoever is signed in: Vee's laptop, now opened as Saanika
   await call('/api/push', 'POST', 'sa', { subscription: friend.sub });
   const saved = JSON.parse(fs.readFileSync(DATA, 'utf8'));

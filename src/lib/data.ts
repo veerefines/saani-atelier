@@ -1,7 +1,18 @@
 import * as db from './db';
 import type { Session } from './session';
 
-export type Media = { id: string; createdAt: string; ownerId: string; mime: string; size: number; ready: boolean };
+export type Media = {
+  id: string;
+  createdAt: string;
+  ownerId: string;
+  mime: string;
+  size: number;
+  ready: boolean;
+  /** only its owner can open it (My Corner files) */
+  private?: boolean;
+  /** the original file name, for downloads */
+  filename?: string;
+};
 
 export type PostKind = 'text' | 'photo' | 'voice' | 'video';
 export type Post = {
@@ -217,8 +228,8 @@ export async function deleteDare(s: Session, id: string) {
 }
 
 /* media */
-export async function createMedia(s: Session, mime: string, size: number) {
-  const m: Media = { id: db.newId('m_'), createdAt: now(), ownerId: s.id, mime, size, ready: false };
+export async function createMedia(s: Session, mime: string, size: number, extra: { private?: boolean; filename?: string } = {}) {
+  const m: Media = { id: db.newId('m_'), createdAt: now(), ownerId: s.id, mime, size, ready: false, ...extra };
   await db.put('media', m);
   return m;
 }

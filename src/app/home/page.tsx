@@ -1,13 +1,14 @@
 import Dashboard from '@/components/home/Dashboard';
 import Keepsakes from '@/components/Keepsakes';
 import { getBingo, getSeen, isLocked, listJar, listLetters, wallPosts } from '@/lib/data';
-import { getChecklist, listDiary, listLook, listOccasions, listPages, listSongs, listStamps, milanDay } from '@/lib/extras';
+import { getChecklist, listDiary, listLook, listMoments, listOccasions, listPages, listSongs, listStamps, milanDay } from '@/lib/extras';
+import { getInvites } from '@/lib/invites';
 import { bingo, milano } from '@/content/home';
 import { checklist } from '@/content/checklist';
 import { places } from '@/content/milano';
 
 export default async function HomePage() {
-  const [posts, letters, jar, board, seen, look, stamps, diary, songs, check, pages, occasions] = await Promise.all([
+  const [posts, letters, jar, board, seen, look, stamps, diary, songs, check, pages, occasions, moments, invites] = await Promise.all([
     wallPosts(),
     listLetters(),
     listJar(),
@@ -20,6 +21,8 @@ export default async function HomePage() {
     getChecklist(),
     listPages(),
     listOccasions(),
+    listMoments(),
+    getInvites(),
   ]);
   const newPosts = posts.filter((p) => !seen.love || p.createdAt > seen.love).length;
   const ready = letters.filter((l) => !isLocked(l) && !l.openedAt).length;
@@ -42,6 +45,7 @@ export default async function HomePage() {
       milano={milano}
       decor={<Keepsakes set="desk" />}
       occasion={occasion}
+      friends={invites.filter((i) => i.role === 'wellwisher').map((i) => ({ id: i.id, name: i.name }))}
       corners={{
         look: look.length,
         stamps: stamps.length,
@@ -51,6 +55,7 @@ export default async function HomePage() {
         checklistDone: Object.keys(check.done).length,
         checklistTotal: checklist.length,
         pages: pages.length,
+        moments: moments.length,
       }}
     />
   );

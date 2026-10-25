@@ -35,7 +35,9 @@ npm run build && npm test
 - every API with each role: signed out, Saanika, friend, admin
 - the privacy rules, plus page renders
 - removing friends and deleting everything they shared
+- Moments, friends reading the journey, private My Corner files, and every My Corner action
 - web push end to end, through a fake push service that decrypts each notification
+- the My Corner assistant against a fake Claude server, checking exactly what it sends
 
 It backs up your `.data/` first and puts it back afterwards. GitHub runs the same tests on every push (`.github/workflows/test.yml`) with throwaway secrets.
 
@@ -66,6 +68,7 @@ It backs up your `.data/` first and puts it back afterwards. GitHub runs the sam
   - Milano corner: her list at the top; a guide of about 95 places with a map, Surprise me and Near me; fashion dates and workshops; beaches.
   - Your story.
 - **"A little memory":** something her people sent, brought back.
+- **Share a moment:** a photo, a little video or a voice note for everyone or for chosen friends (Locket-style). Friends react; she sees who loved what in **Moments**.
 - **More corners:**
   - Lookbook: her outfits, sketches and Pinterest pins; private unless shared.
   - Passport: check in to places for stamps.
@@ -74,6 +77,7 @@ It backs up your `.data/` first and puts it back afterwards. GitHub runs the sam
   - Settling in: the arrival checklist.
   - Scrapbooks: group pages laid out as a collage she can drag, shuffle and flip through.
   - Your book: printable.
+  - My Corner: her private fashion and project workspace (see below).
 - **Special days:** Diwali, Christmas, Departure day and others get a banner and confetti on the day.
 
 **Friends' desk (`/wall`)**
@@ -85,6 +89,8 @@ It backs up your `.data/` first and puts it back afterwards. GitHub runs the sam
   - when to call her
 - **Ways to leave something:** pin to her wall (record voice or video in the browser), seal letters, fill the jar, cheer her bingo, Milano tips, songs, scrapbook pages, and what she's shared from her lookbook.
 - **Sent box:** whether she's opened or read each thing, her reactions and replies.
+- **From Saanika:** her latest moment for them, as a tile they can react to; all of them at `/wall/moments`.
+- **Her story:** friends can read the journey too (her diary days appear only if she shared them).
 
 **Admin (`/admin`, Vee)**
 - **Friends:** add or remove anyone. Removing someone signs them out within seconds and deletes everything they shared.
@@ -92,6 +98,31 @@ It backs up your `.data/` first and puts it back afterwards. GitHub runs the sam
 - **Journey media:** upload a file for any slot, or add any number of extra photos, videos and voice notes to a chapter.
 - **The journey's words:** edit every caption, note, quote and "from" name; clear one to restore the original.
 - **Keepsake images, the reveal note, and how she's getting on.**
+
+## My Corner (`/home/corner`)
+
+Saanika's private studio for fashion and brand projects. Only she can open it, and its files are locked to her account (even a direct link returns "not found" for anyone else).
+
+- **Projects:** create (title, description, one of six categories), search, favourite, archive, rename, duplicate and delete. Cards show a cover or placeholder, the category and when it was last edited; "recently edited" sits on top.
+- **Inside a project:**
+  - **Overview:** description, cover image, quick links, recent activity.
+  - **Documents:** PDF, DOCX, PPTX and TXT, up to 25 MB each; download keeps the original file name.
+  - **Inspiration:** images, links, Pinterest pins and boards, and notes, in a gallery.
+  - **Moodboard:** images, notes and colour swatches; drag to arrange (or use the arrows on touch screens), saved automatically.
+  - **Design elements:** named colour palettes (HEX), typography references, fabrics and materials with photos.
+  - **Fashion management:** a brief (audience, positioning, objectives, budget) and a costing calculator (unit cost, selling price, gross margin and markup), clearly labelled as estimates.
+  - **Assistant:** see below.
+- **Where it's stored:** the same doc store as everything else (collections `cornerProjects` and `cornerItems`; files in the private media bucket). Deleting a project deletes its items and any files nothing else uses. All of the storage code is in `src/lib/corner.ts`.
+
+### Switching on the assistant
+
+The assistant uses Claude (Claude Opus 5.5) on the server; the key never reaches the browser. It reads the project's text, its PDFs and its images, and says what it couldn't read (Word and PowerPoint files aren't read yet).
+
+1. Create an API key at console.anthropic.com.
+2. Add `ANTHROPIC_API_KEY` in Vercel (Project → Settings → Environment Variables). Optionally set `ANTHROPIC_MODEL` to use a different model.
+3. Redeploy.
+
+Without the key, everything else in My Corner works and the Assistant tab shows these steps.
 
 ## Adding her real photos, videos, voice notes and words
 
@@ -174,5 +205,6 @@ A daily Vercel cron (`vercel.json`, 06:00 UTC) calls `/api/daily`. It needs `CRO
   - `CRON_SECRET`
   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`
   - optionally `GOOGLE_MAPS_API_KEY`, for live ratings in the guide
+  - optionally `ANTHROPIC_API_KEY` (and `ANTHROPIC_MODEL`), for My Corner's assistant
 - After changing a setting, redeploy.
 - Friends can also be added and removed from `/admin` without touching `INVITES`.

@@ -50,6 +50,7 @@ export default async function Wall() {
       decor={<Keepsakes set="desk" />}
       admin={Boolean(session.admin)}
       soon={soon}
+      me={session.id}
     />
   );
 }

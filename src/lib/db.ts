@@ -142,8 +142,11 @@ export async function signedUpload(id: string) {
   if (error) throw error;
   return data.signedUrl;
 }
-export async function signedDownload(id: string) {
-  const { data, error } = await supabase().storage.from('media').createSignedUrl(id, 60 * 60);
+/** A short-lived link to a stored file; with a filename, the browser downloads it under that name. */
+export async function signedDownload(id: string, downloadAs?: string) {
+  const { data, error } = await supabase()
+    .storage.from('media')
+    .createSignedUrl(id, 60 * 60, downloadAs ? { download: downloadAs } : undefined);
   if (error) throw error;
   return data.signedUrl;
 }

@@ -1,6 +1,7 @@
 import * as db from './db';
 import type { Nudge } from '@/content/nudges';
 import type { MoodId } from '@/content/mood';
+import type { Moment } from '@/content/moments';
 import type { Session } from './session';
 
 /**
@@ -353,3 +354,11 @@ export async function setJourneyText(key: string, value: string) {
   else delete edits[key]; // blank goes back to the original words
   return db.put<JourneyTextDoc>('state', { id: 'journey-text', createdAt: cur?.createdAt ?? now(), edits });
 }
+
+/* ---------- moments: what she sends her people ---------- */
+
+export const listMoments = async () => (await db.list<Moment>('moments')).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const getMoment = (id: string) => db.get<Moment>('moments', id);
+export const addMoment = (m: Omit<Moment, 'id' | 'createdAt' | 'reactions'>) => db.put<Moment>('moments', { id: db.newId('mo_'), createdAt: now(), reactions: [], ...m });
+export const saveMoment = (m: Moment) => db.put<Moment>('moments', m);
+export const removeMoment = (id: string) => db.remove('moments', id);

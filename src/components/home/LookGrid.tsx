@@ -31,12 +31,11 @@ export function usePinterest(deps: unknown[]) {
 }
 
 /** Pinterest's widget replaces the anchor with its own markup, so React only hands it raw HTML. */
-function PinEmbed({ item }: { item: LookItem }) {
-  const url = (item.pinUrl ?? '').replace(/"/g, '');
-  const html =
-    item.kind === 'board'
-      ? `<a data-pin-do="embedBoard" data-pin-board-width="900" data-pin-scale-height="320" data-pin-scale-width="90" href="${url}"></a>`
-      : `<a data-pin-do="embedPin" data-pin-width="medium" data-pin-lang="en" href="${url}"></a>`;
+export function PinterestEmbed({ url: raw, board }: { url: string; board: boolean }) {
+  const url = raw.replace(/"/g, '');
+  const html = board
+    ? `<a data-pin-do="embedBoard" data-pin-board-width="900" data-pin-scale-height="320" data-pin-scale-width="90" href="${url}"></a>`
+    : `<a data-pin-do="embedPin" data-pin-width="medium" data-pin-lang="en" href="${url}"></a>`;
   return (
     <div className="lk-pin">
       <div dangerouslySetInnerHTML={{ __html: html }} />
@@ -46,6 +45,8 @@ function PinEmbed({ item }: { item: LookItem }) {
     </div>
   );
 }
+
+const PinEmbed = ({ item }: { item: LookItem }) => <PinterestEmbed url={item.pinUrl ?? ''} board={item.kind === 'board'} />;
 
 export default function LookGrid({ items, renderActions }: { items: LookItem[]; renderActions?: (x: LookItem) => React.ReactNode }) {
   usePinterest([items.map((i) => i.id).join(',')]);

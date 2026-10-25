@@ -4438,3 +4438,280 @@ a.pc-rating:hover {
 .atl-word .w-link {
   justify-self: start;
 }
+
+/* ---------- laptop and desktop: a compact desk top (phones and iPads keep the stacked layout) ---------- */
+.desk-col {
+  display: contents;
+}
+@media (min-width: 1024px) {
+  /* logo | greeting and name | clocks, in one row */
+  .h-hello {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 210px;
+    grid-template-areas:
+      'mark greet clocks'
+      'mark name clocks'
+      'mark day clocks'
+      'mark sub clocks';
+    align-items: center;
+    column-gap: 18px;
+    margin-bottom: 20px;
+  }
+  .h-hello > .mark {
+    grid-area: mark;
+    margin: 0;
+  }
+  .h-hello > .mark .mark-logo {
+    width: 72px;
+    height: 72px;
+  }
+  .h-hello > .mark .mark-name {
+    font-size: 26px;
+  }
+  .h-hello > .mark .mark-line {
+    font-size: 18px;
+  }
+  .h-hello > .wc-row {
+    grid-area: clocks;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .h-hello > .h-greet {
+    grid-area: greet;
+    margin: 0;
+  }
+  .h-hello > .h-name {
+    grid-area: name;
+    margin: 0;
+    font-size: clamp(72px, 7.5vw, 104px);
+  }
+  .h-hello > .h-day {
+    grid-area: day;
+  }
+  .h-hello > .w-desk-sub {
+    grid-area: sub;
+    margin: 4px 0 0;
+  }
+
+  /* the cards under it, side by side and the same height */
+  .desk-top {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: stretch;
+    gap: 14px;
+    margin: 0 0 22px;
+  }
+  .desk-top > *,
+  .desk-col > * {
+    max-width: none;
+    margin: 0 !important;
+  }
+  .desk-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 14px;
+    border-radius: 24px;
+    background: rgba(255, 250, 246, 0.7);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+      0 18px 30px -22px rgba(107, 30, 58, 0.55);
+  }
+  .desk-top > .w-soon,
+  .desk-top > .mood-status,
+  .desk-top > .nudge-mini {
+    display: flex;
+    align-items: center;
+    border-radius: 22px;
+    padding: 14px 16px;
+  }
+  .desk-top > .nudge-mini {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+  }
+}
+
+/* ---------- moments (Locket-style) ---------- */
+.mo-share,
+.mo-tile {
+  max-width: 520px;
+  margin: 0 auto 18px;
+  padding: 14px 16px;
+  border-radius: 24px;
+  background: rgba(255, 250, 246, 0.82);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 18px 30px -22px rgba(107, 30, 58, 0.55);
+}
+.mo-share-head,
+.mo-tile-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mo-share-head .hand,
+.mo-tile-head .hand {
+  font-size: 20px;
+  color: var(--berry);
+}
+.mo-tile-head small {
+  font-size: 12px;
+  color: #8a6a7b;
+}
+.mo-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid rgba(178, 48, 95, 0.25);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--burgundy);
+  font: 600 13.5px var(--font-body);
+  cursor: pointer;
+}
+.mo-preview,
+.mo-img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: #f5eaee;
+}
+.mo-share .h-input {
+  margin-top: 10px;
+}
+.mo-rec {
+  display: grid;
+  gap: 8px;
+}
+.mo-rec audio,
+.mo-voice audio {
+  width: 100%;
+}
+.mo-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #e6dcf7, #fbd6e2);
+}
+.mo-voice > span {
+  font-size: 26px;
+}
+.mo-to {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.mo-to button {
+  padding: 5px 12px;
+  border: 1.5px solid rgba(178, 48, 95, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--burgundy);
+  font: 600 12.5px var(--font-body);
+  cursor: pointer;
+}
+.mo-to button[aria-pressed='true'] {
+  border-color: var(--berry);
+  background: var(--berry);
+  color: #fff;
+}
+.mo-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.mo-cap {
+  margin: 8px 2px 0;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.mo-react {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.mo-react button {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 18px;
+  cursor: pointer;
+}
+.mo-react button[aria-pressed='true'] {
+  border-color: var(--berry);
+  background: #fff;
+}
+.mo-tile .w-link {
+  display: inline-block;
+  margin-top: 8px;
+}
+.mo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.mo-card {
+  padding: 10px 10px 12px;
+  border-radius: 20px;
+  background: #fffaf6;
+  box-shadow: 0 14px 24px -18px rgba(70, 25, 45, 0.6);
+}
+.mo-card .mo-img {
+  max-height: 340px;
+}
+.mo-meta,
+.mo-none {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8a6a7b;
+}
+.mo-reacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0 2px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+@media (min-width: 1024px) {
+  .desk-top > .mo-share,
+  .desk-top > .mo-tile {
+    padding: 14px;
+  }
+  /* on a friend's laptop, her latest moment sits on the left and the rest stack beside it */
+  .desk-top:has(> .mo-tile) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .desk-top > .mo-tile {
+    grid-row: span 3;
+  }
+  .desk-top > .mo-tile .mo-img {
+    max-height: 360px;
+  }
+}

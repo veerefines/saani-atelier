@@ -5,7 +5,7 @@ type Authored = { id: string; createdAt: string; authorId?: string; mediaId?: st
 
 /**
  * Everything a friend left, gone: posts and photo albums (with the files), scrapbook pieces, letters,
- * jar notes, bingo dares, Milano tips, songs, nudges, their reactions on her lookbook, their
+ * jar notes, bingo dares, Milano tips, songs, nudges, their reactions on her lookbook and moments, their
  * notification subscriptions and time zone. Returns how many things were removed.
  */
 export async function purgeFriend(id: string): Promise<number> {
@@ -34,6 +34,13 @@ export async function purgeFriend(id: string): Promise<number> {
   const looks = await db.list<{ id: string; createdAt: string; reactions?: { by: string }[] }>('lookbook').catch(() => []);
   for (const l of looks.filter((x) => x.reactions?.some((r) => r.by === id))) {
     await db.put('lookbook', { ...l, reactions: l.reactions!.filter((r) => r.by !== id) });
+    n++;
+  }
+
+  // their reactions on moments she sent
+  const moments = await db.list<{ id: string; createdAt: string; reactions?: { by: string }[] }>('moments').catch(() => []);
+  for (const m of moments.filter((x) => x.reactions?.some((r) => r.by === id))) {
+    await db.put('moments', { ...m, reactions: m.reactions!.filter((r) => r.by !== id) });
     n++;
   }
 

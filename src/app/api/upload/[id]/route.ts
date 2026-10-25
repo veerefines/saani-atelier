@@ -12,7 +12,9 @@ export async function PUT(req: Request, { params }: Ctx) {
   const { id } = await params;
   const m = await getMedia(id);
   if (!m || m.ownerId !== s.id) return fail('Upload not found.', 404);
-  await saveLocalMedia(id, await req.arrayBuffer());
+  const body = await req.arrayBuffer();
+  if (body.byteLength > m.size) return fail('That file is bigger than expected. Try again.', 413);
+  await saveLocalMedia(id, body);
   await markMediaReady(id);
   return json({ ok: true });
 }

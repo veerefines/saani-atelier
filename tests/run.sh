@@ -25,6 +25,7 @@ export ALLOW_TEST_CLOCK=1
 [ -d .data ] && cp -R .data "$TEST_TMP/data-backup"
 cleanup() {
   [ -n "${SERVER:-}" ] && kill "$SERVER" 2>/dev/null
+  [ -n "${FAKE:-}" ] && kill "$FAKE" 2>/dev/null
   rm -rf .data
   [ -d "$TEST_TMP/data-backup" ] && cp -R "$TEST_TMP/data-backup" .data
   rm -rf "$TEST_TMP"
@@ -55,7 +56,18 @@ run() {
 run "endpoints, part 1" bash tests/endpoints-1.sh
 run "endpoints, part 2" bash tests/endpoints-2.sh
 run "endpoints, part 3" bash tests/endpoints-3.sh
+run "endpoints, part 4" bash tests/endpoints-4.sh
 run "web push" node tests/push.js "$TEST_TMP"
+
+# the My Corner assistant, with a key, against a fake Claude server
+kill "$SERVER" 2>/dev/null; wait "$SERVER" 2>/dev/null
+node tests/fake-claude.js 4610 "$TEST_TMP" &
+FAKE=$!
+ANTHROPIC_API_KEY=test-key-not-real ANTHROPIC_BASE_URL=http://localhost:4610 npx next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
+SERVER=$!
+for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
+run "assistant (fake Claude)" bash tests/assistant.sh
+kill "$FAKE" 2>/dev/null
 echo
 [ $status -eq 0 ] && echo "ALL PASSED" || echo "SOME TESTS FAILED"
 exit $status
