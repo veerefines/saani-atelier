@@ -1,0 +1,44 @@
+// A stand-in for Groq's OpenAI-style API in tests: answers /chat/completions with a short reply and
+// free-tier rate-limit headers, and saves each request so tests can check exactly what was sent.
+// A question containing SLOW-DOWN gets a 429 with retry-after, like Groq when the minute is used up.
+// usage: node tests/fake-groq.js <port> <dir>
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const [port, dir] = process.argv.slice(2);
+let n = 0;
+http
+  .createServer((req, res) => {
+    const chunks = [];
+    req.on('data', (c) => chunks.push(c));
+    req.on('end', () => {
+      if (!req.url.endsWith('/chat/completions')) {
+        res.writeHead(404).end();
+        return;
+      }
+      const body = Buffer.concat(chunks).toString();
+      fs.writeFileSync(path.join(dir, `groq-req-${++n}.json`), body);
+      fs.writeFileSync(path.join(dir, 'groq-req-last.json'), body);
+      fs.writeFileSync(path.join(dir, 'groq-headers-last.json'), JSON.stringify(req.headers));
+      fs.writeFileSync(path.join(dir, 'groq-count'), String(n));
+      const limits = { 'x-ratelimit-limit-requests': '1000', 'x-ratelimit-remaining-requests': '990', 'x-ratelimit-reset-requests': '1m26s', 'x-ratelimit-limit-tokens': '8000', 'x-ratelimit-remaining-tokens': '7000', 'x-ratelimit-reset-tokens': '7.5s' };
+      if (body.includes('SLOW-DOWN')) {
+        res.writeHead(429, { 'Content-Type': 'application/json', 'retry-after': '42', ...limits });
+        res.end(JSON.stringify({ error: { message: 'Rate limit reached', type: 'tokens', code: 'rate_limit_exceeded' } }));
+        return;
+      }
+      const reply = '<think>hidden</think>## Summary\n- FAKE-GROQ-REPLY about the brief\n- **Next:** add a target price';
+      res.writeHead(200, { 'Content-Type': 'application/json', ...limits });
+      res.end(
+        JSON.stringify({
+          id: `chatcmpl-${n}`,
+          object: 'chat.completion',
+          model: 'qwen/qwen3.8-27b',
+          choices: [{ index: 0, message: { role: 'assistant', content: reply }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 900, completion_tokens: 100, total_tokens: 1000 },
+        }),
+      );
+    });
+  })
+  .listen(Number(port));

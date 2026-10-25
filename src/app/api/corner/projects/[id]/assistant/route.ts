@@ -1,6 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { getProject, listItems, text } from '@/lib/corner';
-import { askAssistant, assistantReady, type Mode } from '@/lib/assistant';
+import { askAssistant, assistantReady, AssistantBusy, AssistantKeyRejected, type Mode } from '@/lib/assistant';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
 const MODES: Mode[] = ['summary', 'feedback', 'moodboard', 'next', 'question'];
@@ -16,7 +15,7 @@ export async function GET() {
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
-  if (!assistantReady()) return fail('The assistant isn’t switched on yet: add ANTHROPIC_API_KEY to the site’s settings in Vercel, then redeploy.', 503);
+  if (!assistantReady()) return fail('The assistant isn’t switched on yet: add GROQ_API_KEY to the site’s settings in Vercel, then redeploy.', 503);
   const { id } = await params;
   const p = await getProject(id);
   if (!p) return fail('That project isn’t here.', 404);
@@ -25,13 +24,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!mode) return fail('Choose what you’d like help with.');
   const question = text(body.question, 2000);
   if (mode === 'question' && !question) return fail('Type your question first.');
-  const history = (Array.isArray(body.history) ? body.history : []).slice(-4).map((h: { q?: unknown; a?: unknown }) => ({ q: text(h?.q, 2000), a: text(h?.a, 6000) }));
+  // the free tier has little room, so only the last two exchanges come along
+  const history = (Array.isArray(body.history) ? body.history : []).slice(-2).map((h: { q?: unknown; a?: unknown }) => ({ q: text(h?.q, 1000), a: text(h?.a, 6000) }));
   try {
     return json(await askAssistant(p, await listItems(id), mode, question, history));
   } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) return fail('The assistant’s API key was rejected. Check ANTHROPIC_API_KEY in Vercel.', 502);
-    if (e instanceof Anthropic.RateLimitError) return fail('The assistant is busy right now. Try again in a minute.', 429);
-    if (e instanceof Anthropic.APIError) return fail('The assistant couldn’t answer just now. Try again.', 502);
-    throw e;
+    if (e instanceof AssistantBusy) {
+      const r = fail(e.message, 429);
+      r.headers.set('Retry-After', String(e.retryAfter));
+      return r;
+    }
+    if (e instanceof AssistantKeyRejected) return fail('The assistant’s API key was rejected. Check GROQ_API_KEY in Vercel.', 502);
+    console.error('assistant', e);
+    return fail('The assistant couldn’t answer just now. Try again.', 502);
   }
 }

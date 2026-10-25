@@ -35,7 +35,7 @@ function Answer({ text }: { text: string }) {
   );
 }
 
-/** The project-aware assistant. Works only when it's been switched on (ANTHROPIC_API_KEY on the server). */
+/** The project-aware assistant. Works only when it's been switched on (GROQ_API_KEY on the server). */
 export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [q, setQ] = useState('');
@@ -49,9 +49,9 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
           <h3 className="cn-h">The assistant isn’t switched on yet</h3>
           <p>It reads this project (the brief, notes, links, palettes, fabrics, moodboard, PDFs and images) and helps you think it through. Everything else in My Corner works without it.</p>
           <ol>
-            <li>Create an API key at console.anthropic.com (Settings → API keys).</li>
+            <li>Create a free API key at console.groq.com (API Keys).</li>
             <li>
-              In Vercel, open the project → Settings → Environment Variables, and add <code>ANTHROPIC_API_KEY</code> with that key.
+              In Vercel, open the project → Settings → Environment Variables, and add <code>GROQ_API_KEY</code> with that key.
             </li>
             <li>Redeploy (or push any change). This tab then turns into the assistant.</li>
           </ol>
@@ -63,7 +63,7 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
     setBusy(label);
     setErr('');
     try {
-      const r = await api<Reply>(`/api/corner/projects/${ctx.project.id}/assistant`, 'POST', { mode, question, history: turns.slice(-4).map(({ q, a }) => ({ q, a })) });
+      const r = await api<Reply>(`/api/corner/projects/${ctx.project.id}/assistant`, 'POST', { mode, question, history: turns.slice(-2).map(({ q, a }) => ({ q, a })) });
       setTurns((t) => [...t, { q: label, a: r.text, read: r.read, notRead: r.notRead }]);
       if (mode === 'question') setQ('');
     } catch (e) {
@@ -95,7 +95,10 @@ export default function Assistant({ ctx, ready }: { ctx: Ctx; ready: boolean }) 
             Ask
           </button>
         </form>
-        <p className="cn-hint">It only uses what’s saved in this project, and says what it couldn’t read (Word and PowerPoint files, for now).</p>
+        <p className="cn-hint">
+          It only uses what’s saved in this project, and says what it couldn’t read. It runs on a free model, so it reads the start of long documents and a couple of images at a time, and may ask you to wait a minute between
+          questions.
+        </p>
         {busy && <p className="cn-thinking">Reading your project and thinking… ({busy})</p>}
         {err && <p className="h-err">{err}</p>}
       </section>

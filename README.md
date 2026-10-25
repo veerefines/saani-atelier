@@ -37,7 +37,7 @@ npm run build && npm test
 - removing friends and deleting everything they shared
 - Moments, friends reading the journey, private My Corner files, and every My Corner action
 - web push end to end, through a fake push service that decrypts each notification
-- the My Corner assistant against a fake Claude server, checking exactly what it sends
+- the My Corner assistant against a fake Groq server, checking exactly what it sends and that it keeps to the free tier's limits
 
 It backs up your `.data/` first and puts it back afterwards. GitHub runs the same tests on every push (`.github/workflows/test.yml`) with throwaway secrets.
 
@@ -116,13 +116,26 @@ Saanika's private studio for fashion and brand projects. Only she can open it, a
 
 ### Switching on the assistant
 
-The assistant uses Claude (Claude Opus 5.5) on the server; the key never reaches the browser. It reads the project's text, its PDFs and its images, and says what it couldn't read (Word and PowerPoint files aren't read yet).
+The assistant runs Qwen 3.8 27B, an open model, on Groq's free tier. It runs on the server, so the key never reaches the browser. It reads:
 
-1. Create an API key at console.anthropic.com.
-2. Add `ANTHROPIC_API_KEY` in Vercel (Project → Settings → Environment Variables). Optionally set `ANTHROPIC_MODEL` to use a different model.
+- the project's text
+- the text inside its PDFs and TXT files
+- up to two images per question
+
+It says what it couldn't read: Word and PowerPoint files, scanned PDFs, and anything that didn't fit.
+
+1. Create a free API key at console.groq.com.
+2. Add `GROQ_API_KEY` in Vercel (Project → Settings → Environment Variables). Optionally set `GROQ_MODEL` to use a different Groq model.
 3. Redeploy.
 
 Without the key, everything else in My Corner works and the Assistant tab shows these steps.
+
+**Staying free.** Groq's free tier allows 30 requests, 8,000 tokens and 1,000 answer tokens a minute, and 1,000 requests a day, for this model. Answers are capped at 900 tokens, so after a long answer the next question may wait a minute. `src/lib/groq-limits.ts` keeps under all of those:
+
+- **Each question fits in one minute's tokens.** Long documents are trimmed to their opening part, and the reply says so.
+- **Every request is counted in the doc store** (collection `groq-usage`): at most 20 a minute and 900 a day.
+- **It waits when Groq asks.** If Groq's rate-limit headers or a 429 say to slow down, the assistant pauses for as long as Groq says.
+- **She sees how long to wait.** Instead of an error, she gets "try again in about N seconds".
 
 ## Adding her real photos, videos, voice notes and words
 
@@ -205,6 +218,6 @@ A daily Vercel cron (`vercel.json`, 06:00 UTC) calls `/api/daily`. It needs `CRO
   - `CRON_SECRET`
   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`
   - optionally `GOOGLE_MAPS_API_KEY`, for live ratings in the guide
-  - optionally `ANTHROPIC_API_KEY` (and `ANTHROPIC_MODEL`), for My Corner's assistant
+  - optionally `GROQ_API_KEY` (and `GROQ_MODEL`), for My Corner's assistant (free tier)
 - After changing a setting, redeploy.
 - Friends can also be added and removed from `/admin` without touching `INVITES`.

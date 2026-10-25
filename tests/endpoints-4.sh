@@ -199,7 +199,7 @@ echo "--- the assistant (no key here)"
 check "assistant status" 200 -b "$SA" $B/api/corner/projects/$P/assistant
 expect "not ready" '"ready":false'
 check "assistant without a key 503" 503 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
-expect "explains setup" "ANTHROPIC_API_KEY"
+expect "explains setup" "GROQ_API_KEY"
 check "assistant friend 403" 403 -b "$FR" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
 
 echo "--- duplicate and delete"

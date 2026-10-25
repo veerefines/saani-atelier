@@ -20,6 +20,8 @@ export CRON_SECRET=$(envval CRON_SECRET)
 # the friend list, plus one test friend "in the settings"
 export INVITES=$(INV="$(envval INVITES)" node -e 'const a=JSON.parse(process.env.INV||"[]"); a.push({id:"envfriend",name:"Env Friend",role:"wellwisher",code:"ENV-FRIEND-TEST"}); process.stdout.write(JSON.stringify(a))')
 export ALLOW_TEST_CLOCK=1
+# no real AI calls from tests, even if .env.local has a key
+export GROQ_API_KEY=off
 
 # keep the real local data safe
 [ -d .data ] && cp -R .data "$TEST_TMP/data-backup"
@@ -59,16 +61,16 @@ run "endpoints, part 3" bash tests/endpoints-3.sh
 run "endpoints, part 4" bash tests/endpoints-4.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
-# the My Corner assistant, with a key, against a fake Claude server
+# the My Corner assistant, with a key, against a fake Groq server
 kill "$SERVER" 2>/dev/null; wait "$SERVER" 2>/dev/null
 # make sure the first server has let go of the port before starting the keyed one
 for i in $(seq 1 30); do curl -s -o /dev/null "$BASE_URL/" || break; sleep 1; done
-node tests/fake-claude.js 4610 "$TEST_TMP" &
+node tests/fake-groq.js 4610 "$TEST_TMP" &
 FAKE=$!
-ANTHROPIC_API_KEY=test-key-not-real ANTHROPIC_BASE_URL=http://localhost:4610 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
+GROQ_API_KEY=test-key-not-real GROQ_BASE_URL=http://localhost:4610/openai/v1 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
 SERVER=$!
 for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
-run "assistant (fake Claude)" bash tests/assistant.sh
+run "assistant (fake Groq)" bash tests/assistant.sh
 kill "$FAKE" 2>/dev/null
 echo
 [ $status -eq 0 ] && echo "ALL PASSED" || echo "SOME TESTS FAILED"
