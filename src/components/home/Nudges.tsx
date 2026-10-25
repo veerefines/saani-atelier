@@ -74,7 +74,13 @@ export function NudgeSend() {
   }, []);
 
   return (
-    <section className="nudge-mini" id="nudges" aria-label="Thinking of her">
+    <section className="dk-card nudge-mini" id="nudges" aria-label="Thinking of her">
+      <div className="dk-head">
+        <span className="hand">thinking of her?</span>
+        <button type="button" className="nm-more" onClick={() => setMore(!more)} aria-expanded={more} aria-label="Pick an emoji or add a few words" title="Pick an emoji or add a few words">
+          {more ? '×' : '✎'}
+        </button>
+      </div>
       <div className="nm-row">
         <button type="button" className="nm-send" onClick={send} disabled={busy} aria-label={`Send ${emoji} to Saanika`}>
           <span>{emoji}</span>
@@ -87,12 +93,9 @@ export function NudgeSend() {
           </AnimatePresence>
         </button>
         <span className="nm-text">
-          <b>{sent ? 'Sent. She’ll feel it.' : 'Thinking of her?'}</b>
-          <small>{sent ? 'Tap again any time.' : 'Tap to send her a little ' + emoji}</small>
+          <b>{sent ? 'Sent. She’ll feel it.' : `Tap to send her a little ${emoji}`}</b>
+          <small>{sent ? 'Tap again any time.' : 'or ✎ to add a few words'}</small>
         </span>
-        <button type="button" className="nm-more" onClick={() => setMore(!more)} aria-expanded={more} aria-label="Pick an emoji or add a few words">
-          {more ? '×' : '✎'}
-        </button>
       </div>
       {more && (
         <div className="nm-extra">

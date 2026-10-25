@@ -4066,20 +4066,6 @@ a.pc-rating:hover {
 }
 
 /* the friend's small "thinking of her?" */
-.nudge-mini {
-  max-width: 520px;
-  margin: 0 auto 18px;
-  padding: 8px 10px 8px 8px;
-  border-radius: 999px;
-  background: rgba(255, 250, 246, 0.82);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
-    0 12px 22px -18px rgba(107, 30, 58, 0.6);
-}
-.nudge-mini:has(.nm-extra),
-.nudge-mini:has(.nm-back) {
-  border-radius: 22px;
-}
 .nm-row {
   display: flex;
   align-items: center;
@@ -4252,28 +4238,6 @@ a.pc-rating:hover {
   font-size: 12px;
   color: #8a6a7b;
 }
-.mood-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 520px;
-  margin: 0 auto 10px;
-  padding: 8px 14px;
-  border-radius: 16px;
-  background: rgba(255, 250, 246, 0.7);
-  font-size: 14px;
-  color: var(--ink);
-}
-.mood-status > span:first-child {
-  font-size: 24px;
-}
-.mood-status.low {
-  background: rgba(253, 227, 234, 0.85);
-}
-.mood-status small {
-  color: var(--burgundy);
-  font-weight: 600;
-}
 
 /* ---------- a little memory ---------- */
 .memory {
@@ -4316,26 +4280,6 @@ a.pc-rating:hover {
 }
 
 /* friend's desk: her special day is close */
-.w-soon {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 520px;
-  margin: 0 auto 10px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: linear-gradient(120deg, #fff1c7, #fde3ea);
-  color: var(--ink);
-  font-size: 14px;
-  text-decoration: none;
-  box-shadow: 0 10px 20px -16px rgba(107, 30, 58, 0.6);
-}
-.w-soon > span:first-child {
-  font-size: 24px;
-}
-.w-soon b {
-  color: var(--burgundy);
-}
 
 /* her "thinking of my people" */
 .love-back-row {
@@ -4470,19 +4414,6 @@ a.pc-rating:hover {
     box-shadow:
       inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
       0 18px 30px -22px rgba(107, 30, 58, 0.55);
-  }
-  .desk-top > .w-soon,
-  .desk-top > .mood-status,
-  .desk-top > .nudge-mini {
-    display: flex;
-    align-items: center;
-    border-radius: 22px;
-    padding: 14px 16px;
-  }
-  .desk-top > .nudge-mini {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
   }
 }
 
@@ -4949,5 +4880,180 @@ a.pc-rating:hover {
 @media (min-width: 1024px) {
   .desk-left > .mo-share .mo-share-head .hand {
     line-height: 34px;
+  }
+}
+
+/* ---------- the friends' desk top: every card the same shape ----------
+   a handwritten title (and a small detail or action) on one line, then the content, left-aligned */
+.dk-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 auto 12px;
+  padding: 14px 16px 16px;
+  border-radius: 22px;
+  background: rgba(255, 250, 246, 0.82);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 14px 26px -20px rgba(107, 30, 58, 0.55);
+  text-align: left;
+}
+.dk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 32px;
+}
+.dk-head .hand {
+  font-size: 20px;
+  line-height: 32px;
+  color: var(--berry);
+}
+.dk-head small {
+  font-size: 12.5px;
+  color: #8a6a7b;
+}
+.dk-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.dk-line b {
+  color: var(--burgundy);
+}
+.dk-emoji {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 12px -8px rgba(178, 48, 95, 0.6);
+  font-size: 21px;
+}
+.dk-note {
+  margin: 0;
+  padding-left: 52px;
+  font-size: 14px;
+  font-style: italic;
+  color: #4e3a45;
+  overflow-wrap: anywhere;
+}
+.dk-sub {
+  padding-left: 52px;
+  font: 600 13px var(--font-body);
+  color: var(--burgundy);
+}
+.dk-link {
+  justify-self: start;
+  padding-left: 52px;
+  font-size: 13px;
+}
+.mood-status.low {
+  background: rgba(253, 227, 234, 0.9);
+}
+/* thinking of her?: the send button lines up with the emoji circles in the other cards */
+.nudge-mini .nm-row {
+  gap: 10px;
+}
+.nudge-mini .nm-send {
+  width: 42px;
+  height: 42px;
+}
+.nudge-mini .nm-text b {
+  font-size: 14.5px;
+}
+.nudge-mini .nm-more {
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+}
+.nudge-mini .nm-back {
+  margin: 0;
+  padding-left: 52px;
+}
+.nudge-mini .nm-extra {
+  padding: 4px 0 0;
+}
+.dk-card.mo-tile .mo-cap {
+  margin-top: 2px;
+}
+@media (min-width: 1024px) {
+  /* side by side, equal heights */
+  .wall-top {
+    align-items: stretch;
+  }
+  .wall-top > .dk-card {
+    margin: 0;
+    max-width: none;
+  }
+  .wall-top:has(> .mo-tile) {
+    align-items: start;
+  }
+}
+.dk-card .dk-link {
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.wall-right {
+  display: contents;
+}
+@media (min-width: 1024px) {
+  /* with her moment: the photo on the left, the other cards stacked to the same height on the right */
+  .wall-top:has(> .mo-tile) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .wall-top:has(> .mo-tile) > .mo-tile {
+    grid-row: auto;
+  }
+  .wall-top:has(> .mo-tile) > .wall-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .wall-top:has(> .mo-tile) > .wall-right > .dk-card {
+    flex: 1;
+    margin: 0;
+    max-width: none;
+  }
+  .wall-top > .mo-tile .mo-img {
+    max-height: 300px;
+  }
+}
+@media (min-width: 760px) and (max-width: 1023px) {
+  /* iPad: the friends' desk top side by side too */
+  .wall-top {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    align-items: stretch;
+    gap: 14px;
+    margin: 0 0 22px;
+  }
+  .wall-top > .dk-card,
+  .wall-right > .dk-card {
+    margin: 0;
+    max-width: none;
+  }
+  .wall-top:has(> .mo-tile) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .wall-top:has(> .mo-tile) > .wall-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .wall-top:has(> .mo-tile) > .wall-right > .dk-card {
+    flex: 1;
+  }
+  .wall-top > .mo-tile .mo-img {
+    max-height: 280px;
   }
 }

@@ -260,8 +260,8 @@ export function LatestMoment({ me }: { me: string }) {
   const m = list?.[0];
   if (!m) return null;
   return (
-    <section className="mo-tile" aria-label="From Saanika">
-      <div className="mo-tile-head">
+    <section className="dk-card mo-tile" aria-label="From Saanika">
+      <div className="dk-head">
         <span className="hand">from Saanika</span>
         <small>{ago(m.createdAt)}</small>
       </div>

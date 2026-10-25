@@ -80,12 +80,21 @@ export function MoodStatus() {
   const m = MOODS.find((x) => x.id === mood?.mood);
   if (!mood || !m) return null;
   return (
-    <p className={`mood-status${m.low ? ' low' : ''}`}>
-      <span aria-hidden="true">{m.emoji}</span>
-      <span>
-        Saanika’s feeling <b>{m.label}</b> today{mood.note ? `: “${mood.note}”` : '.'}
-        {m.low && <small> Send her a little love below.</small>}
-      </span>
-    </p>
+    <section className={`dk-card mood-status${m.low ? ' low' : ''}`} aria-label="How she’s feeling">
+      <div className="dk-head">
+        <span className="hand">how she’s feeling</span>
+        <small>today</small>
+      </div>
+      <p className="dk-line">
+        <span className="dk-emoji" aria-hidden="true">
+          {m.emoji}
+        </span>
+        <span>
+          Saanika’s feeling <b>{m.label}</b>
+        </span>
+      </p>
+      {mood.note && <p className="dk-note">“{mood.note}”</p>}
+      {m.low && <small className="dk-sub">Send her a little love.</small>}
+    </section>
   );
 }

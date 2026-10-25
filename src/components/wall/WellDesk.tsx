@@ -91,26 +91,39 @@ export default function WellDesk({
       </header>
 
       {/* on a laptop these sit side by side under the header */}
-      <div className="desk-top">
+      <div className="desk-top wall-top">
         <LatestMoment me={me} />
-        {soon && (
-          <Link href="/wall/letters" className="w-soon">
-            <span aria-hidden="true">{soon.emoji}</span>
-            <span>
-              {soon.days === 0 ? (
-                <>
-                  It’s <b>{soon.title}</b> for Saanika today. Send her something.
-                </>
-              ) : (
-                <>
-                  <b>{soon.title}</b> is {soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}. Seal her a letter for the day →
-                </>
-              )}
-            </span>
-          </Link>
-        )}
-        <MoodStatus />
-        <NudgeSend />
+        <div className="wall-right">
+          {soon && (
+            <section className="dk-card w-soon" aria-label="Coming up">
+              <div className="dk-head">
+                <span className="hand">coming up</span>
+                <small>{soon.days === 0 ? 'today' : soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}</small>
+              </div>
+              <p className="dk-line">
+                <span className="dk-emoji" aria-hidden="true">
+                  {soon.emoji}
+                </span>
+                <span>
+                  {soon.days === 0 ? (
+                    <>
+                      It’s <b>{soon.title}</b> for Saanika today.
+                    </>
+                  ) : (
+                    <>
+                      <b>{soon.title}</b> is {soon.days === 1 ? 'tomorrow' : `in ${soon.days} days`}.
+                    </>
+                  )}
+                </span>
+              </p>
+              <Link href="/wall/letters" className="w-link dk-link">
+                {soon.days === 0 ? 'Send her something →' : 'Seal her a letter for the day →'}
+              </Link>
+            </section>
+          )}
+          <MoodStatus />
+          <NudgeSend />
+        </div>
       </div>
 
       <section className="today call-card" aria-label="Good time to call Saanika">
