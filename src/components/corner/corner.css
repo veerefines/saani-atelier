@@ -1145,12 +1145,16 @@
 }
 .cn-used {
   margin: 0;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 12px;
   background: #f7f0f3;
   font-size: 12px;
   line-height: 1.5;
   color: var(--cn-ink-soft);
+}
+.cn-used summary {
+  cursor: pointer;
+  font-weight: 600;
 }
 /* an add-form inside a section card sits flat (no card within a card) */
 .cn-section .cn-adder {
@@ -1189,4 +1193,274 @@
   .cn-head-actions .cn-btn {
     flex: 1;
   }
+}
+
+/* ---------- the studio assistant ---------- */
+.cn-ai {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .cn-ai {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+  .cn-ai-side {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+  }
+}
+.cn-ai-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cn-chats {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cn-chats li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 12px;
+}
+.cn-chats li.on {
+  background: #fbe7ee;
+}
+.cn-chats form {
+  flex: 1;
+  padding: 4px;
+}
+.cn-chat-open {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.cn-chat-open:hover {
+  background: #fdf1f5;
+}
+.cn-chat-open b {
+  overflow: hidden;
+  font: 600 13.5px var(--font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cn-chat-open small {
+  font-size: 11.5px;
+  color: var(--cn-ink-faint);
+}
+.cn-chat-tools {
+  display: flex;
+  flex: none;
+  padding-right: 6px;
+}
+.cn-chat-tools button {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--burgundy);
+  font-size: 14px;
+  cursor: pointer;
+}
+.cn-chat-tools button:hover {
+  background: #fff;
+}
+.cn-ai-title {
+  font-size: 24px;
+}
+/* lenses and ready-made questions */
+.cn-studio {
+  display: grid;
+  gap: 10px;
+}
+.cn-lens {
+  display: inline-flex;
+  justify-self: start;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f7eaf0;
+}
+.cn-lens button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--cn-ink-soft);
+  font: 600 13.5px var(--font-body);
+  cursor: pointer;
+}
+.cn-lens button[aria-selected='true'] {
+  background: #fff;
+  color: var(--burgundy);
+  box-shadow: 0 4px 10px -6px rgba(107, 30, 58, 0.5);
+}
+.cn-prompts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+.cn-prompts button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+  padding: 12px;
+  border: 1.5px solid var(--cn-line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.cn-prompts button:hover:not(:disabled) {
+  border-color: rgba(178, 48, 95, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px -14px rgba(107, 30, 58, 0.6);
+}
+.cn-prompts button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.cn-prompts span {
+  grid-row: span 2;
+  font-size: 22px;
+}
+.cn-prompts b {
+  font: 600 14px var(--font-body);
+}
+.cn-prompts small {
+  font-size: 12px;
+  color: var(--cn-ink-faint);
+}
+.cn-studio.compact .cn-prompts {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+.cn-studio.compact .cn-prompts button {
+  padding: 8px 10px;
+}
+.cn-studio.compact .cn-prompts span {
+  grid-row: auto;
+  font-size: 17px;
+}
+.cn-more summary {
+  cursor: pointer;
+  font: 600 13.5px var(--font-body);
+  color: var(--burgundy);
+}
+.cn-more[open] summary {
+  margin-bottom: 10px;
+}
+/* the conversation */
+.cn-thread {
+  display: grid;
+  gap: 18px;
+}
+.cn-turn {
+  display: grid;
+  gap: 8px;
+}
+.cn-turn .cn-q {
+  justify-self: end;
+  max-width: 85%;
+  padding: 8px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(160deg, #fde3ea, #f9d0de);
+}
+.cn-a {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: 4px 18px 18px 18px;
+  background: #fff;
+}
+.cn-hexdot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.cn-hexdot i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.cn-swatches {
+  display: flex;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.cn-swatches span {
+  display: grid;
+  flex: 1;
+  place-items: end center;
+  min-width: 0;
+  height: 64px;
+  padding-bottom: 6px;
+  font: 600 10.5px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.cn-keep {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.cn-keep .cn-btn {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.cn-keep small {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--cn-ink-faint);
+}
+.cn-next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cn-next button {
+  padding: 7px 12px;
+  border: 1.5px dashed rgba(178, 48, 95, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--burgundy);
+  font: 600 13px var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.cn-next button:hover:not(:disabled) {
+  border-style: solid;
+  background: #fff;
+}
+.cn-ask {
+  position: sticky;
+  bottom: 10px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(255, 250, 246, 0.94);
+  box-shadow: 0 10px 24px -18px rgba(70, 25, 45, 0.6);
 }

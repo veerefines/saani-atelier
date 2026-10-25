@@ -28,7 +28,7 @@ http
         res.end(JSON.stringify({ error: { message: 'Rate limit reached', type: 'tokens', code: 'rate_limit_exceeded' } }));
         return;
       }
-      const reply = '<think>hidden</think>## Summary\n- FAKE-GROQ-REPLY about the brief\n- **Next:** add a target price';
+      const reply = '<think>hidden</think>## Summary\n- FAKE-GROQ-REPLY about the brief\n- **Next:** add a target price\n- Palette: Navigli rose #F4A6C0 and dusk #6B1E3A\n\n## Try next\n- FOLLOW-ONE?\n- **FOLLOW-TWO?**\n3. FOLLOW-THREE?';
       res.writeHead(200, { 'Content-Type': 'application/json', ...limits });
       res.end(
         JSON.stringify({
@@ -36,7 +36,7 @@ http
           object: 'chat.completion',
           model: 'qwen/qwen3.8-27b',
           choices: [{ index: 0, message: { role: 'assistant', content: reply }, finish_reason: 'stop' }],
-          usage: { prompt_tokens: 900, completion_tokens: 100, total_tokens: 1000 },
+          usage: { prompt_tokens: 950, completion_tokens: 50, total_tokens: 1000 },
         }),
       );
     });

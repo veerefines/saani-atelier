@@ -1,7 +1,7 @@
 import * as db from './db';
 import { deleteMedia, getMedia } from './data';
 import type { Session } from './session';
-import { CATEGORIES, isHex, type Brief, type Category, type Costing, type Item, type NewItem, type Project } from './corner-model';
+import { CATEGORIES, isHex, type Brief, type Category, type Chat, type ChatTurn, type Costing, type Item, type NewItem, type Project } from './corner-model';
 
 export * from './corner-model';
 
@@ -13,6 +13,7 @@ export * from './corner-model';
 
 const P = 'cornerProjects';
 const I = 'cornerItems';
+const C = 'cornerChats';
 const now = () => new Date().toISOString();
 const EMPTY_BRIEF: Brief = { audience: '', positioning: '', objectives: '', budget: '' };
 const EMPTY_COSTING: Costing = { fabric: 0, labour: 0, trims: 0, other: 0, sellingPrice: 0 };
@@ -110,6 +111,7 @@ export async function deleteProject(id: string) {
   if (!p) return false;
   const items = await listItems(id);
   for (const it of items) await db.remove(I, it.id);
+  for (const c of await listChats(id)) await db.remove(C, c.id);
   await db.remove(P, id);
   await dropFilesIfUnused([p.coverMediaId, ...items.map((i) => ('mediaId' in i ? i.mediaId : undefined))]);
   return true;
@@ -283,4 +285,28 @@ export function cleanItemEdit(it: Item, raw: Record<string, unknown>): string | 
       break;
   }
   return out;
+}
+
+/* ---------- assistant conversations (saved per project; a duplicate starts with none) ---------- */
+
+export const listChats = async (projectId: string) => (await db.list<Chat>(C)).filter((c) => c.projectId === projectId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+export async function getChat(projectId: string, id: string) {
+  const c = await db.get<Chat>(C, id);
+  return c && c.projectId === projectId ? c : null;
+}
+/** Add a question and its answer: to an existing conversation, or as the start of a new one. */
+export async function saveTurn(projectId: string, chatId: string | null, turn: Omit<ChatTurn, 'id' | 'at'>) {
+  const at = now();
+  const t: ChatTurn = { ...turn, id: db.newId('ct_'), at };
+  const existing = chatId ? await getChat(projectId, chatId) : null;
+  const chat = existing
+    ? await db.put<Chat>(C, { ...existing, turns: [...existing.turns, t].slice(-60), updatedAt: at })
+    : await db.put<Chat>(C, { id: db.newId('ch_'), projectId, title: turn.q.slice(0, 80), turns: [t], createdAt: at, updatedAt: at });
+  return { chat, turn: t };
+}
+export const renameChat = (projectId: string, id: string, title: string) => db.update<Chat>(C, id, (c) => (c.projectId === projectId ? { ...c, title } : c));
+export async function deleteChat(projectId: string, id: string) {
+  if (!(await getChat(projectId, id))) return false;
+  await db.remove(C, id);
+  return true;
 }

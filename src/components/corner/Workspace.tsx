@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Item, Project } from '@/lib/corner-model';
+import type { Chat, Item, Project } from '@/lib/corner-model';
 import { api, mediaUrl } from '@/lib/upload-client';
 import { CATEGORY_LOOK, edited } from './CornerHome';
 import { FileButton, Status, uploadCorner, useAction, type Ctx, type Tab } from './shared';
@@ -24,10 +24,18 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 /** One project's workspace: its tabs share the project and its items, and save straight to the server. */
-export default function Workspace({ initial, aiReady }: { initial: { project: Project; items: Item[] }; aiReady: boolean }) {
+export default function Workspace({ initial, initialTab, aiReady }: { initial: { project: Project; items: Item[]; chats: Chat[] }; initialTab?: string; aiReady: boolean }) {
   const [project, setProject] = useState(initial.project);
   const [items, setItems] = useState(initial.items);
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTabState] = useState<Tab>(TABS.some((t) => t.id === initialTab) ? (initialTab as Tab) : 'overview');
+  // the open tab lives in the address, so going back (or reloading) lands on the same tab
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    window.history.replaceState(null, '', t === 'overview' ? window.location.pathname : `?tab=${t}`);
+  };
+  // conversations stay put while she moves between tabs
+  const [chats, setChats] = useState(initial.chats);
+  const [chatId, setChatId] = useState<string | null>(initial.chats[0]?.id ?? null);
   const base = `/api/corner/projects/${project.id}`;
   const bump = () => setProject((p) => ({ ...p, updatedAt: new Date().toISOString() }));
 
@@ -118,7 +126,7 @@ export default function Workspace({ initial, aiReady }: { initial: { project: Pr
       {tab === 'moodboard' && <Moodboard ctx={ctx} />}
       {tab === 'elements' && <Elements ctx={ctx} />}
       {tab === 'management' && <Management ctx={ctx} />}
-      {tab === 'assistant' && <Assistant ctx={ctx} ready={aiReady} />}
+      {tab === 'assistant' && <Assistant ctx={ctx} ready={aiReady} chats={chats} setChats={setChats} chatId={chatId} setChatId={setChatId} />}
     </>
   );
 }

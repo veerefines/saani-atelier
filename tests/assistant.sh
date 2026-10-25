@@ -70,6 +70,11 @@ expect "hidden thinking is stripped" "hidden" absent
 expect "says it read the PDF" '"read":\[[^]]*Brief.pdf'
 expect "and the text file" '"read":\[[^]]*notes.txt'
 expect "and the image" 'moodboard image'
+expect "follow-up questions come back" '"suggestions":\["FOLLOW-ONE?","FOLLOW-TWO?","FOLLOW-THREE?"\]'
+expect "and are taken out of the answer" 'Try next' absent
+expect "the answer is saved as a conversation" '"chat":{"id":"ch_'
+expect "named after the question" '"title":"Summarise the project"'
+CH=$(jget .chat.id)
 expect "says it couldn't read the deck" '"notRead":\[[^]]*Deck.pptx'
 expect "or the scanned PDF" '"notRead":\[[^]]*Scan.pdf (no text found'
 expect "only two images fit a free request" '"notRead":\[[^]]*THIRD-IMG[^]]*only 2 images'
@@ -92,16 +97,39 @@ same "the request fits the free tier (under 30 KB of text)" "$(node -e "const b=
 cp "$D/groq-headers-last.json" "$D/body"
 expect "the key goes in the auth header (server side only)" 'Bearer test-key-not-real'
 
-check "a follow-up question" 200 -b "$SA" -X POST "${J[@]}" -d '{"mode":"question","question":"FOLLOW-UP-Q","history":[{"q":"OLDEST-Q","a":"OLDEST"},{"q":"Summarise","a":"EARLIER-ANSWER"}]}' $B/api/corner/projects/$P/assistant
+check "a follow-up in the same conversation" 200 -b "$SA" -X POST "${J[@]}" -d "{\"mode\":\"question\",\"question\":\"FOLLOW-UP-Q\",\"chatId\":\"$CH\",\"history\":[{\"q\":\"SNEAKY\",\"a\":\"SNEAKY\"}]}" $B/api/corner/projects/$P/assistant
+same "same conversation" "$(jget .chat.id)" "$CH"
+same "now two answers" "$(jget .chat.turns.length)" 2
 cp "$D/groq-req-last.json" "$D/body"
 expect "the question" "FOLLOW-UP-Q"
-expect "the earlier answer for context" "EARLIER-ANSWER"
+expect "the earlier answer comes from the saved conversation" "FAKE-GROQ-REPLY about the brief"
+expect "history sent by the browser is ignored" "SNEAKY" absent
+check "a designer question starts a new one" 200 -b "$SA" -X POST "${J[@]}" -d '{"mode":"palette"}' $B/api/corner/projects/$P/assistant
+expect "named after it" '"title":"Build a colour story"'
+CH2=$(jget .chat.id)
+cp "$D/groq-req-last.json" "$D/body"
+expect "asks for HEX codes" "HEX code written exactly like"
+check "conversations are saved" 200 -b "$SA" $B/api/corner/projects/$P/assistant
+expect "both listed" "$CH2"
+expect "with the first one's answers" "FOLLOW-UP-Q"
+check "rename" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"title":"CHAT-RENAMED"}' $B/api/corner/projects/$P/assistant/chats/$CH
+expect "renamed" "CHAT-RENAMED"
+check "empty name 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"title":" "}' $B/api/corner/projects/$P/assistant/chats/$CH
+check "another project's conversation 404" 404 -b "$SA" -X POST "${J[@]}" -d "{\"mode\":\"summary\",\"chatId\":\"$CH\"}" $B/api/corner/projects/nope/assistant
+check "unknown conversation 404" 404 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary","chatId":"ch_nope"}' $B/api/corner/projects/$P/assistant
+curl -s -o /dev/null -c "$D/ai-fr.jar" $B/hello/CHANGE-ME-2
+check "friend can't read them 403" 403 -b "$D/ai-fr.jar" $B/api/corner/projects/$P/assistant
+check "friend can't delete 403" 403 -b "$D/ai-fr.jar" -X DELETE $B/api/corner/projects/$P/assistant/chats/$CH
+check "delete one" 200 -b "$SA" -X DELETE $B/api/corner/projects/$P/assistant/chats/$CH2
+check "gone" 404 -b "$SA" -X DELETE $B/api/corner/projects/$P/assistant/chats/$CH2
+check "workspace opens on the assistant tab" 200 -b "$SA" "$B/home/corner/$P?tab=assistant"
+expect "with the saved conversation" "CHAT-RENAMED"
 check "signed out 401" 401 -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
 
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 2
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 3
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
@@ -118,6 +146,9 @@ before=$(count)
 check "then it waits instead of asking again" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
 expect "still friendly" "catching its breath"
 same "Groq wasn't called while paused" "$(count)" "$before"
+
+check "deleting the project" 200 -b "$SA" -X DELETE $B/api/corner/projects/$P
+if grep -q "\"projectId\":\"$P\"" "$ROOT/.data/cornerChats.json" 2>/dev/null; then failn=$((failn+1)); echo "FAIL conversations left behind"; else pass=$((pass+1)); echo "PASS its conversations go too"; fi
 
 echo; echo "passed=$pass failed=$failn"
 [ "$failn" -eq 0 ]

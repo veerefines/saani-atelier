@@ -1,17 +1,18 @@
-import { getProject, listItems, text } from '@/lib/corner';
+import { getChat, getProject, listChats, listItems, saveTurn, STUDIO, text } from '@/lib/corner';
 import { askAssistant, assistantReady, AssistantBusy, AssistantKeyRejected, type Mode } from '@/lib/assistant';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
-const MODES: Mode[] = ['summary', 'feedback', 'moodboard', 'next', 'question'];
+const MODES: string[] = [...STUDIO.map((x) => x.id), 'question'];
 
-/** Is the assistant switched on? (The tab shows setup steps when it isn't.) */
-export async function GET() {
+/** Is the assistant switched on, and the project's saved conversations. */
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
-  return json({ ready: assistantReady() });
+  const { id } = await params;
+  return json({ ready: assistantReady(), chats: (await getProject(id)) ? await listChats(id) : [] });
 }
 
-/** Ask the assistant about this project. */
+/** Ask the assistant about this project. The question and answer are saved to the conversation. */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
@@ -24,10 +25,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!mode) return fail('Choose what you’d like help with.');
   const question = text(body.question, 2000);
   if (mode === 'question' && !question) return fail('Type your question first.');
+  const chatId = typeof body.chatId === 'string' && body.chatId ? body.chatId : null;
+  const chat = chatId ? await getChat(id, chatId) : null;
+  if (chatId && !chat) return fail('That conversation isn’t here any more.', 404);
   // the free tier has little room, so only the last two exchanges come along
-  const history = (Array.isArray(body.history) ? body.history : []).slice(-2).map((h: { q?: unknown; a?: unknown }) => ({ q: text(h?.q, 1000), a: text(h?.a, 6000) }));
+  const history = (chat?.turns ?? []).slice(-2).map((t) => ({ q: t.q, a: t.a }));
   try {
-    return json(await askAssistant(p, await listItems(id), mode, question, history));
+    const r = await askAssistant(p, await listItems(id), mode, question, history);
+    const label = mode === 'question' ? question : STUDIO.find((x) => x.id === mode)!.label;
+    return json(await saveTurn(id, chat?.id ?? null, { mode, q: label, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions }));
   } catch (e) {
     if (e instanceof AssistantBusy) {
       const r = fail(e.message, 429);

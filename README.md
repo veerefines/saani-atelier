@@ -111,8 +111,8 @@ Saanika's private studio for fashion and brand projects. Only she can open it, a
   - **Moodboard:** images, notes and colour swatches; drag to arrange (or use the arrows on touch screens), saved automatically.
   - **Design elements:** named colour palettes (HEX), typography references, fabrics and materials with photos.
   - **Fashion management:** a brief (audience, positioning, objectives, budget) and a costing calculator (unit cost, selling price, gross margin and markup), clearly labelled as estimates.
-  - **Assistant:** see below.
-- **Where it's stored:** the same doc store as everything else (collections `cornerProjects` and `cornerItems`; files in the private media bucket). Deleting a project deletes its items and any files nothing else uses. All of the storage code is in `src/lib/corner.ts`.
+  - **Assistant:** a studio with a designer lens (critique, moodboard, colour story, fabrics, range plan, trends) and a manager lens (summary, costing and pricing, customer, go-to-market, SWOT, next steps). Conversations are saved per project (rename, delete, pick up later), each answer suggests three follow-ups, and answers can be saved to inspiration, or as a palette when they contain HEX colours. See below.
+- **Where it's stored:** the same doc store as everything else (collections `cornerProjects`, `cornerItems` and `cornerChats`; files in the private media bucket). Deleting a project deletes its items and any files nothing else uses. All of the storage code is in `src/lib/corner.ts`.
 
 ### Switching on the assistant
 

@@ -1,6 +1,6 @@
 import { getMedia } from './data';
 import { readLocalMedia, signedDownload, usingSupabase } from './db';
-import { costingSummary, type Item, type Project } from './corner';
+import { costingSummary, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
 import { AssistantBusy, FREE, busy, reserve, seconds, settle, type Budget } from './groq-limits';
 
 /**
@@ -18,13 +18,8 @@ export const assistantReady = () => Boolean(process.env.GROQ_API_KEY) && process
 const MODEL = () => process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 const BASE = () => (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
 
-export type Mode = 'summary' | 'feedback' | 'moodboard' | 'next' | 'question';
-const ASK: Record<Exclude<Mode, 'question'>, string> = {
-  summary: 'Summarise this project: the brief, the research and documents, and where the creative direction stands.',
-  feedback: 'Give honest, specific feedback on the creative direction: what is working, what feels unclear or inconsistent, and why.',
-  moodboard: 'Suggest how to strengthen the moodboard and the brand concept: gaps, contradictions, and concrete additions.',
-  next: 'What information is missing from this project, and what are the most useful next steps, in order?',
-};
+export type { Mode };
+const ASK = Object.fromEntries(STUDIO.map((x) => [x.id, x.ask])) as Record<StudioId, string>;
 
 const SYSTEM = `You are the studio assistant inside "My Corner", Saanika's private workspace for fashion and brand projects. She is a fashion management student in Milan.
 
@@ -32,7 +27,9 @@ Work only from the project content in the message: the brief, notes, links, pale
 
 Costing figures are her own estimates; treat them as such and point out missing cost lines (duties, shipping, VAT, overheads) where relevant.
 
-Be warm but direct, like a good tutor. Use short headings and bullet points, and keep it focused (under about 400 words).`;
+Think like both a fashion designer and a fashion business manager. Be warm but direct, like a good tutor. Use short headings and bullet points, and keep it focused (under about 350 words).
+
+Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
 
 /* ---------- token budget for one request (fits the free tier's tokens per minute) ---------- */
 const ANSWER_TOKENS = 900; // room for the reply (the free tier allows 1,000 answer tokens a minute)
@@ -89,7 +86,19 @@ function describe(p: Project, items: Item[]) {
   return lines.join('\n');
 }
 
-export type AssistantReply = { text: string; read: string[]; notRead: string[] };
+export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[] };
+
+/** Split the answer from its "Try next" questions. */
+export function splitSuggestions(raw: string) {
+  const m = raw.match(/\n?#{1,4}\s*\**try next\**:?\s*\n([\s\S]*)$/i);
+  if (!m) return { text: raw.trim(), suggestions: [] as string[] };
+  const suggestions = m[1]
+    .split('\n')
+    .map((l) => l.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').replace(/\*\*/g, '').trim())
+    .filter((l) => l && l.length <= 140)
+    .slice(0, 3);
+  return { text: raw.slice(0, m.index).trim(), suggestions };
+}
 export { AssistantBusy };
 export class AssistantKeyRejected extends Error {}
 
@@ -197,5 +206,6 @@ export async function askAssistant(p: Project, items: Item[], mode: Mode, questi
   if (res.status === 401) throw new AssistantKeyRejected();
   if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
   const answer = (data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  return { text: answer || 'No answer came back. Try again.', read, notRead };
+  const { text: body, suggestions } = splitSuggestions(answer);
+  return { text: body || 'No answer came back. Try again.', read, notRead, suggestions };
 }
