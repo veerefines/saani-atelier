@@ -1982,6 +1982,137 @@ a.pc-rating:hover {
 .j-polaroid:has(.love-album) {
   position: relative;
 }
+/* wall polaroids keep each photo's own shape (an album is as tall as its tallest photo) */
+.love-polaroid .j-photo-img {
+  aspect-ratio: auto;
+}
+.love-polaroid .j-photo-img img {
+  height: auto;
+  max-height: 75svh;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+.love-polaroid .love-album {
+  align-items: center;
+}
+
+/* full-screen photo viewer */
+.pv {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(20, 10, 16, 0.94);
+  backdrop-filter: blur(8px);
+  animation: pv-in 0.2s ease-out;
+}
+@keyframes pv-in {
+  from {
+    opacity: 0;
+  }
+}
+.pv-track {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.pv-track::-webkit-scrollbar {
+  display: none;
+}
+.pv-slide {
+  flex: 0 0 100%;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(64px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.pv-slide img {
+  max-width: 100%;
+  /* the screen minus the top bar and the caption space */
+  max-height: calc(100dvh - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  object-fit: contain;
+  border: 8px solid #fffdf8;
+  border-radius: 2px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.pv-bar {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.pv-bar > * {
+  pointer-events: auto;
+}
+.pv-count {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: 600 14px var(--font-body);
+}
+.pv-close,
+.pv-nav {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: 400 30px/1 var(--font-body);
+  cursor: pointer;
+}
+.pv-close {
+  margin-left: auto;
+}
+.pv-nav {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+}
+.pv-nav.prev {
+  left: 14px;
+}
+.pv-nav.next {
+  right: 14px;
+}
+.pv-nav:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+/* on phones she swipes; the arrows would sit on top of the photo */
+@media (hover: none) and (pointer: coarse) {
+  .pv-nav {
+    display: none;
+  }
+}
+.pv-caption {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  translate: -50% 0;
+  width: min(92%, 560px);
+  margin: 0;
+  text-align: center;
+  color: #fde6ec;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.pv-caption .love-from {
+  color: #f4a6c0;
+}
 .love-album-count {
   position: absolute;
   top: 20px;

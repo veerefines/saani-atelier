@@ -7,6 +7,7 @@ import { reactions } from '@/content/home';
 import { api, mediaUrl } from '@/lib/upload-client';
 import { Voice } from '@/components/journey/items';
 import ReplyBox from './ReplyBox';
+import PhotoViewer, { type ViewerPhoto } from './PhotoViewer';
 
 const TILTS = [-2.5, 1.8, -1, 2.6, -1.8, 1];
 
@@ -15,11 +16,23 @@ export function when(iso: string) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+const photoIds = (p: Post) => (p.kind === 'photo' ? (p.mediaIds?.length ? p.mediaIds : p.mediaId ? [p.mediaId] : []) : []);
+const viewerPhotos = (posts: Post[]): (ViewerPhoto & { id: string })[] =>
+  posts.flatMap((p) => photoIds(p).map((id) => ({ id, src: mediaUrl(id), caption: p.text || undefined, from: p.authorName })));
+
+/** Tap or Enter on a photo opens the viewer. */
+const tappable = (open: () => void) => ({
+  role: 'button',
+  tabIndex: 0,
+  onClick: open,
+  onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && open(),
+});
+
 /** Several photos in one polaroid: swipe through, with a little counter. */
-function Album({ p, ids }: { p: Post; ids: string[] }) {
+function Album({ p, ids, view }: { p: Post; ids: string[]; view: (id: string) => void }) {
   const [at, setAt] = useState(0);
   return (
-    <div className="j-polaroid">
+    <div className="j-polaroid love-polaroid">
       <div
         className="j-photo-img love-album"
         onScroll={(e) => {
@@ -28,7 +41,7 @@ function Album({ p, ids }: { p: Post; ids: string[] }) {
         }}
       >
         {ids.map((id, i) => (
-          <img key={id} src={mediaUrl(id)} alt={`${p.text || `Photo from ${p.authorName}`} (${i + 1} of ${ids.length})`} loading="lazy" />
+          <img key={id} src={mediaUrl(id)} alt={`${p.text || `Photo from ${p.authorName}`} (${i + 1} of ${ids.length}), tap to view`} loading="lazy" {...tappable(() => view(id))} />
         ))}
       </div>
       <span className="love-album-count" aria-hidden="true">
@@ -42,18 +55,34 @@ function Album({ p, ids }: { p: Post; ids: string[] }) {
   );
 }
 
-export function PostBody({ p }: { p: Post }) {
-  if (p.kind === 'photo' && p.mediaIds && p.mediaIds.length > 1) return <Album p={p} ids={p.mediaIds} />;
+/**
+ * One thing from her wall. Photos open in the full-screen viewer: through `onView` (the wall's own
+ * viewer, which swipes across every photo on it) or, without it, a viewer of just this post's photos.
+ */
+export function PostBody({ p, onView }: { p: Post; onView?: (id: string) => void }) {
+  const [viewing, setViewing] = useState<number | null>(null);
+  const own = viewerPhotos([p]);
+  const view = onView ?? ((id: string) => setViewing(Math.max(0, own.findIndex((x) => x.id === id))));
+  const viewer = viewing !== null && <PhotoViewer photos={own} start={viewing} onClose={() => setViewing(null)} />;
+
+  if (p.kind === 'photo' && p.mediaIds && p.mediaIds.length > 1)
+    return (
+      <>
+        <Album p={p} ids={p.mediaIds} view={view} />
+        {viewer}
+      </>
+    );
   if (p.kind === 'photo')
     return (
-      <div className="j-polaroid">
+      <div className="j-polaroid love-polaroid">
         <div className="j-photo-img">
-          <img src={mediaUrl(p.mediaId)} alt={p.text || `Photo from ${p.authorName}`} loading="lazy" />
+          <img src={mediaUrl(p.mediaId)} alt={`${p.text || `Photo from ${p.authorName}`}, tap to view`} loading="lazy" {...tappable(() => p.mediaId && view(p.mediaId))} />
         </div>
         <figcaption className="hand">
           {p.text || '♡'}
           <span className="love-from">from {p.authorName}</span>
         </figcaption>
+        {viewer}
       </div>
     );
   if (p.kind === 'voice')
@@ -90,6 +119,9 @@ export default function LoveWall({ posts: initial, seenBefore, trackSeen = true 
 
   const people = useMemo(() => Array.from(new Set(initial.map((p) => p.authorName))), [initial]);
   const shown = who === 'all' ? posts : posts.filter((p) => p.authorName === who);
+  // the viewer swipes across every photo on the wall (as filtered), starting at the tapped one
+  const photos = useMemo(() => viewerPhotos(shown), [shown]);
+  const [viewing, setViewing] = useState<number | null>(null);
 
   async function react(id: string, emoji: string) {
     setPosts((ps) =>
@@ -138,7 +170,7 @@ export default function LoveWall({ posts: initial, seenBefore, trackSeen = true 
             transition={{ type: 'spring', stiffness: 110, damping: 15, delay: (i % 4) * 0.05 }}
           >
             {trackSeen && (!seenBefore || (p.showAt ?? p.createdAt) > seenBefore) && <span className="love-badge-new">new</span>}
-            <PostBody p={p} />
+            <PostBody p={p} onView={(id) => setViewing(Math.max(0, photos.findIndex((x) => x.id === id)))} />
             <div className="love-react" role="group" aria-label="React">
               {reactions.map((e) => (
                 <button key={e} aria-pressed={p.reactions.includes(e)} onClick={() => react(p.id, e)} aria-label={`React ${e}`}>
@@ -153,6 +185,7 @@ export default function LoveWall({ posts: initial, seenBefore, trackSeen = true 
           </motion.article>
         ))}
       </div>
+      {viewing !== null && <PhotoViewer photos={photos} start={viewing} onClose={() => setViewing(null)} />}
     </>
   );
 }

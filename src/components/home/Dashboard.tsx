@@ -164,7 +164,7 @@ export default function Dashboard({
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">
         {/* wall of love */}
-        <Tile href="/home/love" i={0} className="t-love" tilt={-1.2} label={`Wall of love, ${counts.newPosts} new`}>
+        <Tile href="/home/love" i={0} className="t-love" tilt={-1.2} label={`Yaadon ka Samandar, ${counts.newPosts} new`}>
           <img className="h-tape" src="/reveal/washi.webp" alt="" />
           {counts.newPosts > 0 && <Badge>{counts.newPosts} new</Badge>}
           <div className="t-love-board" aria-hidden="true">
@@ -195,7 +195,7 @@ export default function Dashboard({
             )}
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Wall of love</h2>
+            <h2 className="hand">Yaadon ka Samandar!</h2>
             <p className="whisper">
               {counts.posts ? `${counts.posts} ${counts.posts === 1 ? 'message' : 'messages'} from your people` : 'messages from your people land here'}
             </p>

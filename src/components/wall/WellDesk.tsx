@@ -132,7 +132,7 @@ export default function WellDesk({
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Things to leave for Saanika">
         {/* wall of love */}
-        <Tile href="/wall/love" i={0} className="t-love" tilt={-1.2} label="Pin something to her wall of love">
+        <Tile href="/wall/love" i={0} className="t-love" tilt={-1.2} label="Pin something to Yaadon ka Samandar">
           <img className="h-tape" src="/reveal/washi.webp" alt="" />
           {counts.reacted > 0 && <Badge>she loved {counts.reacted}</Badge>}
           <div className="t-love-board" aria-hidden="true">
@@ -166,7 +166,7 @@ export default function WellDesk({
             )}
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Pin to her wall</h2>
+            <h2 className="hand">Yaadon ka Samandar!</h2>
             <p className="whisper">{counts.posts ? `${plural(counts.posts, 'thing')} pinned · photos, voice notes, films` : 'messages, photo albums, voice notes and little films'}</p>
           </div>
         </Tile>

@@ -8,7 +8,7 @@ export default async function LovePage() {
   return (
     <main className="h-page">
       <Keepsakes set="love" />
-      <PageHead kicker="pinned up, just for you" title="Wall of love" sub="Messages, voice notes and little films from your people." />
+      <PageHead kicker="pinned up, just for you" title="Yaadon ka Samandar!" sub="Messages, voice notes and little films from your people." />
       <LoveWall posts={posts} seenBefore={seen.love ?? null} />
     </main>
   );

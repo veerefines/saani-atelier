@@ -87,7 +87,7 @@ export function announce(from: { name: string; role: string }, a: Arrival) {
   const m =
     a.kind === 'post'
       ? {
-          title: '💌 Your wall of love',
+          title: '💌 Yaadon ka Samandar',
           body:
             a.postKind === 'photo'
               ? `${who} pinned photos for you`

@@ -27,7 +27,7 @@ export default async function BookPage() {
 
       {posts.length > 0 && (
         <section className="book-sec">
-          <h2 className="hand">Your wall of love</h2>
+          <h2 className="hand">Yaadon ka Samandar</h2>
           <div className="book-grid">
             {posts.map((p) => {
               const photos = postMedia(p);
