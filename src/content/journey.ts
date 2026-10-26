@@ -66,7 +66,7 @@ export const chapters: Chapter[] = [
         tilt: 3,
       },
       { type: 'photo', src: P('childhood-2.jpg'), caption: 'first day of school', size: 's', side: 'right', tilt: 5 },
-      { type: 'voice', src: '/journey/audio/voice-1.mp3', title: 'When you were little', from: 'Mum & Dad', side: 'left' },
+      { type: 'photo', src: P('little-with-mum-dad.jpg'), caption: 'when you were little, with Mum & Dad', size: 'm', side: 'left', tilt: 3, tape: true },
       { type: 'photo', src: P('childhood-3.jpg'), caption: 'already posing', size: 's', side: 'center', tilt: -6, tape: true },
     ],
   },

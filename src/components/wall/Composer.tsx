@@ -13,7 +13,7 @@ const TABS: { id: Tab; label: string; emoji: string; hint: string }[] = [
   { id: 'message', label: 'Message & photos', emoji: '💌', hint: 'A note, a memory, or a whole little album. It goes on her wall of love.' },
   { id: 'voice', label: 'Voice note', emoji: '🎙️', hint: 'Record something she can play when she misses your voice.' },
   { id: 'video', label: 'Video', emoji: '🎬', hint: 'Record a little film right here, or upload one. Keep it short and sweet.' },
-  { id: 'letter', label: 'Open-when letter', emoji: '✉️', hint: 'Sealed for a particular moment. You can lock it until a date.' },
+  { id: 'letter', label: 'Likhe Jo Khat Tujhe', emoji: '✉️', hint: 'Sealed for a particular moment. You can lock it until a date.' },
   { id: 'jar', label: 'Jar note', emoji: '🫙', hint: 'A tiny note she’ll pull out of her jar when she feels a certain way.' },
 ];
 

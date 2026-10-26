@@ -99,7 +99,7 @@ export function announce(from: { name: string; role: string }, a: Arrival) {
           url: '/home/love',
         }
       : a.kind === 'letter'
-        ? { title: '✉️ Open when…', body: a.locked ? `${who} sealed a letter for later` : `${who} sealed a letter for you`, url: '/home/letters' }
+        ? { title: '✉️ Likhe Jo Khat Tujhe!', body: a.locked ? `${who} sealed a letter for later` : `${who} sealed a letter for you`, url: '/home/letters' }
         : a.kind === 'jar'
           ? { title: '🫙 Your message jar', body: `${who} dropped a note in your jar`, url: '/home/jar' }
           : a.kind === 'dare'

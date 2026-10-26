@@ -213,7 +213,7 @@ check "admin upload reserve" 200 -b "$FR" -X POST "${J[@]}" -d "{\"mime\":\"imag
 MID=$(jget .id)
 curl -s -o /dev/null -b "$FR" -X PUT -H 'Content-Type: image/png' --data-binary @"$D/tiny.png" $B/api/upload/$MID
 check "journey unknown slot 400" 400 -b "$FR" -X POST "${J[@]}" -d "{\"slot\":\"/nope.jpg\",\"mediaId\":\"$MID\"}" $B/api/admin/journey
-check "journey wrong kind 400" 400 -b "$FR" -X POST "${J[@]}" -d "{\"slot\":\"/journey/audio/voice-1.mp3\",\"mediaId\":\"$MID\"}" $B/api/admin/journey
+check "journey wrong kind 400" 400 -b "$FR" -X POST "${J[@]}" -d "{\"slot\":\"/journey/audio/voice-2.mp3\",\"mediaId\":\"$MID\"}" $B/api/admin/journey
 check "journey set photo slot" 201 -b "$FR" -X POST "${J[@]}" -d "{\"slot\":\"/journey/photos/childhood-1.jpg\",\"mediaId\":\"$MID\"}" $B/api/admin/journey
 check "journey uses uploaded photo" 200 -b "$SA" $B/journey
 expect "journey references the upload" "/api/media/$MID"

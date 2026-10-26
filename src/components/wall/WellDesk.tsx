@@ -172,7 +172,7 @@ export default function WellDesk({
         </Tile>
 
         {/* open when */}
-        <Tile href="/wall/letters" i={1} className="t-letters" tilt={1.5} label="Write her an open-when letter">
+        <Tile href="/wall/letters" i={1} className="t-letters" tilt={1.5} label="Write her a letter for Likhe Jo Khat Tujhe">
           {counts.opened > 0 && <Badge>{counts.opened} opened</Badge>}
           <div className="t-envelopes" aria-hidden="true">
             <span className="env e2" />
@@ -182,7 +182,7 @@ export default function WellDesk({
             </span>
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Open when…</h2>
+            <h2 className="hand">Likhe Jo Khat Tujhe!</h2>
             <p className="whisper">{counts.letters ? `${plural(counts.letters, 'letter')} sealed by you` : 'seal a letter for the right moment'}</p>
           </div>
         </Tile>

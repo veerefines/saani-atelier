@@ -8,7 +8,7 @@ export default async function LettersPage() {
   return (
     <main className="h-page">
       <Keepsakes set="letters" />
-      <PageHead kicker="sealed with love" title="Open when…" sub="Each one is for a particular moment. Some open on their own day." />
+      <PageHead kicker="sealed with love" title="Likhe Jo Khat Tujhe!" sub="Each one is for a particular moment. Some open on their own day." />
       <Letters letters={letters} />
     </main>
   );

@@ -198,7 +198,7 @@ export default function Dashboard({
         </Tile>
 
         {/* open when */}
-        <Tile href="/home/letters" i={1} className="t-letters" tilt={1.5} label="Open when letters">
+        <Tile href="/home/letters" i={1} className="t-letters" tilt={1.5} label="Likhe Jo Khat Tujhe letters">
           {counts.ready > 0 && <Badge>{counts.ready} to open</Badge>}
           <div className="t-envelopes" aria-hidden="true">
             <span className="env e2" />
@@ -208,7 +208,7 @@ export default function Dashboard({
             </span>
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Open when…</h2>
+            <h2 className="hand">Likhe Jo Khat Tujhe!</h2>
             <p className="whisper">{counts.sealed ? `${counts.sealed} still sealed` : 'letters for the right moment'}</p>
           </div>
         </Tile>
