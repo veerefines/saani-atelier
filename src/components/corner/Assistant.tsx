@@ -275,7 +275,7 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
         <div ref={end} />
         {err && <p className="h-err">{err}</p>}
         {chat && (
-          <details className="cn-more">
+          <details className="cn-ai-more">
             <summary>More from the studio</summary>
             {studio(true)}
           </details>

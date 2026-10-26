@@ -1361,12 +1361,12 @@
   grid-row: auto;
   font-size: 17px;
 }
-.cn-more summary {
+.cn-ai-more summary {
   cursor: pointer;
   font: 600 13.5px var(--font-body);
   color: var(--burgundy);
 }
-.cn-more[open] summary {
+.cn-ai-more[open] summary {
   margin-bottom: 10px;
 }
 /* the conversation */
