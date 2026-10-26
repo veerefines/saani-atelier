@@ -337,15 +337,20 @@
   background: #efe7e2;
 }
 /* the frame takes the photo's own shape; 4:5 only while it's a placeholder */
-.j-photo-img:has(> img) {
-  aspect-ratio: auto;
-}
 .j-photo-img img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* on the journey the frame takes the photo's own shape; 4:5 only while it's a placeholder */
+.j-root .j-photo-img:has(> img) {
+  aspect-ratio: auto;
+}
+.j-root .j-photo-img img {
   height: auto;
   max-height: 82svh;
   object-fit: contain;
-  display: block;
   margin: 0 auto;
 }
 .j-polaroid figcaption {

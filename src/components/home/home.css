@@ -1044,12 +1044,9 @@
   cursor: pointer;
 }
 .proof {
-  display: block;
   width: 100%;
-  height: auto;
-  max-height: 360px;
-  object-fit: contain;
-  background: #f5eaee;
+  max-height: 240px;
+  object-fit: cover;
   border-radius: 10px;
   margin-top: 12px;
 }
@@ -1966,7 +1963,6 @@ a.pc-rating:hover {
 /* ---------- friends' bits on her side ---------- */
 .love-album {
   display: flex;
-  align-items: center;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -2631,11 +2627,9 @@ a.pc-rating:hover {
 }
 .dy-photo {
   flex: none;
-  align-self: flex-start;
   width: 110px;
-  height: auto;
-  max-height: 160px;
-  object-fit: contain;
+  height: 130px;
+  object-fit: cover;
   border-radius: 10px;
   border: 5px solid #fff;
   box-shadow: 0 6px 12px -8px rgba(60, 25, 15, 0.5);
@@ -3521,7 +3515,8 @@ a.pc-rating:hover {
 .sp-polaroid img {
   display: block;
   width: 100%;
-  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
   pointer-events: none;
 }
 .sp-polaroid.stack {
@@ -3566,8 +3561,8 @@ a.pc-rating:hover {
 .sp-film video {
   display: block;
   width: 100%;
-  height: auto;
-  min-height: 80px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
   border-radius: 3px;
   background: #3a2a32;
   pointer-events: none;
@@ -4550,9 +4545,8 @@ a.pc-rating:hover {
 .mo-img {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: min(70svh, 560px);
-  object-fit: contain;
+  max-height: 420px;
+  object-fit: cover;
   border-radius: 18px;
   background: #f5eaee;
 }
