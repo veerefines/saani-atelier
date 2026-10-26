@@ -102,6 +102,8 @@ export function JarArt() {
   );
 }
 
+const STORY_FILL = ['/reveal/tulips.webp', '/reveal/carn-pink-3.webp', '/reveal/carn-white-1.webp', '/reveal/bow.webp'];
+
 export default function Dashboard({
   counts,
   bingoDone,
@@ -111,6 +113,7 @@ export default function Dashboard({
   corners,
   occasion,
   friends = [],
+  story = [],
 }: {
   counts: Counts;
   bingoDone: boolean[];
@@ -122,6 +125,8 @@ export default function Dashboard({
   occasion?: { title: string; emoji: string; note?: string; letters: number } | null;
   /** her people, for choosing who gets a moment */
   friends?: Friend[];
+  /** the best photos from her journey, for the film strip */
+  story?: string[];
 }) {
   const now = useNow();
   const day = dayInfo(now, milano.arrival);
@@ -260,18 +265,12 @@ export default function Dashboard({
         {/* journey */}
         <Tile href="/journey" i={5} className="t-journey" tilt={0.8} label="Replay your story">
           <div className="t-filmstrip" aria-hidden="true">
-            <span>
-              <img src="/reveal/tulips.webp" alt="" />
-            </span>
-            <span>
-              <img src="/reveal/carn-pink-3.webp" alt="" />
-            </span>
-            <span>
-              <img src="/reveal/carn-white-1.webp" alt="" />
-            </span>
-            <span>
-              <img src="/reveal/bow.webp" alt="" />
-            </span>
+            {/* her best journey photos; flowers fill in until there are enough */}
+            {[...story, ...STORY_FILL].slice(0, 4).map((src) => (
+              <span key={src} className={STORY_FILL.includes(src) ? undefined : 'photo'}>
+                <img src={src} alt="" loading="lazy" />
+              </span>
+            ))}
           </div>
           <div className="h-tile-text">
             <h2 className="hand">Your story</h2>

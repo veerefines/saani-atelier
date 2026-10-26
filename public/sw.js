@@ -61,7 +61,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   // code, styles, fonts and site images never change under the same name
-  if (isStatic(p)) {
+  // (except on a local dev server, where they do: no caching there)
+  if (isStatic(p) && self.location.hostname !== 'localhost') {
     event.respondWith(
       caches.match(req).then(
         (hit) =>

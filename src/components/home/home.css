@@ -511,6 +511,11 @@
   height: 100%;
   object-fit: contain;
 }
+/* real photos fill their frame like a contact sheet; faces sit near the top */
+.t-filmstrip .photo img {
+  object-fit: cover;
+  object-position: 50% 25%;
+}
 
 .h-foot {
   display: flex;
