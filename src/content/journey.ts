@@ -15,7 +15,7 @@ export type Texture = 'lined' | 'grid' | 'linen' | 'stars' | 'map';
 type Side = 'left' | 'right' | 'center';
 
 export type Item =
-  | { type: 'photo'; src: string; caption?: string; size?: 's' | 'm' | 'l'; side?: Side; tilt?: number; tape?: boolean }
+  | { type: 'photo'; src: string; caption?: string; size?: 's' | 'm' | 'l' | 'xl'; side?: Side; tilt?: number; tape?: boolean }
   | { type: 'note'; text: string; from?: string; paper?: 'plain' | 'lined' | 'grid'; side?: Side; tilt?: number }
   | { type: 'quote'; text: string; by?: string }
   | { type: 'voice'; src: string; title: string; from: string; side?: Side }
@@ -90,7 +90,8 @@ export const chapters: Chapter[] = [
         side: 'left',
         tilt: -3,
       },
-      { type: 'photo', src: P('spark-2.jpg'), caption: 'that one outfit', size: 's', side: 'right', tilt: -5 },
+      // a milestone piece: the big one
+      { type: 'photo', src: P('spark-2.jpg'), caption: 'that one outfit', size: 'xl', side: 'center', tilt: -2, tape: true },
     ],
   },
   {

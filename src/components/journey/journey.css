@@ -306,6 +306,29 @@
 .j-photo.size-l {
   width: min(88%, 470px);
 }
+/* a milestone piece: as big as the screen allows */
+.j-photo.size-xl {
+  --max-h: 90svh;
+  width: min(96%, 720px);
+}
+.j-photo.size-xl .j-polaroid {
+  padding: 16px 16px 0;
+}
+.j-photo.size-xl .j-polaroid:not(:has(figcaption)) {
+  padding-bottom: 56px;
+}
+.j-photo.size-xl figcaption {
+  font-size: clamp(28px, 6vw, 38px);
+}
+/* the polaroid shrinks to its photo, so a tall photo capped by the screen height isn't boxed in with empty sides */
+.j-root .j-photo .j-polaroid:has(.j-photo-img > img) {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.j-root .j-photo .j-polaroid figcaption {
+  contain: inline-size; /* a long caption wraps instead of widening the frame */
+}
 /* landscape photos get a wider frame so they aren't tiny */
 .j-photo[data-shape='wide'].size-s {
   width: min(78%, 420px);
@@ -315,6 +338,9 @@
 }
 .j-photo[data-shape='wide'].size-l {
   width: min(96%, 640px);
+}
+.j-photo[data-shape='wide'].size-xl {
+  width: min(98%, 960px);
 }
 @media (max-width: 600px) {
   .j-photo[data-shape='wide'],
@@ -352,8 +378,10 @@
   aspect-ratio: auto;
 }
 .j-root .j-photo-img img {
+  width: auto;
+  max-width: 100%;
   height: auto;
-  max-height: 82svh;
+  max-height: var(--max-h, 82svh);
   object-fit: contain;
   margin: 0 auto;
 }
