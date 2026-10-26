@@ -403,9 +403,18 @@
 
 /* ---------- note ---------- */
 .j-note {
+  --paper: #fffaf1;
   padding: 28px 24px 30px;
-  background: #fffaf1;
   color: #3a2a30;
+  isolation: isolate;
+}
+/* the paper (with its torn bottom edge) is its own layer, so the mask never clips the pin */
+.j-note::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--paper);
   box-shadow: 0 16px 28px -14px rgba(70, 25, 45, 0.35);
   -webkit-mask:
     linear-gradient(#000 0 0) top / 100% calc(100% - 9px) no-repeat,
@@ -415,13 +424,13 @@
     conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 9px repeat-x;
 }
 .j-note.paper-lined {
-  background:
+  --paper:
     linear-gradient(90deg, transparent 0 34px, rgba(214, 90, 90, 0.35) 34px 35.5px, transparent 35.5px),
     repeating-linear-gradient(#fffaf1 0 33px, rgba(110, 140, 190, 0.28) 33px 34px);
   padding-left: 48px;
 }
 .j-note.paper-grid {
-  background:
+  --paper:
     repeating-linear-gradient(90deg, rgba(178, 48, 95, 0.12) 0 1px, transparent 1px 20px),
     repeating-linear-gradient(rgba(178, 48, 95, 0.12) 0 1px, transparent 1px 20px),
     #fffdf8;
