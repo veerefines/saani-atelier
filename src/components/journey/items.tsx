@@ -6,6 +6,25 @@ import type { ResolvedItem } from './types';
 type Of<T extends ResolvedItem['type']> = Extract<ResolvedItem, { type: T }>;
 type FilmItem = Omit<Of<'film'>, 'frames'> & { frames: { src: string; caption: string; missing?: boolean }[] };
 
+/** 'wide' or 'tall' once a photo or video knows its size, so frames can fit the whole picture. */
+export type Shape = 'wide' | 'tall' | undefined;
+export function shapeOf(w: number, h: number): Shape {
+  if (!w || !h) return undefined;
+  return w / h > 1.15 ? 'wide' : 'tall';
+}
+
+/** Ref + shape for an <img>: also catches images that finished loading before hydration. */
+export function useImgShape() {
+  const ref = useRef<HTMLImageElement>(null);
+  const [shape, setShape] = useState<Shape>();
+  const read = () => {
+    const img = ref.current;
+    if (img?.complete) setShape(shapeOf(img.naturalWidth, img.naturalHeight));
+  };
+  useEffect(read, []);
+  return { ref, shape, onLoad: read };
+}
+
 function fileName(src: string) {
   return src.split('/').pop();
 }
@@ -28,9 +47,11 @@ export function PhotoPlaceholder({ src, label }: { src: string; label?: string }
 
 export function Photo({ item }: { item: Of<'photo'> }) {
   const size = item.size ?? 'm';
+  const { ref, shape, onLoad } = useImgShape();
   return (
     <figure
       className={`j-item j-photo size-${size} side-${item.side ?? 'center'}`}
+      data-shape={shape}
       data-reveal
       style={{ ['--tilt' as string]: `${item.tilt ?? 0}deg` }}
     >
@@ -41,7 +62,7 @@ export function Photo({ item }: { item: Of<'photo'> }) {
           {item.missing ? (
             <PhotoPlaceholder src={item.src} label={item.caption} />
           ) : (
-            <img src={item.src} alt={item.caption ?? ''} loading="lazy" decoding="async" />
+            <img ref={ref} onLoad={onLoad} src={item.src} alt={item.caption ?? ''} loading="lazy" decoding="async" />
           )}
         </div>
         {item.caption && <figcaption className="hand">{item.caption}</figcaption>}
@@ -180,6 +201,12 @@ export function Voice({ item }: { item: Of<'voice'> }) {
 export function Video({ item }: { item: Of<'video'> }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
+  const [shape, setShape] = useState<Shape>();
+  const readShape = () => {
+    const v = ref.current;
+    if (v && v.readyState >= 1) setShape(shapeOf(v.videoWidth, v.videoHeight));
+  };
+  useEffect(readShape, []);
 
   useEffect(() => {
     const v = ref.current;
@@ -204,10 +231,10 @@ export function Video({ item }: { item: Of<'video'> }) {
   }
 
   return (
-    <figure className={`j-item j-video side-${item.side ?? 'center'}`} data-reveal style={{ ['--tilt' as string]: '1.5deg' }}>
+    <figure className={`j-item j-video side-${item.side ?? 'center'}`} data-shape={shape} data-reveal style={{ ['--tilt' as string]: '1.5deg' }}>
       <Pin color="#e0a84b" />
       <div className="j-video-frame">
-        <video ref={ref} src={item.src} poster={item.poster} muted loop playsInline preload="metadata" />
+        <video ref={ref} onLoadedMetadata={readShape} src={item.src} poster={item.poster} muted loop playsInline preload="metadata" />
         <button type="button" className="j-sound" onClick={toggleSound}>
           {muted ? 'Tap for sound' : 'Sound on'}
         </button>
@@ -231,7 +258,7 @@ export function Film({ item }: { item: FilmItem }) {
         {item.frames.map((f, i) => (
           <figure key={i} className="j-frame">
             <div className="j-frame-img">
-              {f.missing ? <PhotoPlaceholder src={f.src} label={f.caption} /> : <img src={f.src} alt={f.caption} loading="lazy" />}
+              {f.missing ? <PhotoPlaceholder src={f.src} label={f.caption} /> : <img src={f.src} alt={f.caption} />}
             </div>
             <figcaption className="hand">{f.caption}</figcaption>
           </figure>

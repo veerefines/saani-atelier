@@ -164,6 +164,7 @@
 .j-flow {
   position: relative;
   z-index: 1;
+  overflow-x: clip; /* the needle can swing past the edge on phones without widening the page */
 }
 .j-thread {
   position: absolute;
@@ -305,6 +306,23 @@
 .j-photo.size-l {
   width: min(88%, 470px);
 }
+/* landscape photos get a wider frame so they aren't tiny */
+.j-photo[data-shape='wide'].size-s {
+  width: min(78%, 420px);
+}
+.j-photo[data-shape='wide'].size-m {
+  width: min(94%, 540px);
+}
+.j-photo[data-shape='wide'].size-l {
+  width: min(96%, 640px);
+}
+@media (max-width: 600px) {
+  .j-photo[data-shape='wide'],
+  .j-video[data-shape='wide'] {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 .j-polaroid {
   background: #fffdf8;
   padding: 12px 12px 0;
@@ -318,11 +336,17 @@
   overflow: hidden;
   background: #efe7e2;
 }
+/* the frame takes the photo's own shape; 4:5 only while it's a placeholder */
+.j-photo-img:has(> img) {
+  aspect-ratio: auto;
+}
 .j-photo-img img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 82svh;
+  object-fit: contain;
   display: block;
+  margin: 0 auto;
 }
 .j-polaroid figcaption {
   font-size: 26px;
@@ -592,10 +616,14 @@
   padding: 12px;
   box-shadow: 0 20px 34px -14px rgba(70, 25, 45, 0.4);
 }
+.j-video[data-shape='wide'] {
+  width: min(96%, 640px);
+}
 .j-video-frame video {
   width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
+  height: auto;
+  max-height: 82svh;
+  object-fit: contain;
   display: block;
   background: #2a1e24;
 }
@@ -678,24 +706,34 @@
   width: max-content;
   will-change: transform;
 }
+/* every frame is the same height; its width follows the photo (portrait or landscape) */
 .j-frame {
+  --frame-h: min(77vw, 412px, 62svh);
   margin: 0;
-  width: min(62vw, 330px);
+  width: max-content;
+  max-width: 92vw;
   flex: none;
 }
 .j-frame-img {
-  aspect-ratio: 4 / 5;
+  height: var(--frame-h);
   overflow: hidden;
   background: #3a2e36;
   border-radius: 3px;
 }
+.j-frame-img:has(.j-ph) {
+  width: calc(var(--frame-h) * 0.8);
+}
 .j-frame-img img {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
+  width: auto;
+  max-width: 92vw;
+  object-fit: contain;
   display: block;
 }
 .j-frame figcaption {
+  /* never wider than its photo */
+  width: min-content;
+  min-width: 100%;
   font-size: 24px;
   margin-top: 8px;
   text-align: center;

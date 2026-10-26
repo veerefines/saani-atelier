@@ -876,8 +876,7 @@
 }
 .cn-piece img {
   width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
+  height: auto;
   border-radius: 10px;
   pointer-events: none;
 }

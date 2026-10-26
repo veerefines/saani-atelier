@@ -280,8 +280,20 @@ export default function Journey({
       const refresh = () => ScrollTrigger.refresh();
       window.addEventListener('load', refresh);
       document.fonts?.ready.then(refresh);
+      // frames take each photo's own shape, so the page grows as media arrives: re-measure (batched)
+      let t: ReturnType<typeof setTimeout> | undefined;
+      const later = () => {
+        clearTimeout(t);
+        t = setTimeout(refresh, 150);
+      };
+      const el = root.current;
+      el?.addEventListener('load', later, true);
+      el?.addEventListener('loadedmetadata', later, true);
       return () => {
+        clearTimeout(t);
         window.removeEventListener('load', refresh);
+        el?.removeEventListener('load', later, true);
+        el?.removeEventListener('loadedmetadata', later, true);
         mm.revert();
       };
     },
