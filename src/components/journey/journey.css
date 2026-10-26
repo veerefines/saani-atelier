@@ -331,6 +331,10 @@
     0 18px 30px -12px rgba(70, 25, 45, 0.35),
     0 40px 60px -30px rgba(70, 25, 45, 0.25);
 }
+/* no caption: the thick polaroid bottom still frames the photo */
+.j-polaroid:not(:has(figcaption)) {
+  padding-bottom: 44px;
+}
 .j-photo-img {
   aspect-ratio: 4 / 5;
   overflow: hidden;
