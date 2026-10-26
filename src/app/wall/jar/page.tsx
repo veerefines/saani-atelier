@@ -14,7 +14,7 @@ export default async function WallJar() {
   return (
     <main className="h-page w-page">
       <Keepsakes set="jar" />
-      <PageHead back="/wall" kicker="shake it gently" title="Fill her jar" sub="When she tells the jar how she feels, it hands her a note for that mood. Make sure every mood has plenty." />
+      <PageHead back="/wall" kicker="shake it gently" title="Khushiyon ka Pitara!" sub="When she tells the jar how she feels, it hands her a note for that mood. Make sure every mood has plenty." />
       <JarGauge counts={counts} />
       <Composer mine={mine} only={['jar']} />
     </main>

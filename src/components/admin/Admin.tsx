@@ -582,7 +582,7 @@ function Keepsakes({ initial }: { initial: Keepsake[] }) {
   return (
     <section className="atl-sec">
       <p className="atl-note">
-        The little things she loves, tucked around her desk, the journey and Milano corner. Transparent PNGs look best (about 800px on the long side). Each one goes live
+        The little things she loves, tucked around her desk, the journey and Milano Mei Milo. Transparent PNGs look best (about 800px on the long side). Each one goes live
         on every page it belongs to as soon as it’s uploaded. {items.filter((k) => k.mediaId).length} of {items.length} uploaded.
       </p>
       {err && <p className="h-err">{err}</p>}

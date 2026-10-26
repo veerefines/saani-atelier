@@ -27,7 +27,7 @@ const DEFAULT_OCCASIONS: Omit<Occasion, 'id' | 'createdAt'>[] = [
 
 /** Added after the first set went live, so it's seeded on its own (once). */
 const DEPARTURE: Omit<Occasion, 'id' | 'createdAt'> = {
-  date: '2026-10-27',
+  date: '2026-11-10',
   title: 'Departure day',
   emoji: '✈️',
   remindDays: 2,
@@ -43,6 +43,12 @@ export async function listOccasions(): Promise<Occasion[]> {
   if (!(await db.get('state', 'departure-seeded'))) {
     await db.put<Occasion>('occasions', { id: 'o_departure', createdAt: now(), ...DEPARTURE });
     await db.put('state', { id: 'departure-seeded', createdAt: now() });
+  }
+  // her flight moved from 27 Oct to 10 Nov 2026: move the already-seeded day too (once, keeping any edits)
+  if (!(await db.get('state', 'departure-moved-nov10'))) {
+    const d = await db.get<Occasion>('occasions', 'o_departure');
+    if (d && d.date === '2026-10-27') await db.put<Occasion>('occasions', { ...d, date: DEPARTURE.date });
+    await db.put('state', { id: 'departure-moved-nov10', createdAt: now() });
   }
   return (await db.list<Occasion>('occasions')).sort((a, b) => (a.date < b.date ? -1 : 1));
 }

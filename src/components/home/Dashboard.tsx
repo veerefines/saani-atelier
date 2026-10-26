@@ -219,10 +219,10 @@ export default function Dashboard({
         </Tile>
 
         {/* message jar */}
-        <Tile href="/home/jar" i={2} className="t-jar" tilt={-2} label="Message jar">
+        <Tile href="/home/jar" i={2} className="t-jar" tilt={-2} label="Khushiyon ka Pitara">
           <JarArt />
           <div className="h-tile-text">
-            <h2 className="hand">Message jar</h2>
+            <h2 className="hand">Khushiyon ka Pitara!</h2>
             <p className="whisper">for whatever you’re feeling</p>
           </div>
         </Tile>
@@ -245,7 +245,7 @@ export default function Dashboard({
         </Tile>
 
         {/* milano */}
-        <Tile href="/home/milano" i={4} className="t-milano" tilt={-1.5} label="Milano corner">
+        <Tile href="/home/milano" i={4} className="t-milano" tilt={-1.5} label="Milano Mei Milo">
           <div className="t-postcard" aria-hidden="true">
             <span className="t-stamp">
               <img src="/reveal/carn-white-1.webp" alt="" />
@@ -257,7 +257,7 @@ export default function Dashboard({
             <span className="t-lines" />
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Milano corner</h2>
+            <h2 className="hand">Milano Mei Milo!</h2>
             <p className="whisper">clocks, days and your wishlist</p>
           </div>
         </Tile>

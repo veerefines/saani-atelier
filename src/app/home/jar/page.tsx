@@ -10,7 +10,7 @@ export default async function JarPage() {
   return (
     <main className="h-page">
       <Keepsakes set="jar" />
-      <PageHead kicker="shake it gently" title="Message jar" sub="Tell the jar how you feel. It knows what to say." />
+      <PageHead kicker="shake it gently" title="Khushiyon ka Pitara!" sub="Tell the jar how you feel. It knows what to say." />
       <Jar counts={counts} />
     </main>
   );

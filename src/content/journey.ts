@@ -153,7 +153,7 @@ export const chapters: Chapter[] = [
     palette: { base: '#fff4e0', a: '#f7e3a1', b: '#f4a6c0', c: '#e9c79a', ink: '#3a2618' },
     texture: 'map',
     items: [
-      { type: 'ticket', from: 'BOM', fromCity: 'Mumbai', to: 'MXP', toCity: 'Milano', date: '27 Oct 2026', seat: 'window, obviously' },
+      { type: 'ticket', from: 'BOM', fromCity: 'Mumbai', to: 'MXP', toCity: 'Milano', date: '10 Nov 2026', seat: 'window, obviously' },
       { type: 'photo', src: P('milano-1.jpg'), caption: 'the new view', size: 'm', side: 'left', tilt: 4 },
       {
         type: 'postcard',

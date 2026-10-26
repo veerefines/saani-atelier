@@ -101,11 +101,11 @@ export function announce(from: { name: string; role: string }, a: Arrival) {
       : a.kind === 'letter'
         ? { title: '✉️ Likhe Jo Khat Tujhe!', body: a.locked ? `${who} sealed a letter for later` : `${who} sealed a letter for you`, url: '/home/letters' }
         : a.kind === 'jar'
-          ? { title: '🫙 Your message jar', body: `${who} dropped a note in your jar`, url: '/home/jar' }
+          ? { title: '🫙 Khushiyon ka Pitara', body: `${who} dropped a note in your jar`, url: '/home/jar' }
           : a.kind === 'dare'
             ? { title: '🌷 Milano bingo', body: `${who} left you a dare: “${a.square}”`, url: '/home/bingo' }
             : a.kind === 'tip'
-              ? { title: '📮 Milano corner', body: `${who} added a tip to your list`, url: '/home/milano' }
+              ? { title: '📮 Milano Mei Milo', body: `${who} added a tip to your list`, url: '/home/milano' }
               : { title: '📒 Your scrapbooks', body: `${who} added something to a scrapbook page`, url: '/home/scrapbooks' };
   return notifySaanika(m);
 }

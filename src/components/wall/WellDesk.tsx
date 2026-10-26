@@ -188,11 +188,11 @@ export default function WellDesk({
         </Tile>
 
         {/* jar */}
-        <Tile href="/wall/jar" i={2} className="t-jar" tilt={-2} label="Drop notes into her message jar">
+        <Tile href="/wall/jar" i={2} className="t-jar" tilt={-2} label="Drop notes into her Khushiyon ka Pitara">
           {counts.read > 0 && <Badge>{counts.read} read</Badge>}
           <JarArt />
           <div className="h-tile-text">
-            <h2 className="hand">Fill her jar</h2>
+            <h2 className="hand">Khushiyon ka Pitara!</h2>
             <p className="whisper">{counts.jar ? `${plural(counts.jar, 'note')} from you` : 'a note for every feeling'}</p>
           </div>
         </Tile>
@@ -229,7 +229,7 @@ export default function WellDesk({
             <span className="t-lines" />
           </div>
           <div className="h-tile-text">
-            <h2 className="hand">Milano tips</h2>
+            <h2 className="hand">Milano Mei Milo!</h2>
             <p className="whisper">{counts.tips ? `${plural(counts.tips, 'tip')} on her list` : 'tell her where to go'}</p>
           </div>
         </Tile>

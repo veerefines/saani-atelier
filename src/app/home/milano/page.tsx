@@ -8,7 +8,7 @@ export default async function MilanoPage() {
   const wishes = await listWishes();
   return (
     <main className="h-page h-page-wide">
-      <PageHead kicker="la dolce vita" title="Milano corner" />
+      <PageHead kicker="la dolce vita" title="Milano Mei Milo!" />
       <Milano
         info={milano}
         wishes={wishes}

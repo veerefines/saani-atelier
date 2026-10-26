@@ -123,10 +123,10 @@ const ok = (name, cond, extra = '') => {
   // departure day, through the daily job (test clock)
   const CS = process.env.CRON_SECRET || fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').match(/^CRON_SECRET=(.*)$/m)[1];
   const daily = (iso) => fetch(`${B}/api/daily?now=${iso}`, { headers: { authorization: `Bearer ${CS}` } }).then((r) => r.json());
-  await daily('2026-10-25T06:00:00Z');
+  await daily('2026-11-08T06:00:00Z');
   f = await take('friend');
   ok('two days before: friends reminded', f.some((m) => m.startsWith('✈️ Departure day in 2 days')), JSON.stringify(f));
-  await daily('2026-10-27T06:00:00Z');
+  await daily('2026-11-10T06:00:00Z');
   h = await take('saanika');
   f = await take('friend');
   ok('on the day: she gets buon viaggio', h.some((m) => m.startsWith('✈️ Departure day | Buon viaggio!')), JSON.stringify(h));

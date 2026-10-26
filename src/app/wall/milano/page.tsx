@@ -8,7 +8,7 @@ export default async function WallMilano() {
   const mine = await getMine(session);
   return (
     <main className="h-page w-page">
-      <PageHead back="/wall" kicker="la dolce vita" title="Milano tips" sub="Know a place she’d love? Tell her where to go." />
+      <PageHead back="/wall" kicker="la dolce vita" title="Milano Mei Milo!" sub="Know a place she’d love? Tell her where to go." />
       <Tips tips={mine.tips} name={session.name} />
     </main>
   );

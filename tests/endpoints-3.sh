@@ -141,7 +141,7 @@ expect "her love" '"emoji":"💗"'
 echo "--- departure day"
 check "admin lists departure day" 200 -b "$FR" $B/admin
 expect "departure seeded" 'Departure day'
-expect "on the 27th" '2026-10-27'
+expect "on the 10th" '2026-11-10'
 TMRW=$(node -e "const d=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date(Date.now()+86400000));console.log(d)")
 check "a special day tomorrow" 201 -b "$FR" -X POST "${J[@]}" -d "{\"date\":\"$TMRW\",\"title\":\"SOON-DAY\",\"emoji\":\"🎉\",\"remindDays\":2}" $B/api/admin/occasions
 check "friend desk shows it coming up" 200 -b "$FR" $B/wall

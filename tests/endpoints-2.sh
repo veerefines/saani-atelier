@@ -269,7 +269,7 @@ expect "friend desk shows LA clock" "Los Angeles"
 check "milano corner" 200 -b "$SA" $B/home/milano
 expect "milano corner LA clock" "Los Angeles"
 check "journey" 200 -b "$SA" $B/journey
-expect "ticket has her date" "27 Oct 2026"
+expect "ticket has her date" "10 Nov 2026"
 check "admin page" 200 -b "$FR" $B/admin
 expect "no ad-blocker class names" 'class="ad-' absent
 
