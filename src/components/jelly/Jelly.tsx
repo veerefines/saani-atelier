@@ -7,18 +7,18 @@ import { usePathname } from 'next/navigation';
 import { api } from '@/lib/upload-client';
 import type { Chat } from '@/lib/corner-model';
 import type { Gain, JellyView } from '@/lib/jelly';
-import { itemById } from '@/lib/jelly-catalog';
 import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { Answer } from '@/components/corner/Assistant';
 import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
 import { announce, applyChange, emit, useJelly, useJellyChats } from './bus';
+import Celebration from './Celebration';
 import './jelly.css';
 
 type Brief = { id: string; title: string; updatedAt: string; archived: boolean };
 type Friend = JellyView;
 type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null; gains?: Gain[] };
-type Bubble = { label: string; text: string; ask?: string; href?: string; mood: JellyMood };
+type Bubble = { kind: 'fact' | 'checkin' | 'hello'; label: string; text: string; ask?: string; mood: JellyMood; topic?: 'Italy' | 'Fashion' };
 
 /** Ready-made questions that fit the page she's on. */
 function startersFor(path: string, project?: string): string[] {
@@ -38,20 +38,8 @@ function startersFor(path: string, project?: string): string[] {
   return [...own, 'Tell me a fun fact about Milano 🇮🇹', 'How are you feeling, Jelly?'];
 }
 
-/** A pearl or achievement, as Jelly announces it. */
-function cheer(g: Gain): Bubble {
-  if (g.kind === 'daily') return { label: 'Daily pearls 🫧', text: `+${g.pearls} pearls for coming by today${g.streak > 1 ? ` · ${g.streak}-day streak 🔥` : ''}!`, href: '/home/jelly', mood: 'excited' };
-  const thing = g.reward ? itemById(g.reward) : null;
-  return {
-    label: 'Achievement unlocked! 🏆',
-    text: `${g.icon} ${g.title} · +${g.pearls} 🫧${thing ? ` · new for my home: ${thing.emoji} ${thing.name}` : ''}${g.backdrop ? ' · and a new backdrop!' : ''}`,
-    href: '/home/jelly',
-    mood: 'surprised',
-  };
-}
-
-const QUIET = 3 * 60 * 60_000; // at most one unprompted hello every 3 hours
-const SECOND = 10 * 60_000; // and one more if she stays a while
+const QUIET = 90 * 60_000; // a hello when she arrives, if it's been a while
+const EVERY = [12 * 60_000, 20 * 60_000]; // then a fact or a check-in every 12–20 minutes she's around
 const IDLE = 2 * 60_000; // Jelly peeks out if nothing happens for a while
 
 // remembered on this device only; Jelly still works if storage is blocked
@@ -105,7 +93,7 @@ function nextFact(): Bubble {
   const i = pick(left);
   store.set('jelly-seen', JSON.stringify([...seen, i]));
   const f = FACTS[i];
-  return { label: f.topic === 'Italy' ? 'Did you know? 🇮🇹' : 'Did you know? 👗', text: f.text, ask: f.ask, mood: 'idea' };
+  return { kind: 'fact', topic: f.topic, label: 'Did you know?', text: f.text, ask: f.ask, mood: 'idea' };
 }
 
 /** A little check-in, from the time in Milano and her projects. */
@@ -113,15 +101,15 @@ function checkIn(projects: Brief[], mood: JellyMood): Bubble {
   const live = projects.filter((p) => !p.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const hi = mood === 'sleepy' ? 'Psst…' : mood === 'excited' ? 'Buongiorno! ☀️' : mood === 'calm' ? 'Buonasera! 🌙' : 'Ciao, ciao! 🫧';
   const options: Bubble[] = [];
-  if (mood === 'sleepy') options.push({ label: hi, text: 'It’s really late in Milano! 🌙 Even the best designers need their beauty sleep, okay?', ask: 'Give me a tiny wind-down routine for tonight', mood: 'sleepy' });
+  if (mood === 'sleepy') options.push({ kind: 'checkin', label: hi, text: 'It’s really late in Milano! 🌙 Even the best designers need their beauty sleep, okay?', ask: 'Give me a tiny wind-down routine for tonight', mood: 'sleepy' });
   const resting = live.find((p) => daysSince(p.updatedAt) >= 4);
-  if (resting) options.push({ label: hi, text: `“${resting.title}” has been floating on its own for ${daysSince(resting.updatedAt)} days. Shall we take a peek together?`, ask: `Help me pick up “${resting.title}” again: where did I leave it?`, mood: 'curious' });
-  if (live[0]) options.push({ label: hi, text: `How’s “${live[0].title}” coming along? I’d love to hear! 🪼`, ask: `What’s a good next step for “${live[0].title}”?`, mood: 'wink' });
-  if (live.length >= 2) options.push({ label: hi, text: 'Not sure where to start today? I can look across all your projects and pick one with you.', ask: 'What should I work on today?', mood: 'idea' });
-  if (!live.length) options.push({ label: hi, text: 'Your studio is all empty and sparkly ✨ Want to dream up a first project together?', ask: 'Help me brainstorm a first project', mood: 'excited' });
+  if (resting) options.push({ kind: 'checkin', label: hi, text: `“${resting.title}” has been floating on its own for ${daysSince(resting.updatedAt)} days. Shall we take a peek together?`, ask: `Help me pick up “${resting.title}” again: where did I leave it?`, mood: 'curious' });
+  if (live[0]) options.push({ kind: 'checkin', label: hi, text: `How’s “${live[0].title}” coming along? I’d love to hear! 🪼`, ask: `What’s a good next step for “${live[0].title}”?`, mood: 'wink' });
+  if (live.length >= 2) options.push({ kind: 'checkin', label: hi, text: 'Not sure where to start today? I can look across all your projects and pick one with you.', ask: 'What should I work on today?', mood: 'idea' });
+  if (!live.length) options.push({ kind: 'checkin', label: hi, text: 'Your studio is all empty and sparkly ✨ Want to dream up a first project together?', ask: 'Help me brainstorm a first project', mood: 'excited' });
   options.push(
-    { label: hi, text: 'Have you had some water today? Designers need hydration too 💧', ask: 'Give me a few healthy study-break ideas', mood: 'wink' },
-    { label: 'Just saying', text: 'I’m really proud of you, you know? Moving to Milano to chase this is brave. 💗', ask: 'Give me a little pep talk for today', mood: 'love' },
+    { kind: 'checkin', label: hi, text: 'Have you had some water today? Designers need hydration too 💧', ask: 'Give me a few healthy study-break ideas', mood: 'wink' },
+    { kind: 'checkin', label: 'Just saying', text: 'I’m really proud of you, you know? Moving to Milano to chase this is brave. 💗', ask: 'Give me a little pep talk for today', mood: 'love' },
   );
   return pick(options);
 }
@@ -184,15 +172,15 @@ export default function Jelly() {
       .then((d) => {
         setData(d);
         setChatId(d.chats[0]?.id ?? null);
-        if (d.gains?.length) setCheers(d.gains.map(cheer));
+        if (d.gains?.length) setCheers(d.gains);
         emit('jelly:home', d.friend);
       })
       .catch(() => {});
   }, []);
 
   // a queue of celebrations: daily pearls and achievements, one at a time
-  const [cheers, setCheers] = useState<Bubble[]>([]);
-  const celebrate = useCallback((gains: Gain[]) => gains.length && setCheers((c) => [...c, ...gains.map(cheer)]), []);
+  const [cheers, setCheers] = useState<Gain[]>([]);
+  const celebrate = useCallback((gains: Gain[]) => gains.length && setCheers((c) => [...c, ...gains]), []);
   useJelly('jelly:gains', celebrate);
   useJelly(
     'jelly:home',
@@ -239,14 +227,19 @@ export default function Jelly() {
   baseRef.current = base;
   const loaded = data !== null;
   const away = data?.away;
-  const showBubble = useCallback(() => {
-    const n = Number(store.get('jelly-n') ?? 0);
-    store.set('jelly-n', String(n + 1));
-    store.set('jelly-last', String(Date.now()));
-    const b = n % 2 ? nextFact() : checkIn(projects.current, baseRef.current);
-    setBubble(b);
-    feel(b.mood, 5000);
-  }, [feel]);
+  // mostly facts, sometimes a check-in, never two check-ins in a row
+  const lastKind = useRef<Bubble['kind'] | null>(null);
+  const showBubble = useCallback(
+    (kind?: Bubble['kind']) => {
+      store.set('jelly-last', String(Date.now()));
+      const fact = kind === 'fact' || (kind !== 'checkin' && (lastKind.current === 'checkin' || Math.random() < 0.6));
+      const b = fact ? nextFact() : checkIn(projects.current, baseRef.current);
+      lastKind.current = b.kind;
+      setBubble(b);
+      feel(b.mood, 5000);
+    },
+    [feel],
+  );
   useEffect(() => {
     if (!loaded) return;
     const later: number[] = [];
@@ -255,7 +248,7 @@ export default function Jelly() {
       // the very first time they meet
       at(1200, () => {
         store.set('jelly-last', String(Date.now()));
-        setBubble({ label: 'Nice to meet you! 🪼', text: 'I’m Jelly, your new studio friend. Tap me to chat about any project, or rub me (or press and hold) for pats!', ask: 'Tell me about yourself, Jelly!', mood: 'surprised' });
+        setBubble({ kind: 'hello', label: 'Nice to meet you! 🪼', text: 'I’m Jelly, your new studio friend. Tap me to chat about any project, or rub me (or press and hold) for pats!', ask: 'Tell me about yourself, Jelly!', mood: 'surprised' });
         feel('surprised', 4000);
       });
     } else if (away !== undefined && away > 2 * 86_400_000) {
@@ -266,10 +259,23 @@ export default function Jelly() {
       at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, hello(baseRef.current)));
     }
     const due = Date.now() - Number(store.get('jelly-last') ?? 0) > QUIET;
-    if (due && away !== null) at(6000, showBubble);
-    at(SECOND, showBubble);
+    if (due && away !== null) at(7000, () => showBubble());
     return () => later.forEach(clearTimeout);
   }, [loaded, away, feel, showBubble]);
+
+  // while she's around, Jelly pipes up now and then (only when the page is in front of her)
+  useEffect(() => {
+    if (!loaded) return;
+    let id = 0;
+    const next = () => {
+      id = window.setTimeout(() => {
+        if (!document.hidden) showBubble();
+        next();
+      }, EVERY[0] + Math.random() * (EVERY[1] - EVERY[0]));
+    };
+    next();
+    return () => clearTimeout(id);
+  }, [loaded, showBubble]);
 
   // back from another tab or app: she noticed
   useEffect(() => {
@@ -465,8 +471,8 @@ export default function Jelly() {
   }
 
   // celebrations come before check-ins and facts
-  const shown = cheers[0] ?? bubble;
-  const dismiss = () => (cheers.length ? setCheers((c) => c.slice(1)) : setBubble(null));
+  const shown = bubble;
+  const dismiss = () => setBubble(null);
 
   if (!mounted) return null;
   const friend = data?.friend;
@@ -479,22 +485,33 @@ export default function Jelly() {
     <div className={`jelly${open ? ' open' : ''}`}>
       {open && <div className="jelly-scrim" aria-hidden="true" />}
 
+      <Celebration queue={cheers} onDone={() => setCheers((c) => c.slice(1))} atHome={atHome} />
+
       {!open && shown && (
-        <div className={`jelly-bubble${cheers.length ? ' cheer' : ''}`} role="status">
+        <div className={`jelly-bubble kind-${shown.kind}`} role="status">
           <button type="button" className="jelly-x" onClick={dismiss} aria-label="Dismiss">
             ×
           </button>
-          <b>{shown.label}</b>
+          <span className="jb-top">
+            <img src={moodSrc(shown.mood)} alt="" width={40} height={40} />
+            <span className={`jb-chip ${shown.kind}`}>
+              {shown.kind === 'fact' ? (shown.topic === 'Italy' ? '🇮🇹 Italy' : '👗 Fashion') : shown.kind === 'hello' ? '🪼 Hello' : '💌 Check-in'}
+            </span>
+            <b>{shown.label}</b>
+          </span>
           <p>{shown.text}</p>
-          {shown.href && !atHome ? (
-            <Link href={shown.href} className="jelly-more" onClick={dismiss}>
-              See Jelly’s Corner →
-            </Link>
-          ) : shown.ask && data?.ready ? (
-            <button type="button" className="jelly-more" onClick={() => ask(shown.ask!)}>
-              Tell me more →
-            </button>
-          ) : null}
+          <span className="jb-actions">
+            {shown.ask && data?.ready && (
+              <button type="button" className="jb-btn primary" onClick={() => ask(shown.ask!)}>
+                {shown.kind === 'fact' ? 'Tell me more' : 'Let’s chat'}
+              </button>
+            )}
+            {shown.kind === 'fact' && (
+              <button type="button" className="jb-btn" onClick={() => showBubble('fact')}>
+                Another one ✨
+              </button>
+            )}
+          </span>
         </div>
       )}
       {!open && !shown && line && (
@@ -524,7 +541,7 @@ export default function Jelly() {
                   <span>💗 Lv {friend.level}</span>
                   <i style={{ ['--p' as string]: `${Math.round(friend.progress * 100)}%` }} />
                   <Link href="/home/jelly" className="jelly-pearls" onClick={() => setOpen(false)} title="Pearls to spend in Jelly’s Corner">
-                    🫧 {friend.pearls}
+                    <img src="/corner/pearl.webp" alt="" width={14} height={14} /> {friend.pearls}
                   </Link>
                 </span>
               )}

@@ -23,13 +23,36 @@ export type JellyState = db.Doc & {
   days?: string[];
   /** today's small earnings, so pats and chats can't be farmed */
   today?: { day: string; patPearls: number; chatPearls: number; pats: number };
+  /** which catalog her things belong to (2: the illustrated furniture) */
+  v?: number;
 };
+
+// what the first (emoji) catalog charged, so anything bought from it is refunded
+const LEGACY: Record<string, number> = {
+  cactus: 15, tulips: 15, sunflower: 15, blossom: 15, plant: 20, coral: 25, mushroom: 30, chair: 30, painting: 35, clock: 40, sofa: 60, bed: 70, bathtub: 80,
+  bubbles: 5, donut: 10, cupcake: 10, coffee: 10, cornetto: 10, gelato: 12, cake: 15, pasta: 15, pizza: 15, bow: 12, needle: 15, hat: 25, handbag: 45, ring: 60,
+  crab: 30, puffer: 35, octopus: 50, turtle: 55, unicorn: 90, whale: 120, sparkles: 8, star: 10, balloon: 10, lemon: 10, flag: 20, mask: 40, vespa: 70,
+};
+
+/** Move her things to the illustrated catalog: refund what's gone, and hand over the new rewards she's earned. */
+function migrate(s: JellyState): JellyState {
+  if ((s.v ?? 1) >= 2) return s;
+  const owned: Record<string, number> = {};
+  let refund = 0;
+  for (const [id, n] of Object.entries(s.owned ?? {})) {
+    if (itemById(id)) owned[id] = n;
+    else refund += (LEGACY[id] ?? 0) * n;
+  }
+  for (const a of ACHIEVEMENTS) if (a.reward && (s.unlocked ?? {})[a.id] && !owned[a.reward]) owned[a.reward] = 1;
+  const placed = (s.placed ?? []).filter((p) => itemById(p.item));
+  return { ...s, v: 2, owned, placed, pearls: (s.pearls ?? 0) + refund };
+}
 
 const COL = 'jelly';
 const ID = 'friend';
-const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null });
+const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null, v: 2 });
 
-export const jellyState = async () => (await db.get<JellyState>(COL, ID)) ?? fresh();
+export const jellyState = async () => migrate((await db.get<JellyState>(COL, ID)) ?? fresh());
 const save = (s: JellyState) => db.put<JellyState>(COL, s);
 
 /** Change Jelly's state in one go (read, change, write). */

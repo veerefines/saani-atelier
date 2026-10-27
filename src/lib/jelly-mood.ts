@@ -22,6 +22,8 @@ export const MOODS = {
 export type JellyMood = keyof typeof MOODS;
 export const isMood = (m: unknown): m is JellyMood => typeof m === 'string' && m in MOODS;
 export const moodSrc = (m: JellyMood) => `/corner/jelly/${m}.webp`;
+/** Bigger, sharper faces for her home, where she's shown large. */
+export const moodHd = (m: JellyMood) => `/corner/jelly/hd/${m}.webp`;
 
 /** The hour in Milano (0–23), wherever she is. */
 export function milanHour(at = new Date()) {
