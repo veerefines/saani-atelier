@@ -131,34 +131,59 @@ fresh_minute() { node -e "const f='$ROOT/.data/groq-usage.json',u=JSON.parse(req
 check "jelly is awake" 200 -b "$SA" $B/api/corner/jelly
 expect "ready" '"ready":true'
 expect "knows the projects" '"title":"AI test"'
+expect "first time they meet" '"away":null'
+expect "has a mood" '"mood":"[a-z]*"'
+expect "friendship starts at level 1" '"level":1'
+check "jelly remembers the visit" 200 -b "$SA" $B/api/corner/jelly
+expect "so she knows how long Saani was away" '"away":[0-9]'
 check "a second project" 201 -b "$SA" -X POST "${J[@]}" -d '{"title":"OTHER-PROJECT","description":"OTHER-DESC","category":"Fashion Research"}' $B/api/corner/projects
 check "empty question 400" 400 -b "$SA" -X POST "${J[@]}" -d '{"question":" "}' $B/api/corner/jelly
 fresh_minute
 check "ask jelly" 200 -b "$SA" -X POST "${J[@]}" -d '{"question":"JELLY-Q what next?"}' $B/api/corner/jelly
 expect "reply comes back" "FAKE-GROQ-REPLY"
 expect "with follow-ups" '"suggestions":\["FOLLOW-ONE?"'
+expect "the answer has a mood" '"mood":"[a-z]*"'
+expect "a chat counts towards friendship" '"chats":1'
 JC=$(jget .chat.id)
 cp "$D/groq-req-last.json" "$D/body"
 expect "jelly's own system prompt" "You are Jelly"
+expect "she knows how she feels" "in Milano and you feel"
+expect "and tags her answer with a mood" "\\[mood: joyful\\]"
 expect "every project at a glance" "OTHER-DESC"
 expect "and the first one" "AI-DESC"
 expect "no project in full when none is open" "Open now, in full" absent
 fresh_minute
-check "ask from a project page" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"JELLY-Q2\",\"projectId\":\"$P\"}" $B/api/corner/jelly
-same "same running chat" "$(jget .chat.id)" "$JC"
+check "carry on the chat from a project page" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"JELLY-Q2\",\"projectId\":\"$P\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+same "same chat" "$(jget .chat.id)" "$JC"
 cp "$D/groq-req-last.json" "$D/body"
 expect "the open project in full" "Open now, in full"
 expect "with its brief" "AI-AUDIENCE"
 expect "and its documents" "PDF-TREND-WORDS"
 expect "the earlier question comes along" "JELLY-Q what next?"
-check "the chat is saved" 200 -b "$SA" $B/api/corner/jelly
+check "unknown chat 404" 404 -b "$SA" -X POST "${J[@]}" -d '{"question":"x","chatId":"ch_nope"}' $B/api/corner/jelly
+check "her chats are saved" 200 -b "$SA" $B/api/corner/jelly
 expect "with both questions" "JELLY-Q2"
+check "and show in the project's Jelly Got This! tab" 200 -b "$SA" "$B/home/corner/$P?tab=assistant"
+expect "tab renamed" "Jelly Got This!"
+expect "a Jelly chats section" "Chats with Jelly"
+expect "with the chat" "JELLY-Q what next?"
+check "pats" 200 -b "$SA" -X POST "${J[@]}" -d '{"n":12}' $B/api/corner/jelly/pet
+expect "are counted" '"pets":12'
+check "too many at once are capped" 200 -b "$SA" -X POST "${J[@]}" -d '{"n":5000}' $B/api/corner/jelly/pet
+expect "at 60" '"pets":72'
+expect "and friendship grows" '"level":3'
+check "rename a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"title":"JELLY-RENAMED"}' $B/api/corner/jelly/chats/$JC
+expect "renamed" "JELLY-RENAMED"
 check "friend can't talk to jelly 403" 403 -b "$D/ai-fr.jar" $B/api/corner/jelly
 check "friend can't ask 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"question":"hi"}' $B/api/corner/jelly
-check "new chat" 200 -b "$SA" -X DELETE $B/api/corner/jelly
-check "starts empty" 200 -b "$SA" $B/api/corner/jelly
-expect "no chat" '"chat":null'
-check "her picture is served" 200 $B/corner/jelly.png
+check "friend can't pet her 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"n":1}' $B/api/corner/jelly/pet
+check "friend can't delete her chats 403" 403 -b "$D/ai-fr.jar" -X DELETE $B/api/corner/jelly/chats/$JC
+check "delete a jelly chat" 200 -b "$SA" -X DELETE $B/api/corner/jelly/chats/$JC
+check "gone" 404 -b "$SA" -X DELETE $B/api/corner/jelly/chats/$JC
+for m in content joyful excited wink calm sad grumpy confused idea sleepy surprised love studious curious shy; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' $B/corner/jelly/$m.webp)
+  same "her $m face is there" "$code" 200
+done
 
 # free-tier limits
 count() { cat "$D/groq-count"; }

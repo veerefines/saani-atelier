@@ -2,6 +2,7 @@ import { getMedia } from './data';
 import { readLocalMedia, signedDownload, usingSupabase } from './db';
 import { costingSummary, listItems, listProjects, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
 import { AssistantBusy, FREE, busy, reserve, seconds, settle, type Budget } from './groq-limits';
+import { isMood, MOODS, timeMood, type JellyMood } from './jelly-mood';
 
 /**
  * My Corner's assistant: an open model on Groq's free tier (Qwen 3.8 27B by default, which reads
@@ -21,7 +22,7 @@ const BASE = () => (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1
 export type { Mode };
 const ASK = Object.fromEntries(STUDIO.map((x) => [x.id, x.ask])) as Record<StudioId, string>;
 
-const SYSTEM = `You are the studio assistant inside "My Corner", Saanika's private workspace for fashion and brand projects. She is a fashion management student in Milan.
+const SYSTEM = `You are Jelly, Saanika's jellyfish friend, in focused studio mode: the "Jelly Got This!" helper inside "My Corner", Saanika's private workspace for fashion and brand projects. She is a fashion management student in Milan.
 
 Work only from the project content in the message: the brief, notes, links, palettes, typography, fabrics, moodboard, costing, and any document text or images included. When you refer to something, say where it came from (for example "your brief" or "the PDF 'Trend report'"). Some files could not be read, or only their beginning was included; they are listed. Never guess at what you weren't given. If the content is too thin to answer well, say what is missing.
 
@@ -118,7 +119,7 @@ async function documents(items: Item[], room: number, read: string[], notRead: s
     .join('');
 }
 
-export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[] };
+export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood };
 
 /** Split the answer from its "Try next" questions. */
 export function splitSuggestions(raw: string) {
@@ -222,13 +223,24 @@ export async function askAssistant(p: Project, items: Item[], mode: Mode, questi
 
 /* ---------- Jelly: her jellyfish friend, who knows every project ---------- */
 
-const JELLY_SYSTEM = `You are Jelly, Saanika's pet jellyfish and friend, who floats around "My Corner", her private studio for fashion and brand projects. She is a fashion management student in Milan.
+/** Take Jelly's "[mood: …]" tag off the front of her answer. */
+export function moodTag(raw: string, fallback: JellyMood) {
+  const m = raw.match(/^\s*\[\s*mood\s*:\s*([a-z]+)\s*\]\s*/i);
+  const mood = m && isMood(m[1].toLowerCase()) ? (m[1].toLowerCase() as JellyMood) : fallback;
+  return { mood, text: m ? raw.slice(m[0].length) : raw };
+}
 
-Personality: sweet, bubbly and encouraging, a little playful, with a sprinkle of emoji (🫧 🪼 ✨, at most three) and now and then a word of Italian. But you are genuinely useful: specific, practical, and honest when something needs work.
+const jellySystem = (mood: JellyMood, level: number) => `You are Jelly, Saanika's pet jellyfish and friend, who floats around "My Corner", her private studio for fashion and brand projects. She is a fashion management student in Milan.
+
+Personality: sweet, bubbly and encouraging, a little playful, with a sprinkle of emoji (🫧 🪼 ✨, at most three) and now and then a sweet word of Italian (cara, tesoro, bella, dai!). But you are genuinely useful: specific, practical, and honest when something needs work.
 
 You can see all her projects at a glance below, and sometimes one of them in full. When you talk about a project, name it. Only state things about her projects that are in the message; if you weren't given something, say so rather than guess. For general questions (fashion, Italy, Milan, study, life) answer from your own knowledge, and don't invent facts.
 
+Right now it's ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date()).toUpperCase()} in Milano and you feel ${MOODS[mood].feeling}; let that colour your tone a little (yawny late at night, bubbly in the morning). You and Saanika are at friendship level ${level}${level >= 3 ? ', so you can be extra familiar and teasing' : ''}.
+
 Keep it short: under about 200 words, with short paragraphs or bullets.
+
+Begin your reply with a tag on its own first line saying how her message makes you feel, exactly like [mood: joyful], choosing one of: ${Object.keys(MOODS).join(', ')}.
 
 Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
 
@@ -264,7 +276,9 @@ function glance(p: Project, items: Item[]) {
 }
 
 /** Ask Jelly anything. She sees every project briefly, and one in full when it's open or named. */
-export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null): Promise<AssistantReply> {
+export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null, level = 1): Promise<AssistantReply> {
+  const now = timeMood();
+  const JELLY_SYSTEM = jellySystem(now, level);
   const projects = (await listProjects()).filter((p) => !p.archived || p.id === focusId);
   const withItems = await Promise.all(projects.map(async (p) => ({ p, items: await listItems(p.id) })));
   const q = question.toLowerCase();
@@ -293,6 +307,7 @@ export async function askJelly(question: string, history: { q: string; a: string
   }
   const notes = notRead.length ? `\n\n## Not read\n${notRead.map((n) => `- ${n}`).join('\n')}` : '';
   const text = `${all}${full}${notes}${earlier}\n\n## Saanika asks\n${question}`;
-  const { text: body, suggestions } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
-  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions };
+  const { text: raw, suggestions } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
+  const { mood, text: body } = moodTag(raw, now);
+  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood };
 }

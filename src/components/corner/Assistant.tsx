@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { api } from '@/lib/upload-client';
-import { hexesIn, inkOn, STUDIO, type Chat, type ChatTurn, type Mode } from '@/lib/corner-model';
+import { hexesIn, inkOn, JELLY_CHATS, STUDIO, type Chat, type ChatTurn, type Mode } from '@/lib/corner-model';
+import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
+import { announce, applyChange, useJellyChats } from './jelly-bus';
 import { shortDate, type Ctx } from './shared';
 
 type Lens = 'designer' | 'manager';
@@ -64,6 +66,7 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
     <article className="cn-turn">
       <p className="cn-q">{t.q}</p>
       <div className="cn-a">
+        <img className="cn-a-face" src={moodSrc(t.mood ?? 'studious')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'studious'].feeling}`} width={40} height={40} loading="lazy" />
         <Answer text={t.a} />
         {hexes.length >= 2 && (
           <div className="cn-swatches" aria-label="Colours in this answer">
@@ -113,10 +116,19 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
   );
 }
 
-type Props = { ctx: Ctx; ready: boolean; chats: Chat[]; setChats: Dispatch<SetStateAction<Chat[]>>; chatId: string | null; setChatId: (id: string | null) => void };
+type Props = {
+  ctx: Ctx;
+  ready: boolean;
+  chats: Chat[];
+  setChats: Dispatch<SetStateAction<Chat[]>>;
+  jellyChats: Chat[];
+  setJellyChats: Dispatch<SetStateAction<Chat[]>>;
+  chatId: string | null;
+  setChatId: (id: string | null) => void;
+};
 
-/** The studio assistant: ready-made designer and manager questions, saved conversations, and answers she can keep. */
-export default function Assistant({ ctx, ready, chats, setChats, chatId, setChatId }: Props) {
+/** "Jelly Got This!": Jelly in studio mode (ready-made designer and manager questions about this project), every chat with Jelly from anywhere in My Corner, and answers she can keep. */
+export default function Assistant({ ctx, ready, chats, setChats, jellyChats, setJellyChats, chatId, setChatId }: Props) {
   const [lens, setLens] = useState<Lens>('designer');
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState('');
@@ -124,7 +136,21 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
   const [renaming, setRenaming] = useState('');
   const end = useRef<HTMLDivElement>(null);
   const base = `/api/corner/projects/${ctx.project.id}/assistant`;
-  const chat = chats.find((c) => c.id === chatId) ?? null;
+  const chat = chats.find((c) => c.id === chatId) ?? jellyChats.find((c) => c.id === chatId) ?? null;
+  const withJelly = chat?.projectId === JELLY_CHATS;
+  const [face, setFace] = useState<JellyMood>('content');
+  useEffect(() => setFace(timeMood()), []);
+
+  // chats with the floating Jelly show up here straight away
+  useJellyChats(
+    useCallback(
+      (c) => {
+        setJellyChats((l) => applyChange(l, c));
+        if ('removed' in c && c.removed === chatId) setChatId(null);
+      },
+      [setJellyChats, chatId, setChatId],
+    ),
+  );
 
   useEffect(() => {
     if (busy || chat?.turns.length) end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -134,14 +160,15 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
     return (
       <div className="cn-panel">
         <section className="cn-section cn-setup">
-          <h3 className="cn-h">The assistant isn’t switched on yet</h3>
-          <p>It reads this project (the brief, notes, links, palettes, fabrics, moodboard, PDFs and images) and helps you think it through. Everything else in My Corner works without it.</p>
+          <img className="cn-jelly-face" src={moodSrc('sleepy')} alt="" width={72} height={72} />
+          <h3 className="cn-h">Jelly is still asleep</h3>
+          <p>Once she’s awake, Jelly reads this project (the brief, notes, links, palettes, fabrics, moodboard, PDFs and images) and helps you think it through. Everything else in My Corner works without her.</p>
           <ol>
             <li>Create a free API key at console.groq.com (API Keys).</li>
             <li>
               In Vercel, open the project → Settings → Environment Variables, and add <code>GROQ_API_KEY</code> with that key.
             </li>
-            <li>Redeploy (or push any change). This tab then turns into the assistant.</li>
+            <li>Redeploy (or push any change). Jelly then wakes up right here.</li>
           </ol>
         </section>
       </div>
@@ -151,7 +178,16 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
     setBusy(label);
     setErr('');
     try {
-      const r = await api<{ chat: Chat }>(base, 'POST', { mode, question, chatId: chat?.id ?? null });
+      if (withJelly && mode === 'question') {
+        // carrying on a chat with Jelly, now looking at this project
+        const r = await api<{ chat: Chat }>('/api/corner/jelly', 'POST', { question, chatId: chat!.id, projectId: ctx.project.id });
+        setJellyChats((l) => applyChange(l, { chat: r.chat }));
+        announce({ chat: r.chat });
+        setQ('');
+        setBusy('');
+        return;
+      }
+      const r = await api<{ chat: Chat }>(base, 'POST', { mode, question, chatId: withJelly ? null : (chat?.id ?? null) });
       setChats((l) => [r.chat, ...l.filter((c) => c.id !== r.chat.id)]);
       setChatId(r.chat.id);
       if (mode === 'question') setQ('');
@@ -166,6 +202,12 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
     setRenaming('');
     if (!title.trim() || title === c.title) return;
     try {
+      if (c.projectId === JELLY_CHATS) {
+        const n = await api<Chat>(`/api/corner/jelly/chats/${c.id}`, 'PATCH', { title });
+        setJellyChats((l) => applyChange(l, { chat: n }));
+        announce({ chat: n });
+        return;
+      }
       const n = await api<Chat>(`${base}/chats/${c.id}`, 'PATCH', { title });
       setChats((l) => l.map((x) => (x.id === c.id ? n : x)));
     } catch (e) {
@@ -175,13 +217,55 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
   async function remove(c: Chat) {
     if (!confirm(`Delete “${c.title}”? This conversation can’t be brought back.`)) return;
     try {
-      await api(`${base}/chats/${c.id}`, 'DELETE');
-      setChats((l) => l.filter((x) => x.id !== c.id));
+      if (c.projectId === JELLY_CHATS) {
+        await api(`/api/corner/jelly/chats/${c.id}`, 'DELETE');
+        setJellyChats((l) => l.filter((x) => x.id !== c.id));
+        announce({ removed: c.id });
+      } else {
+        await api(`${base}/chats/${c.id}`, 'DELETE');
+        setChats((l) => l.filter((x) => x.id !== c.id));
+      }
       if (chatId === c.id) setChatId(null);
     } catch (e) {
       setErr((e as Error).message);
     }
   }
+
+  const chatList = (list: Chat[]) => (
+    <ul className="cn-chats">
+      {list.map((c) => (
+        <li key={c.id} className={c.id === chatId ? 'on' : ''}>
+          {renaming === c.id ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                rename(c, String(new FormData(e.currentTarget).get('t') ?? ''));
+              }}
+            >
+              <input name="t" className="h-input" defaultValue={c.title} maxLength={80} autoFocus onBlur={(e) => rename(c, e.target.value)} aria-label="Conversation name" />
+            </form>
+          ) : (
+            <button type="button" className="cn-chat-open" onClick={() => setChatId(c.id)} disabled={Boolean(busy)}>
+              <b>{c.title}</b>
+              <small>
+                {shortDate(c.updatedAt)} · {c.turns.length} {c.turns.length === 1 ? 'answer' : 'answers'}
+              </small>
+            </button>
+          )}
+          {c.id === chatId && renaming !== c.id && (
+            <span className="cn-chat-tools">
+              <button type="button" onClick={() => setRenaming(c.id)} aria-label="Rename" title="Rename">
+                ✎
+              </button>
+              <button type="button" onClick={() => remove(c)} aria-label="Delete" title="Delete">
+                ×
+              </button>
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 
   const studio = (compact: boolean) => (
     <div className={`cn-studio${compact ? ' compact' : ''}`}>
@@ -213,52 +297,31 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
             + New
           </button>
         </div>
-        {!chats.length && <p className="cn-hint">Every conversation is saved here, so you can pick it up again.</p>}
-        <ul className="cn-chats">
-          {chats.map((c) => (
-            <li key={c.id} className={c.id === chatId ? 'on' : ''}>
-              {renaming === c.id ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    rename(c, String(new FormData(e.currentTarget).get('t') ?? ''));
-                  }}
-                >
-                  <input name="t" className="h-input" defaultValue={c.title} maxLength={80} autoFocus onBlur={(e) => rename(c, e.target.value)} aria-label="Conversation name" />
-                </form>
-              ) : (
-                <button type="button" className="cn-chat-open" onClick={() => setChatId(c.id)} disabled={Boolean(busy)}>
-                  <b>{c.title}</b>
-                  <small>
-                    {shortDate(c.updatedAt)} · {c.turns.length} {c.turns.length === 1 ? 'answer' : 'answers'}
-                  </small>
-                </button>
-              )}
-              {c.id === chatId && renaming !== c.id && (
-                <span className="cn-chat-tools">
-                  <button type="button" onClick={() => setRenaming(c.id)} aria-label="Rename" title="Rename">
-                    ✎
-                  </button>
-                  <button type="button" onClick={() => remove(c)} aria-label="Delete" title="Delete">
-                    ×
-                  </button>
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
+        <h4 className="cn-ai-group">This project</h4>
+        {!chats.length && <p className="cn-hint">Studio questions about this project are saved here, so you can pick them up again.</p>}
+        {chatList(chats)}
+        <h4 className="cn-ai-group">
+          <img src={moodSrc('wink')} alt="" width={22} height={22} /> Chats with Jelly
+        </h4>
+        {!jellyChats.length ? <p className="cn-hint">Everything you ask the floating Jelly, anywhere in My Corner, is saved here too.</p> : chatList(jellyChats)}
       </aside>
 
       <section className="cn-section cn-ai-main" aria-label={chat ? chat.title : 'New conversation'}>
         {!chat ? (
           <>
-            <h3 className="cn-h">What would you like to work on?</h3>
-            <p className="cn-hint">Pick a lens and a question, or ask your own below. It only uses what’s saved in this project.</p>
+            <div className="cn-jelly-hi">
+              <img src={moodSrc(busy ? 'studious' : face)} alt="" width={84} height={84} />
+              <div>
+                <h3 className="cn-h">Jelly got this! What shall we work on?</h3>
+                <p className="cn-hint">Pick a lens and a question, or ask your own below. In studio mode Jelly only uses what’s saved in this project.</p>
+              </div>
+            </div>
             {studio(false)}
           </>
         ) : (
           <>
             <h3 className="cn-h cn-ai-title">{chat.title}</h3>
+            {withJelly && <p className="cn-hint">🪼 A chat with Jelly. Follow-ups here look at this project too.</p>}
             <div className="cn-thread">
               {chat.turns.map((t, i) => (
                 <Turn key={t.id} t={t} chat={chat} ctx={ctx} last={i === chat.turns.length - 1} busy={Boolean(busy)} onAsk={askText} />
@@ -269,7 +332,9 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
         {busy && (
           <div className="cn-turn">
             <p className="cn-q">{busy}</p>
-            <p className="cn-thinking">Reading your project and thinking…</p>
+            <p className="cn-thinking">
+              <img src={moodSrc('studious')} alt="" width={32} height={32} /> Jelly is reading your project…
+            </p>
           </div>
         )}
         <div ref={end} />
@@ -287,13 +352,13 @@ export default function Assistant({ ctx, ready, chats, setChats, chatId, setChat
             if (q.trim()) askText(q.trim());
           }}
         >
-          <input className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder={chat ? 'Ask a follow-up…' : 'Or ask anything about what’s saved here…'} aria-label="Your question" />
+          <input className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder={chat ? 'Ask Jelly a follow-up…' : 'Or ask Jelly anything about what’s saved here…'} aria-label="Your question" />
           <button className="cn-btn primary" disabled={Boolean(busy) || !q.trim()}>
             Ask
           </button>
         </form>
         <p className="cn-hint">
-          Runs on a free model: it reads the start of long documents and a couple of images at a time, and may ask you to wait a minute between questions. Conversations are saved with this project.
+          Jelly runs on a free model: she reads the start of long documents and a couple of images at a time, and may ask you to wait a minute between questions. Every conversation is saved here.
         </p>
       </section>
     </div>

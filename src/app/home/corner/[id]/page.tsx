@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import PageHead from '@/components/home/Back';
 import Workspace from '@/components/corner/Workspace';
-import { getProject, listChats, listItems } from '@/lib/corner';
+import { getProject, JELLY_CHATS, listChats, listItems } from '@/lib/corner';
 import { assistantReady } from '@/lib/assistant';
 import '@/components/corner/corner.css';
 
@@ -15,7 +15,7 @@ export default async function ProjectPage({ params, searchParams }: { params: Pr
   return (
     <main className="h-page h-page-wide cn-page">
       <PageHead back="/home/corner" backLabel="My Corner" title="" />
-      <Workspace initial={{ project, items: await listItems(id), chats: await listChats(id) }} initialTab={tab} aiReady={assistantReady()} />
+      <Workspace initial={{ project, items: await listItems(id), chats: await listChats(id), jellyChats: await listChats(JELLY_CHATS) }} initialTab={tab} aiReady={assistantReady()} />
     </main>
   );
 }

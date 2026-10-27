@@ -20,7 +20,7 @@ export default function Overview({ ctx }: { ctx: Ctx }) {
     { tab: 'moodboard', icon: '🎨', label: 'Moodboard', n: count('board') },
     { tab: 'elements', icon: '🧵', label: 'Design elements', n: count('palette') + count('type') + count('fabric') },
     { tab: 'management', icon: '📊', label: 'Brief & costing', n: null },
-    { tab: 'assistant', icon: '✨', label: 'Assistant', n: null },
+    { tab: 'assistant', icon: '🪼', label: 'Jelly Got This!', n: null },
   ] as const;
   const b = p.brief;
   const briefDone = [b.audience, b.positioning, b.objectives, b.budget].filter((x) => x.trim()).length;

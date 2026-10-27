@@ -20,11 +20,11 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'moodboard', label: 'Moodboard' },
   { id: 'elements', label: 'Design elements' },
   { id: 'management', label: 'Fashion management' },
-  { id: 'assistant', label: '✨ Assistant' },
+  { id: 'assistant', label: '🪼 Jelly Got This!' },
 ];
 
 /** One project's workspace: its tabs share the project and its items, and save straight to the server. */
-export default function Workspace({ initial, initialTab, aiReady }: { initial: { project: Project; items: Item[]; chats: Chat[] }; initialTab?: string; aiReady: boolean }) {
+export default function Workspace({ initial, initialTab, aiReady }: { initial: { project: Project; items: Item[]; chats: Chat[]; jellyChats: Chat[] }; initialTab?: string; aiReady: boolean }) {
   const [project, setProject] = useState(initial.project);
   const [items, setItems] = useState(initial.items);
   const [tab, setTabState] = useState<Tab>(TABS.some((t) => t.id === initialTab) ? (initialTab as Tab) : 'overview');
@@ -35,6 +35,7 @@ export default function Workspace({ initial, initialTab, aiReady }: { initial: {
   };
   // conversations stay put while she moves between tabs
   const [chats, setChats] = useState(initial.chats);
+  const [jellyChats, setJellyChats] = useState(initial.jellyChats);
   const [chatId, setChatId] = useState<string | null>(initial.chats[0]?.id ?? null);
   const base = `/api/corner/projects/${project.id}`;
   const bump = () => setProject((p) => ({ ...p, updatedAt: new Date().toISOString() }));
@@ -126,7 +127,7 @@ export default function Workspace({ initial, initialTab, aiReady }: { initial: {
       {tab === 'moodboard' && <Moodboard ctx={ctx} />}
       {tab === 'elements' && <Elements ctx={ctx} />}
       {tab === 'management' && <Management ctx={ctx} />}
-      {tab === 'assistant' && <Assistant ctx={ctx} ready={aiReady} chats={chats} setChats={setChats} chatId={chatId} setChatId={setChatId} />}
+      {tab === 'assistant' && <Assistant ctx={ctx} ready={aiReady} chats={chats} setChats={setChats} jellyChats={jellyChats} setJellyChats={setJellyChats} chatId={chatId} setChatId={setChatId} />}
     </>
   );
 }

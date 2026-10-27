@@ -2,6 +2,7 @@
  * My Corner's shapes and the small calculations both the server and the browser use.
  * (No database code here, so client components can import it.)
  */
+import type { JellyMood } from './jelly-mood';
 
 export const CATEGORIES = ['Fashion Collection', 'Brand Strategy', 'Fashion Research', 'Marketing Campaign', 'University Assignment', 'Personal Inspiration'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -105,8 +106,10 @@ export const STUDIO = [
 export type StudioId = (typeof STUDIO)[number]['id'];
 export type Mode = StudioId | 'question';
 
-export type ChatTurn = { id: string; at: string; mode: Mode; q: string; a: string; read: string[]; notRead: string[]; suggestions: string[] };
+export type ChatTurn = { id: string; at: string; mode: Mode; q: string; a: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood };
 export type Chat = { id: string; createdAt: string; updatedAt: string; projectId: string; title: string; turns: ChatTurn[] };
+/** Chats with Jelly (from anywhere in My Corner) are saved with the project chats under this id. */
+export const JELLY_CHATS = 'jelly';
 
 /** HEX colours mentioned in an answer, so a suggested palette can be saved in one tap. */
 export const hexesIn = (s: string) => [...new Set((s.match(/#[0-9a-fA-F]{6}\b/g) ?? []).map((h) => h.toLowerCase()))].slice(0, 12);

@@ -1,19 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { api } from '@/lib/upload-client';
 import type { Chat } from '@/lib/corner-model';
+import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { Answer } from './Assistant';
 import { FACTS } from './jelly-facts';
+import { announce, applyChange, useJellyChats } from './jelly-bus';
+import { shortDate } from './shared';
 
 type Brief = { id: string; title: string; updatedAt: string; archived: boolean };
-type State = { ready: boolean; chat: Chat | null; projects: Brief[] };
-type Bubble = { label: string; text: string; ask: string };
+type Friend = { pets: number; chats: number; level: number; progress: number };
+type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null };
+type Bubble = { label: string; text: string; ask: string; mood: JellyMood };
 
 const QUIET = 3 * 60 * 60_000; // at most one unprompted hello every 3 hours
 const SECOND = 10 * 60_000; // and one more if she stays a while
+const IDLE = 2 * 60_000; // Jelly peeks out if nothing happens for a while
 
 // remembered on this device only; Jelly still works if storage is blocked
 const store = {
@@ -31,8 +36,29 @@ const store = {
   },
 };
 
-const pick = <T,>(l: T[]) => l[Math.floor(Math.random() * l.length)];
+const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
 const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+
+/* ---------- what she says ---------- */
+const PETTED = ['Hehe, that tickles! 💗', 'Blub blub… more please 🫧', 'Mmm, best pats in all of Milano', 'I’m melting… in a good way 🪼', 'You’re my favourite human, you know?', 'Purr… wait, jellyfish don’t purr. Blub!'];
+const DIZZY = ['Okay okay, I’m getting dizzy! 😵‍💫', 'Too many pats! My tentacles are in a knot 😤', 'Hey! Gentle, I’m made of jelly!'];
+const SHY = ['…are you still there? 👀', '*peeks out* Just checking on you 🍃', 'I’ll be right here when you need me'];
+const WAKE = ['Huh?! Oh… I was dreaming of gelato 🍨', '*yawn* …oh, hi Saani! I wasn’t sleeping, promise', 'Mmh? Five more minutes… okay, I’m up!'];
+
+function hello(mood: JellyMood) {
+  switch (mood) {
+    case 'sleepy':
+      return '*yawn* It’s late in Milano… hi Saani 🌙';
+    case 'excited':
+      return 'Buongiorno! ☀️ I’m full of bubbles today!';
+    case 'joyful':
+      return 'Ciao, ciao! So happy you’re here 🫧';
+    case 'calm':
+      return 'Buonasera, Saani 🌸 Cosy studio time?';
+    default:
+      return 'Hi you! Tap me to chat, or rub me for pats 💗';
+  }
+}
 
 /** A "Did you know?" she hasn't seen lately. */
 function nextFact(): Bubble {
@@ -45,37 +71,41 @@ function nextFact(): Bubble {
   const i = pick(left);
   store.set('jelly-seen', JSON.stringify([...seen, i]));
   const f = FACTS[i];
-  return { label: f.topic === 'Italy' ? 'Did you know? 🇮🇹' : 'Did you know? 👗', text: f.text, ask: f.ask };
+  return { label: f.topic === 'Italy' ? 'Did you know? 🇮🇹' : 'Did you know? 👗', text: f.text, ask: f.ask, mood: 'idea' };
 }
 
-/** A little check-in, from the time of day and her projects. */
-function checkIn(projects: Brief[]): Bubble {
-  const h = new Date().getHours();
+/** A little check-in, from the time in Milano and her projects. */
+function checkIn(projects: Brief[], mood: JellyMood): Bubble {
   const live = projects.filter((p) => !p.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const hi = mood === 'sleepy' ? 'Psst…' : mood === 'excited' ? 'Buongiorno! ☀️' : mood === 'calm' ? 'Buonasera! 🌙' : 'Ciao, ciao! 🫧';
   const options: Bubble[] = [];
-  const hi = h >= 5 && h < 12 ? 'Buongiorno! ☀️' : h >= 12 && h < 17 ? 'Ciao, ciao! 🫧' : h >= 17 && h < 23 ? 'Buonasera! 🌙' : null;
-  if (!hi) options.push({ label: 'Psst…', text: 'It’s really late! 🌙 Even the best designers need their beauty sleep, okay?', ask: 'Give me a tiny wind-down routine for tonight' });
+  if (mood === 'sleepy') options.push({ label: hi, text: 'It’s really late in Milano! 🌙 Even the best designers need their beauty sleep, okay?', ask: 'Give me a tiny wind-down routine for tonight', mood: 'sleepy' });
   const resting = live.find((p) => daysSince(p.updatedAt) >= 4);
-  if (resting) options.push({ label: hi ?? 'Hey you', text: `“${resting.title}” has been floating on its own for ${daysSince(resting.updatedAt)} days. Shall we take a peek together?`, ask: `Help me pick up “${resting.title}” again: where did I leave it?` });
-  if (live[0]) options.push({ label: hi ?? 'Hey you', text: `How’s “${live[0].title}” coming along? I’d love to hear! 🪼`, ask: `What’s a good next step for “${live[0].title}”?` });
-  if (live.length >= 2) options.push({ label: hi ?? 'Hey you', text: 'Not sure where to start today? I can look across all your projects and pick one with you.', ask: 'What should I work on today?' });
-  if (!live.length) options.push({ label: hi ?? 'Hey you', text: 'Your studio is all empty and sparkly ✨ Want to dream up a first project together?', ask: 'Help me brainstorm a first project' });
+  if (resting) options.push({ label: hi, text: `“${resting.title}” has been floating on its own for ${daysSince(resting.updatedAt)} days. Shall we take a peek together?`, ask: `Help me pick up “${resting.title}” again: where did I leave it?`, mood: 'curious' });
+  if (live[0]) options.push({ label: hi, text: `How’s “${live[0].title}” coming along? I’d love to hear! 🪼`, ask: `What’s a good next step for “${live[0].title}”?`, mood: 'wink' });
+  if (live.length >= 2) options.push({ label: hi, text: 'Not sure where to start today? I can look across all your projects and pick one with you.', ask: 'What should I work on today?', mood: 'idea' });
+  if (!live.length) options.push({ label: hi, text: 'Your studio is all empty and sparkly ✨ Want to dream up a first project together?', ask: 'Help me brainstorm a first project', mood: 'excited' });
   options.push(
-    { label: hi ?? 'Hey you', text: 'Have you had some water today? Designers need hydration too 💧', ask: 'Give me a few healthy study-break ideas' },
-    { label: 'Just saying', text: 'I’m really proud of you, you know? Moving to Milano to chase this is brave. 💗', ask: 'Give me a little pep talk for today' },
+    { label: hi, text: 'Have you had some water today? Designers need hydration too 💧', ask: 'Give me a few healthy study-break ideas', mood: 'wink' },
+    { label: 'Just saying', text: 'I’m really proud of you, you know? Moving to Milano to chase this is brave. 💗', ask: 'Give me a little pep talk for today', mood: 'love' },
   );
   return pick(options);
 }
 
-/** Jelly: her jellyfish friend who floats around My Corner, checks in, and answers anything about her projects. */
+/** Jelly: her jellyfish friend who floats around My Corner, has moods, loves pats, and answers anything about her projects. */
 export default function Jelly() {
   const path = usePathname();
   const projectId = path.match(/^\/home\/corner\/([^/?#]+)/)?.[1] ?? null;
-  const [data, setData] = useState<State | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<State | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<'chat' | 'history'>('chat');
   const [bubble, setBubble] = useState<Bubble | null>(null);
-  const [squish, setSquish] = useState(false);
+  const [line, setLine] = useState('');
+  const [base, setBase] = useState<JellyMood>('content');
+  const [reaction, setReaction] = useState<JellyMood | null>(null);
+  const [hearts, setHearts] = useState<{ id: number; x: number; c: string }[]>([]);
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
@@ -83,39 +113,241 @@ export default function Jelly() {
   const panel = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
+  const timers = useRef<{ react?: number; line?: number }>({});
+
+  const mood: JellyMood = busy ? 'studious' : (reaction ?? (q.trim() && open ? 'curious' : base));
+
+  /* ---------- feelings ---------- */
+  const say = useCallback((text: string, ms = 3400) => {
+    clearTimeout(timers.current.line);
+    setLine(text);
+    timers.current.line = window.setTimeout(() => setLine(''), ms);
+  }, []);
+  const feel = useCallback(
+    (m: JellyMood, ms = 2600, text?: string) => {
+      clearTimeout(timers.current.react);
+      setReaction(m);
+      timers.current.react = window.setTimeout(() => setReaction(null), ms);
+      if (text) say(text, Math.max(ms, 3000));
+    },
+    [say],
+  );
+
+  // her everyday mood follows the clock in Milano
+  useEffect(() => {
+    setBase(timeMood());
+    const id = setInterval(() => setBase(timeMood()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
+    // every face ready, so a mood change never flickers
+    for (const m of Object.keys(MOODS) as JellyMood[]) new Image().src = moodSrc(m);
     api<State>('/api/corner/jelly', 'GET')
-      .then(setData)
-      .catch(() => setData({ ready: false, chat: null, projects: [] }));
+      .then((d) => {
+        setData(d);
+        setChatId(d.chats[0]?.id ?? null);
+      })
+      .catch(() => setData({ ready: false, mood: timeMood(), chats: [], projects: [], friend: { pets: 0, chats: 0, level: 1, progress: 0 }, away: 0 }));
   }, []);
 
-  // say hello now and then: a check-in or a fact, taking turns
+  // the same chats as the "Jelly Got This!" tab
+  useJellyChats(
+    useCallback((c) => {
+      setData((d) => (d ? { ...d, chats: applyChange(d.chats, c) } : d));
+      if ('removed' in c) setChatId((id) => (id === c.removed ? null : id));
+    }, []),
+  );
+
+  /* ---------- saying hello ---------- */
   const projects = useRef<Brief[]>([]);
   projects.current = data?.projects ?? [];
+  const baseRef = useRef(base);
+  baseRef.current = base;
   const loaded = data !== null;
-  const say = useCallback(() => {
+  const away = data?.away;
+  const showBubble = useCallback(() => {
     const n = Number(store.get('jelly-n') ?? 0);
     store.set('jelly-n', String(n + 1));
     store.set('jelly-last', String(Date.now()));
-    setBubble(n % 2 ? nextFact() : checkIn(projects.current));
-  }, []);
+    const b = n % 2 ? nextFact() : checkIn(projects.current, baseRef.current);
+    setBubble(b);
+    feel(b.mood, 5000);
+  }, [feel]);
   useEffect(() => {
     if (!loaded) return;
+    const later: number[] = [];
+    const at = (ms: number, fn: () => void) => later.push(window.setTimeout(fn, ms));
+    if (away === null) {
+      // the very first time they meet
+      at(1200, () => {
+        store.set('jelly-last', String(Date.now()));
+        setBubble({ label: 'Nice to meet you! 🪼', text: 'I’m Jelly, your new studio friend. Tap me to chat about any project, or rub me (or press and hold) for pats!', ask: 'Tell me about yourself, Jelly!', mood: 'surprised' });
+        feel('surprised', 4000);
+      });
+    } else if (away !== undefined && away > 2 * 86_400_000) {
+      const days = Math.round(away / 86_400_000);
+      at(1200, () => feel('sad', 3200, `You were gone for ${days} days… I missed you! 🥺`));
+      at(4600, () => feel('love', 3000, 'But you’re here now 💗'));
+    } else if (away !== undefined && away > 20 * 60_000) {
+      at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, hello(baseRef.current)));
+    }
     const due = Date.now() - Number(store.get('jelly-last') ?? 0) > QUIET;
-    const first = due ? setTimeout(say, 4000) : undefined;
-    const second = setTimeout(say, SECOND);
-    return () => {
-      clearTimeout(first);
-      clearTimeout(second);
+    if (due && away !== null) at(6000, showBubble);
+    at(SECOND, showBubble);
+    return () => later.forEach(clearTimeout);
+  }, [loaded, away, feel, showBubble]);
+
+  // back from another tab or app: she noticed
+  useEffect(() => {
+    let hiddenAt = 0;
+    const onVis = () => {
+      if (document.hidden) hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt > 60_000) feel('surprised', 2200, 'You’re back! I kept the bubbles warm 🫧');
     };
-  }, [loaded, say]);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [feel]);
+
+  // nothing happening for a while: she peeks out (or dozes off at night)
+  useEffect(() => {
+    let id = 0;
+    const reset = () => {
+      clearTimeout(id);
+      id = window.setTimeout(() => (baseRef.current === 'sleepy' ? say('zzz… 💤') : feel('shy', 4500, pick(SHY))), IDLE);
+    };
+    reset();
+    const evs = ['pointerdown', 'keydown', 'scroll'] as const;
+    evs.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    return () => {
+      clearTimeout(id);
+      evs.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [feel, say]);
+
+  /* ---------- pats ---------- */
+  const pending = useRef(0);
+  const flushAt = useRef(0);
+  const recent = useRef<number[]>([]);
+  const woke = useRef(false);
+  const levelRef = useRef(1);
+  levelRef.current = data?.friend.level ?? 1;
+  const heart = useCallback((c = pick(['💗', '💕', '🫧', '✨', '💖'])) => {
+    const id = Math.random();
+    setHearts((h) => [...h.slice(-14), { id, x: 15 + Math.random() * 70, c }]);
+    setTimeout(() => setHearts((h) => h.filter((x) => x.id !== id)), 1300);
+  }, []);
+  const flush = useCallback(async () => {
+    const n = pending.current;
+    if (!n) return;
+    pending.current = 0;
+    try {
+      const f = await api<Friend>('/api/corner/jelly/pet', 'POST', { n });
+      if (f.level > levelRef.current) {
+        feel('love', 4000, `We’re friendship level ${f.level} now! 💗✨`);
+        for (let i = 0; i < 8; i++) setTimeout(() => heart('💗'), i * 90);
+      }
+      setData((d) => (d ? { ...d, friend: f } : d));
+    } catch {}
+  }, [feel, heart]);
+  const petOnce = useCallback(() => {
+    heart();
+    pending.current++;
+    clearTimeout(flushAt.current);
+    flushAt.current = window.setTimeout(flush, 1500);
+    setBubble(null);
+    const now = Date.now();
+    recent.current = [...recent.current.filter((t) => now - t < 5000), now];
+    if (recent.current.length > 24) {
+      recent.current = [];
+      feel('grumpy', 2800, pick(DIZZY));
+      setTimeout(() => feel('shy', 2200, '…but I still like you 🍃'), 2900);
+      return;
+    }
+    if (baseRef.current === 'sleepy' && !woke.current) {
+      woke.current = true;
+      feel('surprised', 2200, pick(WAKE));
+      return;
+    }
+    feel('love', 2000);
+    if (recent.current.length % 6 === 1) say(pick(PETTED), 2600);
+  }, [feel, flush, heart, say]);
+
+  /* ---------- chat ---------- */
+  const chats = data?.chats ?? [];
+  const chat = chats.find((c) => c.id === chatId) ?? null;
+  const turns = chat?.turns ?? [];
+  const here = projectId ? data?.projects.find((p) => p.id === projectId) : undefined;
+
+  const toggle = () => {
+    setBubble(null);
+    setOpen((o) => !o);
+    if (!open) {
+      setView('chat');
+      feel(baseRef.current === 'sleepy' ? 'sleepy' : 'wink', 1600);
+    }
+  };
+
+  // a quick tap opens the chat; rubbing her, or pressing and holding, is petting
+  const touch = useRef({ down: false, x: 0, y: 0, moved: 0, acc: 0, petting: false, hold: 0, repeat: 0, hover: 0 });
+  const stopHold = () => {
+    clearTimeout(touch.current.hold);
+    clearInterval(touch.current.repeat);
+  };
+  const onDown = (e: RPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const t = touch.current;
+    Object.assign(t, { down: true, x: e.clientX, y: e.clientY, moved: 0, acc: 0, petting: false });
+    stopHold();
+    t.hold = window.setTimeout(() => {
+      t.petting = true;
+      petOnce();
+      t.repeat = window.setInterval(petOnce, 420);
+    }, 450);
+  };
+  const onMove = (e: RPointerEvent<HTMLButtonElement>) => {
+    const t = touch.current;
+    const d = Math.hypot(e.clientX - t.x, e.clientY - t.y);
+    t.x = e.clientX;
+    t.y = e.clientY;
+    if (t.down) {
+      t.moved += d;
+      t.acc += d;
+      if (t.moved > 16 && !t.petting) {
+        t.petting = true;
+        stopHold();
+      }
+      if (t.petting && t.acc > 40) {
+        t.acc = 0;
+        petOnce();
+      }
+    } else if (e.pointerType === 'mouse') {
+      // stroking her with the mouse, no click needed
+      t.hover += d;
+      if (t.hover > 160) {
+        t.hover = 0;
+        petOnce();
+      }
+    }
+  };
+  const onUp = () => {
+    const t = touch.current;
+    stopHold();
+    if (t.down && !t.petting) toggle();
+    t.down = false;
+  };
+  const onCancel = () => {
+    stopHold();
+    touch.current.down = false;
+  };
 
   // close on Escape or a tap outside, and hand focus back to Jelly
   useEffect(() => {
     if (!open) return;
-    input.current?.focus();
+    // on phones the keyboard would cover the chat, so only focus the box with a mouse
+    if (window.matchMedia('(pointer: fine)').matches) input.current?.focus();
     const close = (e: Event) => {
       if (e instanceof KeyboardEvent) {
         if (e.key !== 'Escape') return;
@@ -131,52 +363,46 @@ export default function Jelly() {
     };
   }, [open]);
 
-  const turns = data?.chat?.turns ?? [];
   useEffect(() => {
-    if (open) end.current?.scrollIntoView({ block: 'end' });
-  }, [open, busy, turns.length]);
-
-  const here = projectId ? data?.projects.find((p) => p.id === projectId) : undefined;
+    if (open && view === 'chat') end.current?.scrollIntoView({ block: 'end' });
+  }, [open, view, busy, turns.length]);
 
   async function ask(question: string) {
     setOpen(true);
+    setView('chat');
     setBubble(null);
     if (!data?.ready || busy) return;
     setBusy(question);
     setErr('');
     try {
-      const r = await api<{ chat: Chat }>('/api/corner/jelly', 'POST', { question, projectId });
-      setData((d) => (d ? { ...d, chat: r.chat } : d));
+      const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId });
+      setData((d) => (d ? { ...d, chats: applyChange(d.chats, { chat: r.chat }), friend: r.friend } : d));
+      setChatId(r.chat.id);
+      announce({ chat: r.chat });
       setQ('');
+      if (r.friend.level > levelRef.current) feel('love', 4000, `We’re friendship level ${r.friend.level} now! 💗✨`);
+      else feel(r.turn.mood ?? 'idea', 4200);
     } catch (e) {
-      setErr((e as Error).message);
+      const m = (e as Error).message;
+      setErr(m);
+      if (/try again in/i.test(m)) feel('sleepy', 4500, 'I’m all out of puff… give me a minute? 😮‍💨');
+      else feel('sad', 3500);
     }
     setBusy('');
   }
-  async function fresh() {
-    setErr('');
-    try {
-      await api('/api/corner/jelly', 'DELETE');
-      setData((d) => (d ? { ...d, chat: null } : d));
-    } catch (e) {
-      setErr((e as Error).message);
-    }
-  }
-  const tap = () => {
-    setSquish(true);
-    setTimeout(() => setSquish(false), 450);
-    setBubble(null);
-    setOpen((o) => !o);
-  };
 
-  const starters = [here ? `Summarise “${here.title}” for me` : 'What should I work on today?', 'Compare my projects', 'Tell me a fun fact about Milano 🇮🇹', 'What’s trending in fashion this season?'];
-  const last = turns[turns.length - 1];
+  if (!mounted) return null;
+  const friend = data?.friend;
+  const starters = [here ? `Summarise “${here.title}” for me` : 'What should I work on today?', 'Compare my projects', 'Tell me a fun fact about Milano 🇮🇹', 'How are you feeling, Jelly?'];
+  const chips = busy ? [] : turns.length ? (turns[turns.length - 1].suggestions ?? []) : starters;
+  const status = !data ? 'waking up…' : `feeling ${MOODS[mood].feeling} ${MOODS[mood].emoji}`;
 
   // on <body>: the page transition's transform would otherwise pin her to the page, not the screen
-  if (!mounted) return null;
   return createPortal(
-    <div className="jelly">
-      {bubble && !open && (
+    <div className={`jelly${open ? ' open' : ''}`}>
+      {open && <div className="jelly-scrim" aria-hidden="true" />}
+
+      {!open && bubble && (
         <div className="jelly-bubble" role="status">
           <button type="button" className="jelly-x" onClick={() => setBubble(null)} aria-label="Dismiss">
             ×
@@ -190,68 +416,141 @@ export default function Jelly() {
           )}
         </div>
       )}
+      {!open && !bubble && line && (
+        <p className="jelly-line" aria-live="polite">
+          {line}
+        </p>
+      )}
 
       {open && (
         <div ref={panel} className="jelly-panel" role="dialog" aria-label="Chat with Jelly">
           <header className="jelly-head">
-            <img src="/corner/jelly.png" alt="" width={44} height={43} />
-            <div>
-              <b>Jelly</b>
-              <small>{!data ? 'waking up…' : data.ready ? 'your studio friend · knows all your projects' : 'napping right now'}</small>
-            </div>
-            {turns.length > 0 && (
-              <button type="button" className="cn-btn ghost" onClick={fresh} disabled={Boolean(busy)}>
-                New chat
-              </button>
-            )}
-            <button
-              type="button"
-              className="jelly-close"
-              onClick={() => {
-                setOpen(false);
-                pet.current?.focus();
-              }}
-              aria-label="Close"
-            >
-              ×
+            <button type="button" className={`jelly-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Pet Jelly">
+              <img key={mood} src={moodSrc(mood)} alt="" width={56} height={56} />
+              <span className="jelly-hearts" aria-hidden="true">
+                {hearts.map((h) => (
+                  <i key={h.id} style={{ left: `${h.x}%` }}>
+                    {h.c}
+                  </i>
+                ))}
+              </span>
             </button>
+            <div className="jelly-who">
+              <b>Jelly</b>
+              <small aria-live="polite">{status}</small>
+              {friend && (
+                <span className="jelly-friend" title={`${friend.pets} pats · ${friend.chats} chats`}>
+                  <span>💗 Friends · Lv {friend.level}</span>
+                  <i style={{ ['--p' as string]: `${Math.round(friend.progress * 100)}%` }} />
+                </span>
+              )}
+            </div>
+            <div className="jelly-tools">
+              <button type="button" onClick={() => setView(view === 'history' ? 'chat' : 'history')} aria-pressed={view === 'history'} aria-label="Past chats" title="Past chats">
+                🕘
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setChatId(null);
+                  setView('chat');
+                  feel('excited', 1500);
+                }}
+                disabled={Boolean(busy) || !chat}
+                aria-label="New chat"
+                title="New chat"
+              >
+                ＋
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  pet.current?.focus();
+                }}
+                aria-label="Close"
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
           </header>
 
-          <div className="jelly-thread">
-            {!data?.ready ? (
-              <p className="jelly-say">Blub… I’m asleep until the assistant is switched on (GROQ_API_KEY in Vercel). I can still tell you fun facts though! 🫧</p>
-            ) : (
-              <>
-                {!turns.length && !busy && <p className="jelly-say">Ciao Saani! 🪼 Ask me anything about any of your projects, or about Milano and fashion. I’m all ears (well… all tentacles).</p>}
-                {turns.map((t) => (
-                  <div key={t.id} className="jelly-turn">
-                    <p className="jelly-q">{t.q}</p>
-                    <div className="jelly-a">
-                      <Answer text={t.a} />
-                    </div>
-                  </div>
-                ))}
-                {busy && (
-                  <div className="jelly-turn">
-                    <p className="jelly-q">{busy}</p>
-                    <p className="jelly-thinking">Jelly is thinking… 🫧</p>
-                  </div>
-                )}
-              </>
-            )}
-            {err && <p className="h-err">{err}</p>}
-            <div ref={end} />
-          </div>
+          {line && (
+            <p className="jelly-line in-panel" aria-live="polite">
+              {line}
+            </p>
+          )}
 
-          {data?.ready && (
-            <>
-              <div className="jelly-chips">
-                {(last && !busy ? last.suggestions : turns.length ? [] : starters).map((s) => (
-                  <button key={s} type="button" disabled={Boolean(busy)} onClick={() => ask(s)}>
-                    {s}
-                  </button>
+          {view === 'history' ? (
+            <div className="jelly-thread">
+              <p className="jelly-hint">Every chat is saved here, and in each project’s “Jelly Got This!” tab.</p>
+              {!chats.length && <p className="jelly-say">No chats yet. Ask me something! 🫧</p>}
+              <ul className="jelly-history">
+                {chats.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className={c.id === chatId ? 'on' : ''}
+                      onClick={() => {
+                        setChatId(c.id);
+                        setView('chat');
+                      }}
+                    >
+                      <b>{c.title}</b>
+                      <small>
+                        {shortDate(c.updatedAt)} · {c.turns.length} {c.turns.length === 1 ? 'answer' : 'answers'}
+                      </small>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
+            </div>
+          ) : (
+            <div className="jelly-thread">
+              {!data?.ready ? (
+                <p className="jelly-say">Blub… I can’t chat until the assistant is switched on (GROQ_API_KEY in Vercel). You can still give me pats, and I’ll share fun facts! 🫧</p>
+              ) : (
+                <>
+                  {!turns.length && !busy && (
+                    <p className="jelly-say">
+                      {base === 'sleepy' ? '*yawn* Hi Saani 🌙 ' : 'Ciao Saani! 🪼 '}
+                      Ask me anything about any of your projects, or about Milano and fashion. I’m all ears (well… all tentacles). Psst: tap my face up here, or rub me, for pats!
+                    </p>
+                  )}
+                  {turns.map((t) => (
+                    <div key={t.id} className="jelly-turn">
+                      <p className="jelly-q">{t.q}</p>
+                      <div className="jelly-a">
+                        <img className="jelly-a-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={34} height={34} loading="lazy" />
+                        <Answer text={t.a} />
+                      </div>
+                    </div>
+                  ))}
+                  {busy && (
+                    <div className="jelly-turn">
+                      <p className="jelly-q">{busy}</p>
+                      <p className="jelly-thinking">Jelly is reading… 📖🫧</p>
+                    </div>
+                  )}
+                </>
+              )}
+              {err && <p className="h-err">{err}</p>}
+              <div ref={end} />
+            </div>
+          )}
+
+          {data?.ready && view === 'chat' && (
+            <div className="jelly-foot">
+              {chips.length > 0 && (
+                <div className="jelly-chips">
+                  {chips.map((s) => (
+                    <button key={s} type="button" onClick={() => ask(s)}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
               {here && <p className="jelly-about">Looking at: “{here.title}”</p>}
               <form
                 className="jelly-ask"
@@ -260,23 +559,44 @@ export default function Jelly() {
                   if (q.trim()) ask(q.trim());
                 }}
               >
-                <input ref={input} className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder="Ask Jelly anything…" aria-label="Your question for Jelly" />
+                <input ref={input} className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder="Ask Jelly anything…" aria-label="Your question for Jelly" enterKeyHint="send" />
                 <button className="cn-btn primary" disabled={Boolean(busy) || !q.trim()}>
                   Ask
                 </button>
               </form>
-            </>
+            </div>
           )}
         </div>
       )}
 
-      <button ref={pet} type="button" className={`jelly-pet${squish ? ' squish' : ''}${bubble && !open ? ' chatty' : ''}`} onClick={tap} aria-expanded={open} aria-label={open ? 'Close Jelly' : 'Talk to Jelly'}>
+      <button
+        ref={pet}
+        type="button"
+        className={`jelly-pet mood-${mood}${bubble && !open ? ' chatty' : ''}`}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onCancel}
+        onPointerLeave={() => (touch.current.hover = 0)}
+        onPointerEnter={(e) => e.pointerType === 'mouse' && !reaction && !open && feel('curious', 1400)}
+        onClick={(e) => e.detail === 0 && toggle()}
+        onContextMenu={(e) => e.preventDefault()}
+        aria-expanded={open}
+        aria-label={open ? 'Close Jelly' : `Talk to Jelly (she’s feeling ${MOODS[mood].feeling})`}
+      >
+        <span className="jelly-hearts" aria-hidden="true">
+          {hearts.map((h) => (
+            <i key={h.id} style={{ left: `${h.x}%` }}>
+              {h.c}
+            </i>
+          ))}
+        </span>
         <span className="jelly-bubbles" aria-hidden="true">
           <i />
           <i />
           <i />
         </span>
-        <img src="/corner/jelly.png" alt="" width={88} height={86} draggable={false} />
+        <img key={mood} src={moodSrc(mood)} alt="" width={96} height={96} draggable={false} />
       </button>
     </div>,
     document.body,
