@@ -7,6 +7,8 @@ import { journeyHighlights } from '@/lib/journey-highlights';
 import { bingo, milano } from '@/content/home';
 import { checklist } from '@/content/checklist';
 import { places } from '@/content/milano';
+import { jellyState } from '@/lib/jelly';
+import { friendship } from '@/lib/jelly-mood';
 
 export default async function HomePage() {
   const [posts, letters, jar, board, seen, look, stamps, diary, songs, check, pages, occasions, moments, invites, story] = await Promise.all([
@@ -26,6 +28,7 @@ export default async function HomePage() {
     getInvites(),
     journeyHighlights(),
   ]);
+  const jelly = await jellyState();
   const newPosts = posts.filter((p) => !seen.love || p.createdAt > seen.love).length;
   const ready = letters.filter((l) => !isLocked(l) && !l.openedAt).length;
   const sealed = letters.filter((l) => isLocked(l)).length;
@@ -58,6 +61,8 @@ export default async function HomePage() {
         checklistDone: Object.keys(check.done).length,
         checklistTotal: checklist.length,
         pages: pages.length,
+        pearls: jelly.pearls ?? 0,
+        jellyLevel: friendship(jelly.pets, jelly.chats).level,
         moments: moments.length,
       }}
     />

@@ -134,6 +134,8 @@ expect "knows the projects" '"title":"AI test"'
 expect "first time they meet" '"away":null'
 expect "has a mood" '"mood":"[a-z]*"'
 expect "friendship starts at level 1" '"level":1'
+expect "pearls for today's visit" '"kind":"daily","pearls":10'
+expect "and the first achievement" '"id":"hello"'
 check "jelly remembers the visit" 200 -b "$SA" $B/api/corner/jelly
 expect "so she knows how long Saani was away" '"away":[0-9]'
 check "a second project" 201 -b "$SA" -X POST "${J[@]}" -d '{"title":"OTHER-PROJECT","description":"OTHER-DESC","category":"Fashion Research"}' $B/api/corner/projects
@@ -150,13 +152,19 @@ expect "jelly's own system prompt" "You are Jelly"
 expect "she knows how she feels" "in Milano and you feel"
 expect "and tags her answer with a mood" "\\[mood: joyful\\]"
 expect "every project at a glance" "OTHER-DESC"
+expect "she knows the whole Atelier" "Atelier (her private site"
+expect "the checklist" "Settling-in checklist: 0/"
+expect "the passport" "Passport: 0/"
+expect "her home and achievements" "Close to unlocking"
+expect "never sealed letters' words" "never reveal"
 expect "and the first one" "AI-DESC"
 expect "no project in full when none is open" "Open now, in full" absent
 fresh_minute
-check "carry on the chat from a project page" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"JELLY-Q2\",\"projectId\":\"$P\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+check "carry on the chat from a project page" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"JELLY-Q2\",\"projectId\":\"$P\",\"chatId\":\"$JC\",\"page\":\"/home/corner/$P\"}" $B/api/corner/jelly
 same "same chat" "$(jget .chat.id)" "$JC"
 cp "$D/groq-req-last.json" "$D/body"
 expect "the open project in full" "Open now, in full"
+expect "and which page she's on" "looking at a project in My Corner"
 expect "with its brief" "AI-AUDIENCE"
 expect "and its documents" "PDF-TREND-WORDS"
 expect "the earlier question comes along" "JELLY-Q what next?"
@@ -174,6 +182,39 @@ expect "at 60" '"pets":72'
 expect "and friendship grows" '"level":3'
 check "rename a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"title":"JELLY-RENAMED"}' $B/api/corner/jelly/chats/$JC
 expect "renamed" "JELLY-RENAMED"
+# Jelly's Corner: pearls, the shop, her room, achievements
+check "her home" 200 -b "$SA" $B/api/jelly/home
+expect "no second daily bonus today" '"kind":"daily"' absent
+expect "pats and chats unlocked things" '"pats-50":"'
+expect "a reward in her things" '"teddy":1'
+expect "My Corner counts too" '"project-1":"'
+PEARLS=$(jget .home.pearls)
+same "she has pearls to spend" "$( [ "$PEARLS" -ge 20 ] && echo yes )" yes
+check "buy a plant" 200 -b "$SA" -X POST "${J[@]}" -d '{"id":"plant"}' $B/api/jelly/shop
+same "it costs 20 pearls (and unlocks a 10-pearl achievement)" "$(jget .home.pearls)" "$((PEARLS - 20 + 10))"
+expect "it's hers" '"plant":1'
+expect "first purchase" '"shop-1":"'
+check "rewards can't be bought" 400 -b "$SA" -X POST "${J[@]}" -d '{"id":"crown"}' $B/api/jelly/shop
+check "nor made-up things" 400 -b "$SA" -X POST "${J[@]}" -d '{"id":"spaceship"}' $B/api/jelly/shop
+# spend down until a whale (120) is out of reach
+for i in 1 2 3; do curl -s -o /dev/null -b "$SA" -X POST "${J[@]}" -d '{"id":"whale"}' $B/api/jelly/shop; done
+check "too expensive" 400 -b "$SA" -X POST "${J[@]}" -d '{"id":"whale"}' $B/api/jelly/shop
+expect "says so kindly" "Not enough pearls"
+check "place it in her room" 200 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"uid":"a","item":"plant","x":40,"y":70,"s":9},{"uid":"b","item":"teddy","x":-5,"y":50}],"backdrop":"stars"}' $B/api/jelly/home
+expect "sizes are kept sensible" '"s":2.5'
+expect "and inside the room" '"x":0'
+expect "a backdrop she doesn't own isn't used" '"backdrop":"lagoon"'
+check "two plants when she has one" 400 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"item":"plant"},{"item":"plant"}]}' $B/api/jelly/home
+check "a thing she doesn't have" 400 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"item":"unicorn"}]}' $B/api/jelly/home
+check "checking in again" 200 -b "$SA" -X POST $B/api/jelly/check
+expect "nothing new" '"gains":\[\]'
+check "Jelly's Corner opens" 200 -b "$SA" $B/home/jelly
+expect "her page" "Jelly’s Corner"
+check "and it's on her desk" 200 -b "$SA" $B/home
+expect "a Jelly tile" "/home/jelly"
+check "friend can't see her home 403" 403 -b "$D/ai-fr.jar" $B/api/jelly/home
+check "friend can't shop 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"id":"plant"}' $B/api/jelly/shop
+check "friend can't check in 403" 403 -b "$D/ai-fr.jar" -X POST $B/api/jelly/check
 check "friend can't talk to jelly 403" 403 -b "$D/ai-fr.jar" $B/api/corner/jelly
 check "friend can't ask 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"question":"hi"}' $B/api/corner/jelly
 check "friend can't pet her 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"n":1}' $B/api/corner/jelly/pet

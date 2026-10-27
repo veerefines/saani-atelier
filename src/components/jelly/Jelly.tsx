@@ -2,19 +2,53 @@
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { api } from '@/lib/upload-client';
 import type { Chat } from '@/lib/corner-model';
+import type { Gain, JellyView } from '@/lib/jelly';
+import { itemById } from '@/lib/jelly-catalog';
 import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
-import { Answer } from './Assistant';
-import { FACTS } from './jelly-facts';
-import { announce, applyChange, useJellyChats } from './jelly-bus';
-import { shortDate } from './shared';
+import { Answer } from '@/components/corner/Assistant';
+import { shortDate } from '@/components/corner/shared';
+import { FACTS } from './facts';
+import { announce, applyChange, emit, useJelly, useJellyChats } from './bus';
+import './jelly.css';
 
 type Brief = { id: string; title: string; updatedAt: string; archived: boolean };
-type Friend = { pets: number; chats: number; level: number; progress: number };
-type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null };
-type Bubble = { label: string; text: string; ask: string; mood: JellyMood };
+type Friend = JellyView;
+type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null; gains?: Gain[] };
+type Bubble = { label: string; text: string; ask?: string; href?: string; mood: JellyMood };
+
+/** Ready-made questions that fit the page she's on. */
+function startersFor(path: string, project?: string): string[] {
+  const page: [RegExp, string[]][] = [
+    [/^\/home\/corner\/./, [`Summarise “${project ?? 'this project'}” for me`, 'What’s missing from this project?']],
+    [/^\/home\/corner/, ['Which project should I work on today?', 'Compare my projects']],
+    [/^\/home\/checklist/, ['What’s next on my settling-in list?', 'Help me with the trickiest task']],
+    [/^\/home\/passport/, ['Which place should I stamp next?', 'Plan me a Saturday of stamps']],
+    [/^\/home\/milano/, ['Where should I go this weekend?', 'Find me a cosy café to study in']],
+    [/^\/home\/bingo/, ['Which bingo square should I do next?', 'How close am I to a bingo?']],
+    [/^\/home\/chapter/, ['Give me a prompt for today’s chapter', 'What have I written about lately?']],
+    [/^\/home\/lookbook/, ['Style me an outfit for tomorrow', 'What’s my style, from my lookbook?']],
+    [/^\/home\/(letters|love|jar|songs|scrapbook)/, ['Who’s been sending me love lately?', 'Help me write a thank-you note']],
+    [/^\/home\/jelly/, ['How do I earn more pearls?', 'What should I buy for your home?']],
+  ];
+  const own = page.find(([re]) => re.test(path))?.[1] ?? ['What should I do today?', 'What am I close to unlocking?'];
+  return [...own, 'Tell me a fun fact about Milano 🇮🇹', 'How are you feeling, Jelly?'];
+}
+
+/** A pearl or achievement, as Jelly announces it. */
+function cheer(g: Gain): Bubble {
+  if (g.kind === 'daily') return { label: 'Daily pearls 🫧', text: `+${g.pearls} pearls for coming by today${g.streak > 1 ? ` · ${g.streak}-day streak 🔥` : ''}!`, href: '/home/jelly', mood: 'excited' };
+  const thing = g.reward ? itemById(g.reward) : null;
+  return {
+    label: 'Achievement unlocked! 🏆',
+    text: `${g.icon} ${g.title} · +${g.pearls} 🫧${thing ? ` · new for my home: ${thing.emoji} ${thing.name}` : ''}${g.backdrop ? ' · and a new backdrop!' : ''}`,
+    href: '/home/jelly',
+    mood: 'surprised',
+  };
+}
 
 const QUIET = 3 * 60 * 60_000; // at most one unprompted hello every 3 hours
 const SECOND = 10 * 60_000; // and one more if she stays a while
@@ -96,6 +130,8 @@ function checkIn(projects: Brief[], mood: JellyMood): Bubble {
 export default function Jelly() {
   const path = usePathname();
   const projectId = path.match(/^\/home\/corner\/([^/?#]+)/)?.[1] ?? null;
+  // in Jelly's Corner she's floating around her room instead
+  const atHome = path.startsWith('/home/jelly');
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<State | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -148,9 +184,45 @@ export default function Jelly() {
       .then((d) => {
         setData(d);
         setChatId(d.chats[0]?.id ?? null);
+        if (d.gains?.length) setCheers(d.gains.map(cheer));
+        emit('jelly:home', d.friend);
       })
-      .catch(() => setData({ ready: false, mood: timeMood(), chats: [], projects: [], friend: { pets: 0, chats: 0, level: 1, progress: 0 }, away: 0 }));
+      .catch(() => {});
   }, []);
+
+  // a queue of celebrations: daily pearls and achievements, one at a time
+  const [cheers, setCheers] = useState<Bubble[]>([]);
+  const celebrate = useCallback((gains: Gain[]) => gains.length && setCheers((c) => [...c, ...gains.map(cheer)]), []);
+  useJelly('jelly:gains', celebrate);
+  useJelly(
+    'jelly:home',
+    useCallback((f: JellyView) => setData((d) => (d ? { ...d, friend: f } : d)), []),
+  );
+  useJelly(
+    'jelly:open',
+    useCallback(() => {
+      setOpen(true);
+      setView('chat');
+    }, []),
+  );
+
+  // after she moves around the site, check for anything she just unlocked
+  const firstPath = useRef(true);
+  useEffect(() => {
+    if (firstPath.current) {
+      firstPath.current = false;
+      return;
+    }
+    const id = setTimeout(() => {
+      api<{ home: JellyView; gains: Gain[] }>('/api/jelly/check', 'POST')
+        .then((r) => {
+          celebrate(r.gains);
+          emit('jelly:home', r.home);
+        })
+        .catch(() => {});
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [path, celebrate]);
 
   // the same chats as the "Jelly Got This!" tab
   useJellyChats(
@@ -248,7 +320,7 @@ export default function Jelly() {
         feel('love', 4000, `We’re friendship level ${f.level} now! 💗✨`);
         for (let i = 0; i < 8; i++) setTimeout(() => heart('💗'), i * 90);
       }
-      setData((d) => (d ? { ...d, friend: f } : d));
+      emit('jelly:home', f);
     } catch {}
   }, [feel, heart]);
   const petOnce = useCallback(() => {
@@ -375,8 +447,9 @@ export default function Jelly() {
     setBusy(question);
     setErr('');
     try {
-      const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId });
-      setData((d) => (d ? { ...d, chats: applyChange(d.chats, { chat: r.chat }), friend: r.friend } : d));
+      const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId, page: path });
+      setData((d) => (d ? { ...d, chats: applyChange(d.chats, { chat: r.chat }) } : d));
+      emit('jelly:home', r.friend);
       setChatId(r.chat.id);
       announce({ chat: r.chat });
       setQ('');
@@ -391,9 +464,13 @@ export default function Jelly() {
     setBusy('');
   }
 
+  // celebrations come before check-ins and facts
+  const shown = cheers[0] ?? bubble;
+  const dismiss = () => (cheers.length ? setCheers((c) => c.slice(1)) : setBubble(null));
+
   if (!mounted) return null;
   const friend = data?.friend;
-  const starters = [here ? `Summarise “${here.title}” for me` : 'What should I work on today?', 'Compare my projects', 'Tell me a fun fact about Milano 🇮🇹', 'How are you feeling, Jelly?'];
+  const starters = startersFor(path, here?.title);
   const chips = busy ? [] : turns.length ? (turns[turns.length - 1].suggestions ?? []) : starters;
   const status = !data ? 'waking up…' : `feeling ${MOODS[mood].feeling} ${MOODS[mood].emoji}`;
 
@@ -402,21 +479,25 @@ export default function Jelly() {
     <div className={`jelly${open ? ' open' : ''}`}>
       {open && <div className="jelly-scrim" aria-hidden="true" />}
 
-      {!open && bubble && (
-        <div className="jelly-bubble" role="status">
-          <button type="button" className="jelly-x" onClick={() => setBubble(null)} aria-label="Dismiss">
+      {!open && shown && (
+        <div className={`jelly-bubble${cheers.length ? ' cheer' : ''}`} role="status">
+          <button type="button" className="jelly-x" onClick={dismiss} aria-label="Dismiss">
             ×
           </button>
-          <b>{bubble.label}</b>
-          <p>{bubble.text}</p>
-          {data?.ready && (
-            <button type="button" className="jelly-more" onClick={() => ask(bubble.ask)}>
+          <b>{shown.label}</b>
+          <p>{shown.text}</p>
+          {shown.href && !atHome ? (
+            <Link href={shown.href} className="jelly-more" onClick={dismiss}>
+              See Jelly’s Corner →
+            </Link>
+          ) : shown.ask && data?.ready ? (
+            <button type="button" className="jelly-more" onClick={() => ask(shown.ask!)}>
               Tell me more →
             </button>
-          )}
+          ) : null}
         </div>
       )}
-      {!open && !bubble && line && (
+      {!open && !shown && line && (
         <p className="jelly-line" aria-live="polite">
           {line}
         </p>
@@ -440,8 +521,11 @@ export default function Jelly() {
               <small aria-live="polite">{status}</small>
               {friend && (
                 <span className="jelly-friend" title={`${friend.pets} pats · ${friend.chats} chats`}>
-                  <span>💗 Friends · Lv {friend.level}</span>
+                  <span>💗 Lv {friend.level}</span>
                   <i style={{ ['--p' as string]: `${Math.round(friend.progress * 100)}%` }} />
+                  <Link href="/home/jelly" className="jelly-pearls" onClick={() => setOpen(false)} title="Pearls to spend in Jelly’s Corner">
+                    🫧 {friend.pearls}
+                  </Link>
                 </span>
               )}
             </div>
@@ -572,7 +656,7 @@ export default function Jelly() {
       <button
         ref={pet}
         type="button"
-        className={`jelly-pet mood-${mood}${bubble && !open ? ' chatty' : ''}`}
+        className={`jelly-pet mood-${mood}${shown && !open ? ' chatty' : ''}${atHome ? ' away' : ''}`}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}

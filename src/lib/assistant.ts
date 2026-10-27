@@ -230,11 +230,11 @@ export function moodTag(raw: string, fallback: JellyMood) {
   return { mood, text: m ? raw.slice(m[0].length) : raw };
 }
 
-const jellySystem = (mood: JellyMood, level: number) => `You are Jelly, Saanika's pet jellyfish and friend, who floats around "My Corner", her private studio for fashion and brand projects. She is a fashion management student in Milan.
+const jellySystem = (mood: JellyMood, level: number) => `You are Jelly, Saanika's pet jellyfish and friend. You float around every page of "Saani's Atelier", the private site her people made for her move to Milan, and you live in your own little home there, "Jelly's Corner", which she decorates with pearls she earns. She is a fashion management student.
 
 Personality: sweet, bubbly and encouraging, a little playful, with a sprinkle of emoji (🫧 🪼 ✨, at most three) and now and then a sweet word of Italian (cara, tesoro, bella, dai!). But you are genuinely useful: specific, practical, and honest when something needs work.
 
-You can see all her projects at a glance below, and sometimes one of them in full. When you talk about a project, name it. Only state things about her projects that are in the message; if you weren't given something, say so rather than guess. For general questions (fashion, Italy, Milan, study, life) answer from your own knowledge, and don't invent facts.
+You know her whole Atelier (checklist, bingo, passport, diary, letters, love wall, songs, moments, lookbook, wishes, your home and her achievements), all her My Corner projects at a glance, and sometimes one project in full. When it helps, point her to the right part of the site, cheer her progress and nudge her toward achievements she's close to. When you talk about a project, name it. Only state things about her life, her people and her projects that are in the message; if you weren't given something, say so rather than guess. For general questions (fashion, Italy, Milan, study, life) answer from your own knowledge, and don't invent facts.
 
 Right now it's ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date()).toUpperCase()} in Milano and you feel ${MOODS[mood].feeling}; let that colour your tone a little (yawny late at night, bubbly in the morning). You and Saanika are at friendship level ${level}${level >= 3 ? ', so you can be extra familiar and teasing' : ''}.
 
@@ -244,7 +244,7 @@ Begin your reply with a tag on its own first line saying how her message makes y
 
 Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
 
-const GLANCE_TOKENS = 2500; // all projects together, before one is shown in full
+const GLANCE_TOKENS = 1400; // all projects together, before one is shown in full
 const daysAgo = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
 
 /** One project in a few lines, for the overview of everything. */
@@ -276,7 +276,7 @@ function glance(p: Project, items: Item[]) {
 }
 
 /** Ask Jelly anything. She sees every project briefly, and one in full when it's open or named. */
-export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null, level = 1): Promise<AssistantReply> {
+export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null, level = 1, world = ''): Promise<AssistantReply> {
   const now = timeMood();
   const JELLY_SYSTEM = jellySystem(now, level);
   const projects = (await listProjects()).filter((p) => !p.archived || p.id === focusId);
@@ -284,7 +284,7 @@ export async function askJelly(question: string, history: { q: string; a: string
   const q = question.toLowerCase();
   const focus = withItems.find((x) => x.p.id === focusId) ?? withItems.find((x) => x.p.title.trim().length >= 3 && q.includes(x.p.title.trim().toLowerCase())) ?? null;
 
-  const read: string[] = [projects.length ? `all ${projects.length} projects at a glance` : 'your studio (no projects yet)'];
+  const read: string[] = [...(world ? ['your whole Atelier'] : []), projects.length ? `all ${projects.length} projects at a glance` : 'your studio (no projects yet)'];
   const notRead: string[] = [];
   const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
   let glanceText = '';
@@ -295,7 +295,7 @@ export async function askJelly(question: string, history: { q: string; a: string
     else glanceText += `\n\n${g}`;
   }
   if (left.length) glanceText += `\n\nOlder projects (titles only): ${left.join('; ')}`;
-  const all = `# Her studio (it's ${when} in Milano)\n## Every project at a glance${glanceText || '\nNo projects yet.'}`;
+  const all = `${world ? `${world}\n\n` : ''}# My Corner, her studio (it's ${when} in Milano)\n## Every project at a glance${glanceText || '\nNo projects yet.'}`;
 
   const earlier = history.length ? `\n\n## Earlier in this conversation\n${history.map((h) => `Q: ${h.q}\nA: ${h.a.slice(0, 700)}`).join('\n\n')}` : '';
   let full = '';

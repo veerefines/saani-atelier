@@ -6,6 +6,8 @@ import { seedJar, seedLetters } from '@/content/home';
 import '@/components/journey/journey.css';
 import '@/components/home/home.css';
 import '@/components/wall/wall.css';
+import '@/components/corner/corner.css';
+import Jelly from '@/components/jelly/Jelly';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,5 +18,11 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
   await ensureSeeded({ letters: seedLetters, jar: seedJar });
   // so the admin page can show when she was last here
   await touchPresence().catch(() => {});
-  return <div className="h-root">{children}</div>;
+  return (
+    <div className="h-root">
+      {children}
+      {/* Jelly floats on every page of her desk (the gift and the journey are their own pages, without her) */}
+      <Jelly />
+    </div>
+  );
 }

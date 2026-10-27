@@ -1,29 +1,30 @@
 import { getChat, JELLY_CHATS, listChats, listProjects, saveTurn, text } from '@/lib/corner';
 import { askJelly, assistantReady, AssistantBusy, AssistantKeyRejected } from '@/lib/assistant';
-import { bump, jellyState, seen, type JellyState } from '@/lib/jelly';
+import { addChat, jellyState, seen, view } from '@/lib/jelly';
+import { checkIn, platformContext } from '@/lib/jelly-world';
 import { friendship, timeMood } from '@/lib/jelly-mood';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
-const friend = (s: JellyState) => ({ pets: s.pets, chats: s.chats, ...friendship(s.pets, s.chats) });
-
-/** Is Jelly awake, how she feels, her chats, the projects she checks in about, and how long Saani was away. */
+/** Is Jelly awake, how she feels, her chats, the projects she checks in about, how long Saani was away, and today's pearls and achievements. */
 export async function GET() {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
   const before = await seen();
+  const { home, gains } = await checkIn();
   const projects = (await listProjects()).map((p) => ({ id: p.id, title: p.title, updatedAt: p.updatedAt, archived: p.archived }));
   return json({
     ready: assistantReady(),
     mood: timeMood(),
     chats: await listChats(JELLY_CHATS),
     projects,
-    friend: friend(before),
+    friend: home,
+    gains,
     // null the very first time they meet
     away: before.lastSeen ? Date.now() - Date.parse(before.lastSeen) : null,
   });
 }
 
-/** Ask Jelly anything, about any project (or none): in a chat she's already in, or a new one. */
+/** Ask Jelly anything, about the whole Atelier or any project: in a chat she's already in, or a new one. */
 export async function POST(req: Request) {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
@@ -32,15 +33,16 @@ export async function POST(req: Request) {
   const question = text(body.question, 2000);
   if (!question) return fail('Type your question first.');
   const projectId = typeof body.projectId === 'string' && body.projectId ? body.projectId : null;
+  const page = typeof body.page === 'string' ? body.page.slice(0, 200) : null;
   const chatId = typeof body.chatId === 'string' && body.chatId ? body.chatId : null;
   const chat = chatId ? await getChat(JELLY_CHATS, chatId) : null;
   if (chatId && !chat) return fail('That chat isn’t here any more.', 404);
   const history = (chat?.turns ?? []).slice(-2).map((t) => ({ q: t.q, a: t.a }));
   try {
     const before = await jellyState();
-    const r = await askJelly(question, history, projectId, friendship(before.pets, before.chats).level);
+    const r = await askJelly(question, history, projectId, friendship(before.pets, before.chats).level, await platformContext(before, page));
     const saved = await saveTurn(JELLY_CHATS, chat?.id ?? null, { mode: 'question', q: question, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions, mood: r.mood });
-    return json({ ...saved, friend: friend(await bump('chats', 1)) });
+    return json({ ...saved, friend: view(await addChat()) });
   } catch (e) {
     if (e instanceof AssistantBusy) {
       const r = fail(e.message, 429);

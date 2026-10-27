@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { api } from '@/lib/upload-client';
 import { hexesIn, inkOn, JELLY_CHATS, STUDIO, type Chat, type ChatTurn, type Mode } from '@/lib/corner-model';
 import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
-import { announce, applyChange, useJellyChats } from './jelly-bus';
+import { announce, applyChange, useJellyChats } from '../jelly/bus';
 import { shortDate, type Ctx } from './shared';
 
 type Lens = 'designer' | 'manager';

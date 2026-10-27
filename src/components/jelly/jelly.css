@@ -1,0 +1,1229 @@
+/* Jelly: her jellyfish friend, floating on every page of her desk (and at home in Jelly's Corner). */
+.jelly {
+  position: fixed;
+  right: 20px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 45; /* under dialogs and lightboxes */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+.jelly > * {
+  pointer-events: auto;
+}
+.jelly-scrim {
+  display: none;
+}
+
+/* Jelly herself: her motion follows her mood */
+.jelly-pet {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  touch-action: none; /* rubbing her mustn't scroll the page */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: jelly-bob 4.2s ease-in-out infinite;
+}
+.jelly-pet img,
+.jelly-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  transform-origin: 50% 40%;
+  animation:
+    jelly-pop 0.35s ease-out,
+    jelly-pulse 2.6s 0.35s ease-in-out infinite;
+}
+.jelly-pet img {
+  filter: drop-shadow(0 8px 14px rgba(244, 166, 192, 0.7)) drop-shadow(0 0 12px rgba(205, 180, 240, 0.45));
+}
+.jelly-pet:focus-visible,
+.jelly-avatar:focus-visible {
+  outline: 3px solid var(--berry);
+  outline-offset: 2px;
+}
+.jelly-pet.chatty {
+  animation: jelly-wiggle 1.4s ease-in-out infinite;
+}
+.jelly-pet.mood-sleepy {
+  animation: jelly-doze 7s ease-in-out infinite;
+}
+.jelly-pet.mood-sleepy img {
+  animation:
+    jelly-pop 0.35s ease-out,
+    jelly-pulse 5s 0.35s ease-in-out infinite;
+}
+.jelly-pet.mood-excited,
+.jelly-pet.mood-joyful {
+  animation: jelly-bounce 1.5s ease-in-out infinite;
+}
+.jelly-pet.mood-love img,
+.jelly-avatar.mood-love img {
+  animation:
+    jelly-pop 0.35s ease-out,
+    jelly-beat 0.9s 0.35s ease-in-out infinite;
+}
+.jelly-pet.mood-grumpy,
+.jelly-avatar.mood-grumpy {
+  animation: jelly-shake 0.5s ease-in-out 3;
+}
+.jelly-pet.mood-sad {
+  animation: jelly-droop 5s ease-in-out infinite;
+}
+.jelly-pet.mood-surprised {
+  animation: jelly-jump 0.6s ease-out;
+}
+.jelly-pet.mood-curious {
+  animation: jelly-lean 2.2s ease-in-out infinite;
+}
+
+/* bubbles always rising; hearts when she's petted */
+.jelly-bubbles i {
+  position: absolute;
+  bottom: 70%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(205, 180, 240, 0.9);
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  animation: jelly-rise 3.6s ease-in infinite;
+}
+.jelly-bubbles i:nth-child(1) {
+  left: 12%;
+}
+.jelly-bubbles i:nth-child(2) {
+  left: 78%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 1.2s;
+}
+.jelly-bubbles i:nth-child(3) {
+  left: 46%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 2.4s;
+}
+.jelly-hearts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.jelly-hearts i {
+  position: absolute;
+  bottom: 55%;
+  font-size: 18px;
+  font-style: normal;
+  animation: jelly-heart 1.3s ease-out forwards;
+}
+
+@keyframes jelly-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+@keyframes jelly-doze {
+  0%,
+  100% {
+    transform: translateY(2px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+@keyframes jelly-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  30% {
+    transform: translateY(-16px) scale(0.96, 1.05);
+  }
+  55% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  75% {
+    transform: translateY(-5px) scale(1, 1);
+  }
+}
+@keyframes jelly-droop {
+  0%,
+  100% {
+    transform: translateY(4px) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(7px) rotate(1deg);
+  }
+}
+@keyframes jelly-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px) rotate(-4deg);
+  }
+  75% {
+    transform: translateX(5px) rotate(4deg);
+  }
+}
+@keyframes jelly-jump {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-22px) scale(1.06);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes jelly-lean {
+  0%,
+  100% {
+    transform: translateY(-4px) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-3deg);
+  }
+}
+@keyframes jelly-pulse {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.04, 0.96);
+  }
+}
+@keyframes jelly-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.1, 0.92);
+  }
+  40% {
+    transform: scale(0.97, 1.04);
+  }
+}
+@keyframes jelly-pop {
+  0% {
+    transform: scale(0.82, 1.12);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.08, 0.94);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes jelly-wiggle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  20% {
+    transform: translateY(-6px) rotate(-8deg);
+  }
+  40% {
+    transform: translateY(-2px) rotate(7deg);
+  }
+  60% {
+    transform: translateY(-8px) rotate(-4deg);
+  }
+}
+@keyframes jelly-rise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-70px) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes jelly-heart {
+  0% {
+    transform: translate(-50%, 0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + 10px), -70px) scale(1.15) rotate(12deg);
+    opacity: 0;
+  }
+}
+@keyframes jelly-in {
+  from {
+    transform: translateY(10px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+/* what she says: a check-in card, or a quick line */
+.jelly-bubble {
+  position: relative;
+  width: min(300px, calc(100vw - 32px));
+  margin-right: 34px;
+  padding: 14px 16px 12px;
+  border-radius: 20px 20px 6px 20px;
+  background: linear-gradient(160deg, #fff, #fdf0f6 60%, #f3ecfd);
+  border: 1.5px solid rgba(205, 180, 240, 0.7);
+  box-shadow: 0 14px 30px -16px rgba(107, 30, 58, 0.45);
+  animation: jelly-in 0.35s ease-out;
+}
+.jelly-bubble b {
+  display: block;
+  padding-right: 24px;
+  font: 400 22px var(--font-hand);
+  color: var(--berry);
+}
+.jelly-bubble p {
+  margin: 4px 0 8px;
+  font: 400 14.5px/1.5 var(--font-body);
+  color: var(--ink);
+}
+.jelly-line {
+  max-width: min(260px, calc(100vw - 140px));
+  margin: 0 46px 0 0;
+  padding: 8px 12px;
+  border-radius: 16px 16px 4px 16px;
+  background: #fff;
+  border: 1.5px solid rgba(205, 180, 240, 0.7);
+  box-shadow: 0 10px 22px -14px rgba(107, 30, 58, 0.5);
+  font: 500 14px/1.4 var(--font-body);
+  color: var(--burgundy);
+  animation: jelly-in 0.25s ease-out;
+}
+.jelly-line.in-panel {
+  align-self: center;
+  max-width: none;
+  margin: 8px 14px 0;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: none;
+}
+.jelly-x {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--cn-ink-faint);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.jelly-x:hover {
+  background: rgba(178, 48, 95, 0.08);
+}
+.jelly-more {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--berry);
+  font: 600 14px var(--font-body);
+  cursor: pointer;
+}
+
+/* the chat */
+.jelly-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(410px, calc(100vw - 40px));
+  height: min(640px, calc(100dvh - 150px));
+  border-radius: 24px;
+  background: var(--cn-paper);
+  border: 1.5px solid rgba(205, 180, 240, 0.6);
+  box-shadow: 0 24px 50px -24px rgba(70, 25, 45, 0.6);
+  overflow: hidden;
+  animation: jelly-in 0.3s ease-out;
+}
+.jelly-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+  background: linear-gradient(120deg, #fde4ee, #efe6fc);
+}
+.jelly-avatar {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.jelly-who {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.jelly-who b {
+  font: 400 22px var(--font-display);
+  color: var(--burgundy);
+  line-height: 1.1;
+}
+.jelly-who small {
+  overflow: hidden;
+  font: 400 12.5px var(--font-body);
+  color: var(--cn-ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jelly-friend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px var(--font-body);
+  color: var(--berry);
+}
+.jelly-friend i {
+  flex: 1;
+  max-width: 90px;
+  height: 5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--rose) var(--p), rgba(178, 48, 95, 0.12) var(--p));
+}
+.jelly-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+.jelly-tools button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--burgundy);
+  font-size: 17px;
+  cursor: pointer;
+}
+.jelly-tools button:hover:not(:disabled),
+.jelly-tools button[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.75);
+}
+.jelly-tools button:disabled {
+  opacity: 0.35;
+}
+.jelly-thread {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px;
+}
+.jelly-say {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px 16px 16px 16px;
+  background: #f5eefc;
+  font: 400 14.5px/1.5 var(--font-body);
+  color: var(--ink);
+}
+.jelly-hint {
+  margin: 0 0 8px;
+  font: 400 12.5px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jelly-history {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jelly-history button {
+  display: grid;
+  width: 100%;
+  gap: 1px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.jelly-history button.on {
+  background: #fbe7ee;
+}
+.jelly-history b {
+  overflow: hidden;
+  font: 600 13.5px var(--font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jelly-history small {
+  font-size: 11.5px;
+  color: var(--cn-ink-faint);
+}
+.jelly-turn + .jelly-turn {
+  margin-top: 14px;
+}
+.jelly-q {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 6px auto;
+  padding: 8px 12px;
+  border-radius: 16px 16px 6px 16px;
+  background: linear-gradient(180deg, #c8487a, var(--berry));
+  color: #fff;
+  font: 500 14px/1.4 var(--font-body);
+  overflow-wrap: anywhere;
+}
+.jelly-a {
+  padding: 8px 12px;
+  border-radius: 6px 16px 16px 16px;
+  background: #f5eefc;
+  overflow-wrap: anywhere;
+}
+.jelly-a-face {
+  float: left;
+  margin: 2px 8px 2px -4px;
+}
+.jelly-a .cn-answer {
+  font-size: 14.5px;
+}
+.jelly-a .cn-answer h4 {
+  font-size: 19px;
+}
+.jelly-thinking {
+  margin: 0;
+  font: 400 20px var(--font-hand);
+  color: var(--berry);
+  animation: jelly-pulse 1.6s ease-in-out infinite;
+}
+.jelly-foot {
+  border-top: 1px solid var(--cn-line);
+  padding-top: 8px;
+}
+.jelly-chips {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jelly-chips::-webkit-scrollbar {
+  display: none;
+}
+.jelly-chips button {
+  flex: none;
+  max-width: 250px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1.5px dashed rgba(178, 48, 95, 0.3);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--burgundy);
+  font: 600 12.5px var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.jelly-about {
+  margin: 6px 14px 0;
+  font: 600 12px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jelly-ask {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 14px;
+}
+.jelly-ask .h-input {
+  min-width: 0;
+}
+
+/* iPad and laptops: the chat sits above her as a card */
+@media (max-width: 1100px) {
+  .cn-ask {
+    flex-wrap: nowrap;
+    margin-right: 104px; /* room for Jelly */
+  }
+}
+@media (min-width: 601px) and (max-width: 1100px) {
+  .jelly-pet {
+    width: 88px;
+    height: 88px;
+  }
+  .jelly-panel {
+    width: min(430px, calc(100vw - 40px));
+    height: min(680px, calc(100dvh - 140px));
+  }
+}
+/* iPhone: the chat is a bottom sheet, and Jelly rides in its header */
+@media (max-width: 600px) {
+  .jelly {
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .jelly-pet {
+    width: 76px;
+    height: 76px;
+  }
+  .cn-ask {
+    margin-right: 84px;
+  }
+  .cn-ask .h-input {
+    min-width: 0;
+  }
+  .jelly.open {
+    inset: 0;
+    justify-content: flex-end;
+  }
+  .jelly.open .jelly-pet {
+    display: none;
+  }
+  .jelly-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: rgba(40, 15, 30, 0.28);
+    animation: jelly-fade 0.2s ease-out;
+  }
+  .jelly-panel {
+    width: 100%;
+    height: calc(100dvh - 56px - env(safe-area-inset-top));
+    border-width: 1.5px 0 0;
+    border-radius: 26px 26px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: jelly-sheet 0.3s ease-out;
+  }
+  .jelly-bubble {
+    margin-right: 20px;
+  }
+}
+/* phones on their side: use the whole height */
+@media (max-height: 500px) {
+  .jelly-panel {
+    height: calc(100dvh - 24px);
+  }
+}
+@keyframes jelly-sheet {
+  from {
+    transform: translateY(40%);
+    opacity: 0.4;
+  }
+}
+@keyframes jelly-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jelly *,
+  .jelly-pet,
+  .cn-jelly-hi img,
+  .cn-jelly-face {
+    animation: none !important;
+  }
+}
+
+/* the Milano guide's "back to my list" button sits where she floats: she moves up a little */
+body:has(.mil-listbtn) .jelly:not(.open) {
+  bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.jelly-pet.away {
+  display: none;
+}
+.jelly-pearls {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--burgundy);
+  font: 700 11px var(--font-body);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.jelly-bubble.cheer {
+  background: linear-gradient(160deg, #fff8e1, #fdf0f6 55%, #f3ecfd);
+  border-color: rgba(224, 168, 75, 0.6);
+}
+a.jelly-more {
+  display: inline-block;
+  text-decoration: none;
+}
+@media print {
+  .jelly {
+    display: none !important;
+  }
+}
+
+/* ---------- Jelly's Corner: her home ---------- */
+.jh {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* long scrolling rows mustn't widen the page */
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.jh-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.jh-stats > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1.5px var(--cn-line);
+  font: 500 13.5px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jh-stats b {
+  color: var(--burgundy);
+}
+.jh-bar {
+  width: 54px;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--rose) var(--p), rgba(178, 48, 95, 0.12) var(--p));
+}
+.jh-tabs,
+.jh-kinds {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jh-tabs {
+  justify-content: center;
+}
+.jh-tabs::-webkit-scrollbar,
+.jh-kinds::-webkit-scrollbar {
+  display: none;
+}
+.jh-tabs button,
+.jh-kinds button {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid var(--cn-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--burgundy);
+  font: 600 14px var(--font-body);
+  cursor: pointer;
+}
+.jh-kinds button {
+  min-height: 36px;
+  font-size: 13px;
+}
+.jh-tabs button[aria-selected='true'],
+.jh-kinds button[aria-selected='true'] {
+  border-color: var(--berry);
+  background: var(--berry);
+  color: #fff;
+}
+.jh-msg {
+  margin: 0;
+  text-align: center;
+}
+.jh-note {
+  font: 600 14px var(--font-body);
+  color: var(--stem);
+}
+.jh-h {
+  margin: 14px 0 8px;
+  font: 400 22px var(--font-whisper);
+  color: var(--burgundy);
+}
+
+/* the room */
+.jh-room {
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: 4 / 3;
+  /* the whole room fits on screen, with room for the buttons under it */
+  width: min(100%, calc((100dvh - 320px) * 4 / 3));
+  min-width: min(100%, 320px);
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--sky);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 24px 48px -26px rgba(70, 25, 45, 0.6);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.jh-room.editing {
+  box-shadow:
+    0 0 0 3px var(--rose),
+    0 24px 48px -26px rgba(70, 25, 45, 0.6);
+}
+.jh-floor {
+  position: absolute;
+  inset: auto 0 0;
+  height: 26%;
+  border-radius: 50% 50% 0 0 / 22% 22% 0 0;
+  background:
+    radial-gradient(circle at 20% 40%, rgba(255, 255, 255, 0.35) 0 2px, transparent 3px) 0 0 / 38px 30px,
+    var(--floor);
+  box-shadow: inset 0 10px 18px -12px rgba(0, 0, 0, 0.18);
+}
+.jh-rays {
+  position: absolute;
+  inset: -20% 0 auto;
+  height: 80%;
+  background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.22) 0 4%, transparent 4% 11%);
+  mask-image: linear-gradient(180deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  animation: jh-sway 9s ease-in-out infinite alternate;
+}
+.jh-amb i {
+  position: absolute;
+  bottom: -4%;
+  width: 2.2cqw;
+  height: 2.2cqw;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.25);
+  animation: jh-rise 9s linear infinite;
+}
+.jh-amb i:nth-child(1) {
+  left: 12%;
+}
+.jh-amb i:nth-child(2) {
+  left: 38%;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  animation-delay: 3s;
+}
+.jh-amb i:nth-child(3) {
+  left: 64%;
+  animation-delay: 5.5s;
+}
+.jh-amb i:nth-child(4) {
+  left: 86%;
+  width: 1.6cqw;
+  height: 1.6cqw;
+  animation-delay: 1.5s;
+}
+.jh-thing {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: calc(var(--s) * 8.5cqw);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 0.6cqw 0.5cqw rgba(60, 20, 40, 0.18));
+}
+.jh-thing span {
+  display: block;
+  transform: scaleX(var(--f));
+}
+.jh-thing:active span {
+  animation: jh-boing 0.35s ease-out;
+}
+.jh-room.editing .jh-thing {
+  cursor: grab;
+}
+.jh-thing.on {
+  outline: 2px dashed var(--berry);
+  outline-offset: 0.6cqw;
+  border-radius: 1.5cqw;
+}
+.jh-jelly {
+  position: absolute;
+  top: 18%;
+  left: 40%;
+  z-index: 150;
+  width: 22cqw;
+  height: 22cqw;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: jh-drift 22s ease-in-out infinite;
+}
+.jh-room.editing .jh-jelly {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.jh-jelly img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 1.5cqw 1.5cqw rgba(244, 166, 192, 0.6));
+  animation:
+    jelly-pop 0.35s ease-out,
+    jelly-pulse 2.6s 0.35s ease-in-out infinite;
+}
+.jh-jelly.mood-sleepy {
+  animation-duration: 40s;
+}
+.jh-jelly .jelly-hearts i {
+  font-size: 3.4cqw;
+}
+.jh-line {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  z-index: 160;
+  max-width: 80%;
+  margin: 0;
+  padding: 1.4cqw 2.6cqw;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 18px -12px rgba(107, 30, 58, 0.5);
+  font: 600 clamp(12px, 2.4cqw, 16px) var(--font-body);
+  color: var(--burgundy);
+  text-align: center;
+  transform: translateX(-50%);
+  animation: jelly-in 0.25s ease-out;
+}
+.jh-empty {
+  position: absolute;
+  inset: auto 6% 30%;
+  z-index: 140;
+  margin: 0;
+  padding: 2cqw 3cqw;
+  border-radius: 3cqw;
+  background: rgba(255, 255, 255, 0.85);
+  font: 500 clamp(12.5px, 2.4cqw, 16px) / 1.45 var(--font-body);
+  color: var(--cn-ink-soft);
+  text-align: center;
+}
+@keyframes jh-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-3deg);
+  }
+  25% {
+    transform: translate(-90%, 12%) rotate(4deg);
+  }
+  50% {
+    transform: translate(-30%, 30%) rotate(-2deg);
+  }
+  75% {
+    transform: translate(80%, 6%) rotate(3deg);
+  }
+}
+@keyframes jh-rise {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-80cqw);
+    opacity: 0;
+  }
+}
+@keyframes jh-sway {
+  to {
+    transform: translateX(6%);
+  }
+}
+@keyframes jh-boing {
+  40% {
+    transform: scaleX(var(--f)) scale(1.18, 0.86);
+  }
+}
+
+/* under the room */
+.jh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.jh-edit {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: var(--cn-radius);
+  background: var(--cn-paper);
+  box-shadow: var(--cn-shadow);
+}
+.jh-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.jh-tools b {
+  margin-right: auto;
+  font: 600 15px var(--font-body);
+  color: var(--burgundy);
+}
+.jh-tools .cn-btn {
+  min-width: 44px;
+  padding: 0 12px;
+}
+.jh-tray {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.jh-tray button {
+  position: relative;
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 2px;
+  width: 78px;
+  padding: 8px 4px;
+  border: 1.5px solid var(--cn-line);
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+}
+.jh-tray span {
+  font-size: 32px;
+  line-height: 1.1;
+}
+.jh-tray small {
+  overflow: hidden;
+  max-width: 100%;
+  font: 600 11px var(--font-body);
+  color: var(--cn-ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jh-tray i {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font: 700 11px var(--font-body);
+  font-style: normal;
+  color: var(--berry);
+}
+.jh-backdrops {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.jh-backdrops button {
+  display: grid;
+  flex: none;
+  gap: 4px;
+  width: 96px;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: none;
+  cursor: pointer;
+}
+.jh-backdrops button[aria-pressed='true'] {
+  border-color: var(--berry);
+}
+.jh-backdrops span,
+.jh-swatch {
+  display: block;
+  height: 56px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, transparent 72%, var(--floor) 72%),
+    var(--sky);
+}
+.jh-backdrops small {
+  font: 600 11.5px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+
+/* the shop */
+.jh-kinds {
+  margin: 4px 0 12px;
+}
+.jh-shop {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+.jh-card {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  padding: 14px 10px 12px;
+  border-radius: 20px;
+  background: var(--cn-paper);
+  box-shadow: var(--cn-shadow);
+  text-align: center;
+}
+.jh-card.owned {
+  box-shadow:
+    0 0 0 2px rgba(127, 183, 176, 0.6),
+    var(--cn-shadow);
+}
+.jh-card.locked .jh-emoji {
+  filter: grayscale(1) opacity(0.45);
+}
+.jh-emoji {
+  font-size: 44px;
+  line-height: 1.1;
+}
+.jh-swatch {
+  width: 100%;
+  height: 70px;
+}
+.jh-card b {
+  font: 600 14px var(--font-body);
+  color: var(--ink);
+}
+.jh-card .cn-btn {
+  min-height: 36px;
+  padding: 0 14px;
+}
+.jh-own {
+  font: 600 12px var(--font-body);
+  color: var(--stem);
+}
+.jh-lock {
+  font: 600 11.5px/1.35 var(--font-body);
+  color: var(--cn-ink-faint);
+}
+
+/* achievements */
+.jh-awards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.jh-award {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 1.5px var(--cn-line);
+}
+.jh-award.done {
+  background: linear-gradient(150deg, #fff8e1, #fdf0f6);
+  box-shadow:
+    0 0 0 2px rgba(224, 168, 75, 0.55),
+    0 10px 20px -16px rgba(107, 30, 58, 0.5);
+}
+.jh-award-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 24px;
+}
+.jh-award:not(.done) .jh-award-icon {
+  filter: grayscale(0.85);
+  opacity: 0.6;
+}
+.jh-award > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+.jh-award b {
+  font: 600 14.5px var(--font-body);
+  color: var(--burgundy);
+}
+.jh-award small {
+  font: 400 12.5px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jh-progress {
+  display: block;
+  height: 6px;
+  margin: 3px 0;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(178, 48, 95, 0.1);
+}
+.jh-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rose), var(--berry));
+}
+.jh-award.done .jh-progress i {
+  background: linear-gradient(90deg, #f2c14e, var(--honey));
+}
+small.jh-reward {
+  font-weight: 600;
+  color: var(--cn-ink-faint);
+}
+
+@media (max-width: 600px) {
+  .jh-room {
+    border-radius: 20px;
+  }
+  .jh-stats > span {
+    min-height: 34px;
+    padding: 0 11px;
+    font-size: 12.5px;
+  }
+  .jh-shop {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  .jh-emoji {
+    font-size: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jh *,
+  .jh-jelly {
+    animation: none !important;
+  }
+}

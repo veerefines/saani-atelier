@@ -130,6 +130,9 @@ export async function duplicateProject(id: string) {
 
 export const listItems = async (projectId: string) => (await db.list<Item>(I)).filter((i) => i.projectId === projectId).sort((a, b) => a.order - b.order || a.createdAt.localeCompare(b.createdAt));
 export const getItem = (id: string) => db.get<Item>(I, id);
+/** Every item and every saved chat, across all projects (for Jelly's achievements). */
+export const listAllItems = () => db.list<Item>(I);
+export const listAllChats = () => db.list<Chat>(C);
 
 export async function addItem(projectId: string, item: NewItem) {
   const existing = await listItems(projectId);
