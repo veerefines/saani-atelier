@@ -69,7 +69,7 @@ export const phrases: Phrase[] = [
   { it: 'È piccante?', say: 'EH peek-KAHN-teh', en: 'Is it spicy?', when: 'ordering food' },
   { it: 'Sono vegetariana.', say: 'SO-no veh-jeh-tah-RYAH-nah', en: 'I’m vegetarian.', when: 'ordering food' },
   { it: 'Acqua naturale o frizzante?', say: 'AHK-kwah nah-too-RAH-leh oh freed-DZAHN-teh', en: 'Still or sparkling water?', when: 'every single meal' },
-  { it: 'Andiamo a fare un aperitivo?', say: 'ahn-DYAH-mo ah FAH-reh oon ah-peh-ree-TEE-vo', en: 'Shall we go for an aperitivo?', when: 'around 7pm' },
+  { it: 'Andiamo a fare un aperitivo?', say: 'ahn-DYAH-mo ah FAH-reh oon ah-peh-ree-TEE-vo', en: 'Shall we go for an aperitivo?', when: 'around 7 PM' },
   { it: 'Cin cin!', say: 'cheen CHEEN', en: 'Cheers!', when: 'with a spritz in hand' },
   { it: 'A che ora apre?', say: 'ah keh OH-rah AH-preh', en: 'What time does it open?', when: 'planning the day' },
   { it: 'È chiuso la domenica?', say: 'EH KYOO-zo lah doh-MEH-nee-kah', en: 'Is it closed on Sunday?', when: 'many shops are' },

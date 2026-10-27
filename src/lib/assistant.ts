@@ -1,6 +1,6 @@
 import { getMedia } from './data';
 import { readLocalMedia, signedDownload, usingSupabase } from './db';
-import { costingSummary, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
+import { costingSummary, listItems, listProjects, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
 import { AssistantBusy, FREE, busy, reserve, seconds, settle, type Budget } from './groq-limits';
 
 /**
@@ -54,7 +54,7 @@ async function pdfText(buf: Buffer): Promise<string> {
 }
 
 /** The project as plain text, for the prompt. */
-function describe(p: Project, items: Item[]) {
+export function describe(p: Project, items: Item[]) {
   const lines: string[] = [`# Project: ${p.title}`, `Category: ${p.category}`];
   if (p.description) lines.push(`Description: ${p.description}`);
   const b = p.brief;
@@ -86,6 +86,38 @@ function describe(p: Project, items: Item[]) {
   return lines.join('\n');
 }
 
+/** The text of a project's PDFs and TXT files, shared fairly within `room` tokens. Notes what was and wasn't read. */
+async function documents(items: Item[], room: number, read: string[], notRead: string[]) {
+  const docs: { name: string; text: string }[] = [];
+  for (const it of items) {
+    if (it.kind !== 'doc') continue;
+    if (it.mime !== 'application/pdf' && it.mime !== 'text/plain') {
+      notRead.push(`${it.filename} (Word and PowerPoint files can’t be read yet; a PDF export can)`);
+      continue;
+    }
+    const buf = await bytesOf(it.mediaId).catch(() => null);
+    const text = buf ? (it.mime === 'text/plain' ? buf.toString('utf8') : await pdfText(buf).catch(() => '')) : '';
+    if (!text.trim()) {
+      notRead.push(`${it.filename} (${!buf ? 'couldn’t open the file' : 'no text found, maybe a scanned PDF'})`);
+      continue;
+    }
+    docs.push({ name: it.filename, text });
+  }
+  const share = docs.length ? Math.max(0, Math.floor(room / docs.length)) : 0;
+  return docs
+    .map((d) => {
+      if (share < 150) {
+        notRead.push(`${d.name} (no room left in this request)`);
+        return '';
+      }
+      const max = Math.floor(share * 3.5);
+      const cut = d.text.length > max;
+      read.push(cut ? `${d.name} (the first part)` : d.name);
+      return `\n\n## Document: ${d.name}${cut ? ' (first part only)' : ''}\n${cut ? d.text.slice(0, max) + '…' : d.text}`;
+    })
+    .join('');
+}
+
 export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[] };
 
 /** Split the answer from its "Try next" questions. */
@@ -103,6 +135,42 @@ export { AssistantBusy };
 export class AssistantKeyRejected extends Error {}
 
 type Part = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+
+/** One request to Groq within the free tier: reserves the budget, asks, and splits off the "Try next" questions. */
+async function callGroq(system: string, text: string, parts: Part[], estimate: number) {
+  const budget: Budget = await reserve(estimate, ANSWER_TOKENS);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE()}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: MODEL(),
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: [{ type: 'text', text }, ...parts] },
+        ],
+        max_completion_tokens: ANSWER_TOKENS,
+        temperature: 0.6,
+        // answer directly: hidden "thinking" would use up the free tier's tokens
+        reasoning_effort: 'none',
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (e) {
+    await settle(budget, 0, 0, null);
+    throw e;
+  }
+  const data = (await res.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[]; usage?: { total_tokens?: number; completion_tokens?: number }; error?: { message?: string } };
+  await settle(budget, data.usage?.total_tokens ?? 0, data.usage?.completion_tokens ?? 0, res.headers);
+  // "request too large" is also a 429, but waiting won't help
+  if (res.status === 429 && res.headers.get('x-should-retry') === 'false') throw new Error(`Groq refused the request: ${data.error?.message}`);
+  if (res.status === 429) throw busy(Math.ceil(seconds(res.headers.get('retry-after')) || 60));
+  if (res.status === 401) throw new AssistantKeyRejected();
+  if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
+  const answer = (data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  return splitSuggestions(answer);
+}
 
 /** Ask about a project. Gathers what fits in one free-tier request, asks, and says what was used. */
 export async function askAssistant(p: Project, items: Item[], mode: Mode, question: string, history: { q: string; a: string }[]): Promise<AssistantReply> {
@@ -142,70 +210,89 @@ export async function askAssistant(p: Project, items: Item[], mode: Mode, questi
   }
 
   // documents: the text of PDFs and TXT files, shared fairly within what's left
-  const docs: { name: string; text: string }[] = [];
-  for (const it of items) {
-    if (it.kind !== 'doc') continue;
-    if (it.mime !== 'application/pdf' && it.mime !== 'text/plain') {
-      notRead.push(`${it.filename} (Word and PowerPoint files can’t be read yet; a PDF export can)`);
-      continue;
-    }
-    const buf = await bytesOf(it.mediaId).catch(() => null);
-    const text = buf ? (it.mime === 'text/plain' ? buf.toString('utf8') : await pdfText(buf).catch(() => '')) : '';
-    if (!text.trim()) {
-      notRead.push(`${it.filename} (${!buf ? 'couldn’t open the file' : 'no text found, maybe a scanned PDF'})`);
-      continue;
-    }
-    docs.push({ name: it.filename, text });
-  }
-  const share = docs.length ? Math.max(0, Math.floor(room / docs.length)) : 0;
-  const docText = docs
-    .map((d) => {
-      if (share < 150) {
-        notRead.push(`${d.name} (no room left in this request)`);
-        return '';
-      }
-      const max = Math.floor(share * 3.5);
-      const cut = d.text.length > max;
-      read.push(cut ? `${d.name} (the first part)` : d.name);
-      return `\n\n## Document: ${d.name}${cut ? ' (first part only)' : ''}\n${cut ? d.text.slice(0, max) + '…' : d.text}`;
-    })
-    .join('');
+  const docText = await documents(items, room, read, notRead);
 
   const notes = notRead.length ? `\n\n## Not read\n${notRead.map((n) => `- ${n}`).join('\n')}` : '';
   const text = `${project}${docText}${notes}${earlier}\n\n## Her request\n${ask}`;
   const estimate = tokensOf(SYSTEM + text) + images * IMAGE_TOKENS + ANSWER_TOKENS;
 
-  const budget: Budget = await reserve(estimate, ANSWER_TOKENS);
-  let res: Response;
-  try {
-    res = await fetch(`${BASE()}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: MODEL(),
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: [{ type: 'text', text }, ...parts] },
-        ],
-        max_completion_tokens: ANSWER_TOKENS,
-        temperature: 0.6,
-        // answer directly: hidden "thinking" would use up the free tier's tokens
-        reasoning_effort: 'none',
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
-  } catch (e) {
-    await settle(budget, 0, 0, null);
-    throw e;
-  }
-  const data = (await res.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[]; usage?: { total_tokens?: number; completion_tokens?: number }; error?: { message?: string } };
-  await settle(budget, data.usage?.total_tokens ?? 0, data.usage?.completion_tokens ?? 0, res.headers);
-  // "request too large" is also a 429, but waiting won't help
-  if (res.status === 429 && res.headers.get('x-should-retry') === 'false') throw new Error(`Groq refused the request: ${data.error?.message}`);
-  if (res.status === 429) throw busy(Math.ceil(seconds(res.headers.get('retry-after')) || 60));
-  if (res.status === 401) throw new AssistantKeyRejected();
-  if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
-  const answer = (data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  const { text: body, suggestions } = splitSuggestions(answer);
+  const { text: body, suggestions } = await callGroq(SYSTEM, text, parts, estimate);
   return { text: body || 'No answer came back. Try again.', read, notRead, suggestions };
+}
+
+/* ---------- Jelly: her jellyfish friend, who knows every project ---------- */
+
+const JELLY_SYSTEM = `You are Jelly, Saanika's pet jellyfish and friend, who floats around "My Corner", her private studio for fashion and brand projects. She is a fashion management student in Milan.
+
+Personality: sweet, bubbly and encouraging, a little playful, with a sprinkle of emoji (🫧 🪼 ✨, at most three) and now and then a word of Italian. But you are genuinely useful: specific, practical, and honest when something needs work.
+
+You can see all her projects at a glance below, and sometimes one of them in full. When you talk about a project, name it. Only state things about her projects that are in the message; if you weren't given something, say so rather than guess. For general questions (fashion, Italy, Milan, study, life) answer from your own knowledge, and don't invent facts.
+
+Keep it short: under about 200 words, with short paragraphs or bullets.
+
+Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
+
+const GLANCE_TOKENS = 2500; // all projects together, before one is shown in full
+const daysAgo = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+
+/** One project in a few lines, for the overview of everything. */
+function glance(p: Project, items: Item[]) {
+  const last = [p.updatedAt, ...items.map((i) => i.updatedAt)].sort().pop()!;
+  const count = (k: Item['kind']) => items.filter((i) => i.kind === k).length;
+  const counts = (
+    [
+      ['doc', 'documents'],
+      ['drop', 'inspiration drops'],
+      ['board', 'moodboard pieces'],
+      ['palette', 'palettes'],
+      ['fabric', 'fabrics'],
+      ['type', 'fonts'],
+    ] as const
+  )
+    .map(([k, w]) => (count(k) ? `${count(k)} ${w}` : ''))
+    .filter(Boolean)
+    .join(', ');
+  const d = daysAgo(last);
+  const lines = [`### ${p.title}${p.favourite ? ' ♥' : ''}`, `${p.category}; last touched ${d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`}${counts ? `; ${counts}` : '; nothing added yet'}`];
+  if (p.description) lines.push(`About: ${p.description.slice(0, 300)}`);
+  const b = p.brief;
+  const brief = [b.audience && `audience ${b.audience}`, b.positioning && `positioning ${b.positioning}`, b.objectives && `objectives ${b.objectives}`, b.budget && `budget ${b.budget}`].filter(Boolean).join('; ');
+  if (brief) lines.push(`Brief: ${brief.slice(0, 400)}`);
+  const palettes = items.flatMap((i) => (i.kind === 'palette' ? [`${i.name} (${i.hexes.join(' ')})`] : []));
+  if (palettes.length) lines.push(`Palettes: ${palettes.join('; ').slice(0, 300)}`);
+  return lines.join('\n');
+}
+
+/** Ask Jelly anything. She sees every project briefly, and one in full when it's open or named. */
+export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null): Promise<AssistantReply> {
+  const projects = (await listProjects()).filter((p) => !p.archived || p.id === focusId);
+  const withItems = await Promise.all(projects.map(async (p) => ({ p, items: await listItems(p.id) })));
+  const q = question.toLowerCase();
+  const focus = withItems.find((x) => x.p.id === focusId) ?? withItems.find((x) => x.p.title.trim().length >= 3 && q.includes(x.p.title.trim().toLowerCase())) ?? null;
+
+  const read: string[] = [projects.length ? `all ${projects.length} projects at a glance` : 'your studio (no projects yet)'];
+  const notRead: string[] = [];
+  const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  let glanceText = '';
+  const left: string[] = [];
+  for (const x of withItems) {
+    const g = glance(x.p, x.items);
+    if (tokensOf(glanceText + g) > GLANCE_TOKENS) left.push(x.p.title);
+    else glanceText += `\n\n${g}`;
+  }
+  if (left.length) glanceText += `\n\nOlder projects (titles only): ${left.join('; ')}`;
+  const all = `# Her studio (it's ${when} in Milano)\n## Every project at a glance${glanceText || '\nNo projects yet.'}`;
+
+  const earlier = history.length ? `\n\n## Earlier in this conversation\n${history.map((h) => `Q: ${h.q}\nA: ${h.a.slice(0, 700)}`).join('\n\n')}` : '';
+  let full = '';
+  if (focus) {
+    full = `\n\n## Open now, in full\n${describe(focus.p, focus.items)}`;
+    read.push(`“${focus.p.title}” in full`);
+    const room = FREE.requestTokens - ANSWER_TOKENS - tokensOf(JELLY_SYSTEM + all + full + earlier + question) - 300;
+    full += await documents(focus.items, room, read, notRead);
+  }
+  const notes = notRead.length ? `\n\n## Not read\n${notRead.map((n) => `- ${n}`).join('\n')}` : '';
+  const text = `${all}${full}${notes}${earlier}\n\n## Saanika asks\n${question}`;
+  const { text: body, suggestions } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
+  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions };
 }

@@ -12,7 +12,7 @@ const LENSES: { id: Lens; label: string }[] = [
 ];
 
 /** Very small formatting for replies: headings, bullets, bold and colour dots, without rendering any HTML from the reply. */
-function Answer({ text }: { text: string }) {
+export function Answer({ text }: { text: string }) {
   const rich = (s: string) =>
     s.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|#[0-9a-fA-F]{6}\b)/g).map((part, i) =>
       part.startsWith('**') && part.endsWith('**') ? (
@@ -86,7 +86,7 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
           <button type="button" className="cn-btn ghost" onClick={() => keep('copy', () => navigator.clipboard.writeText(t.a))}>
             {saved.copy ? 'Copied ✓' : 'Copy'}
           </button>
-          <small>{new Date(t.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
+          <small>{new Date(t.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\b(am|pm)\b/i, (x) => x.toUpperCase())}</small>
         </div>
         {err && <p className="h-err">{err}</p>}
         <details className="cn-used">

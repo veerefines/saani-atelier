@@ -1,3 +1,4 @@
+import { clock12, fromHHMM } from './time';
 /**
  * The Today card: Milano weather (Open-Meteo, free, no key) and an outfit idea a fashion student
  * would actually wear. Weather is cached for 30 minutes per server instance.
@@ -44,9 +45,9 @@ export async function milanoWeather(): Promise<Weather | null> {
       code: j.current.weather_code,
       wind: Math.round(j.current.wind_speed_10m),
       rainChance: ahead.reduce((m, x) => Math.max(m, x.p), 0),
-      rainFrom: likely ? `${String(likely.h).padStart(2, '0')}:00` : null,
-      sunrise: String(j.daily.sunrise[0]).slice(11, 16),
-      sunset: String(j.daily.sunset[0]).slice(11, 16),
+      rainFrom: likely ? clock12(likely.h) : null,
+      sunrise: fromHHMM(String(j.daily.sunrise[0]).slice(11, 16)),
+      sunset: fromHHMM(String(j.daily.sunset[0]).slice(11, 16)),
       isDay: j.current.is_day === 1,
     };
     cache = { at: Date.now(), w };

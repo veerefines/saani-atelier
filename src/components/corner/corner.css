@@ -1,7 +1,9 @@
 /* ---------- My Corner: her studio ----------
    One button system (.cn-btn), one card surface (.cn-section), one heading style (.cn-h).
    Phones: single column. iPad: two-column grids where they help. Laptop: side-by-side panels. */
-.cn-page {
+/* Jelly floats outside the page, so she gets the same tokens */
+.cn-page,
+.jelly {
   --cn-paper: #fffaf6;
   --cn-line: rgba(178, 48, 95, 0.16);
   --cn-ink-soft: #6b5160;
@@ -1463,4 +1465,360 @@
   border-radius: 18px;
   background: rgba(255, 250, 246, 0.94);
   box-shadow: 0 10px 24px -18px rgba(70, 25, 45, 0.6);
+}
+
+/* ---------- Jelly: her jellyfish friend ---------- */
+.jelly {
+  position: fixed;
+  right: 16px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 45; /* under dialogs and lightboxes */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.jelly > * {
+  pointer-events: auto;
+}
+.jelly-pet {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: jelly-bob 4.2s ease-in-out infinite;
+}
+.jelly-pet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 14px rgba(244, 166, 192, 0.75)) drop-shadow(0 0 10px rgba(205, 180, 240, 0.55));
+  user-select: none;
+  animation: jelly-pulse 2.6s ease-in-out infinite;
+  transform-origin: 50% 35%;
+}
+.jelly-pet:focus-visible {
+  outline: 3px solid var(--berry);
+  outline-offset: 2px;
+}
+.jelly-pet.squish img {
+  animation: jelly-squish 0.45s ease-out;
+}
+.jelly-pet.chatty {
+  animation: jelly-wiggle 1.4s ease-in-out infinite;
+}
+.jelly-bubbles i {
+  position: absolute;
+  bottom: 70%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(205, 180, 240, 0.9);
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  animation: jelly-rise 3.6s ease-in infinite;
+}
+.jelly-bubbles i:nth-child(1) {
+  left: 12%;
+}
+.jelly-bubbles i:nth-child(2) {
+  left: 78%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 1.2s;
+}
+.jelly-bubbles i:nth-child(3) {
+  left: 46%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 2.4s;
+}
+@keyframes jelly-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+@keyframes jelly-pulse {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.04, 0.96);
+  }
+}
+@keyframes jelly-squish {
+  0% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.18, 0.82);
+  }
+  60% {
+    transform: scale(0.92, 1.1);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes jelly-wiggle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  20% {
+    transform: translateY(-6px) rotate(-8deg);
+  }
+  40% {
+    transform: translateY(-2px) rotate(7deg);
+  }
+  60% {
+    transform: translateY(-8px) rotate(-4deg);
+  }
+}
+@keyframes jelly-rise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-70px) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes jelly-in {
+  from {
+    transform: translateY(10px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+/* her speech bubble */
+.jelly-bubble {
+  position: relative;
+  width: min(290px, calc(100vw - 32px));
+  margin-right: 30px;
+  padding: 14px 16px 12px;
+  border-radius: 20px 20px 6px 20px;
+  background: linear-gradient(160deg, #fff, #fdf0f6 60%, #f3ecfd);
+  border: 1.5px solid rgba(205, 180, 240, 0.7);
+  box-shadow: 0 14px 30px -16px rgba(107, 30, 58, 0.45);
+  animation: jelly-in 0.35s ease-out;
+}
+.jelly-bubble b {
+  display: block;
+  font: 400 22px var(--font-hand);
+  color: var(--berry);
+}
+.jelly-bubble p {
+  margin: 4px 0 8px;
+  font: 400 14.5px/1.5 var(--font-body);
+  color: var(--ink);
+}
+.jelly-x,
+.jelly-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--cn-ink-faint);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.jelly-x:hover,
+.jelly-close:hover {
+  background: rgba(178, 48, 95, 0.08);
+}
+.jelly-more {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--berry);
+  font: 600 13.5px var(--font-body);
+  cursor: pointer;
+}
+
+/* the chat */
+.jelly-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(620px, calc(100dvh - 140px));
+  border-radius: 24px;
+  background: var(--cn-paper);
+  border: 1.5px solid rgba(205, 180, 240, 0.6);
+  box-shadow: 0 24px 50px -24px rgba(70, 25, 45, 0.6);
+  overflow: hidden;
+  animation: jelly-in 0.3s ease-out;
+}
+.jelly-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 44px 10px 14px;
+  background: linear-gradient(120deg, #fde4ee, #efe6fc);
+}
+.jelly-head img {
+  flex: none;
+}
+.jelly-head div {
+  flex: 1;
+  min-width: 0;
+}
+.jelly-head b {
+  display: block;
+  font: 400 22px var(--font-display);
+  color: var(--burgundy);
+  line-height: 1.1;
+}
+.jelly-head small {
+  font: 400 12.5px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jelly-head .cn-btn {
+  min-height: 34px;
+  font-size: 13px;
+}
+.jelly-close {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.jelly-thread {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+}
+.jelly-say {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px 16px 16px 16px;
+  background: #f5eefc;
+  font: 400 14.5px/1.5 var(--font-body);
+  color: var(--ink);
+}
+.jelly-turn + .jelly-turn {
+  margin-top: 14px;
+}
+.jelly-q {
+  width: fit-content;
+  max-width: 85%;
+  margin: 0 0 6px auto;
+  padding: 8px 12px;
+  border-radius: 16px 16px 6px 16px;
+  background: linear-gradient(180deg, #c8487a, var(--berry));
+  color: #fff;
+  font: 500 14px/1.4 var(--font-body);
+}
+.jelly-a {
+  padding: 8px 12px;
+  border-radius: 6px 16px 16px 16px;
+  background: #f5eefc;
+}
+.jelly-a .cn-answer {
+  font-size: 14.5px;
+}
+.jelly-a .cn-answer h4 {
+  font-size: 19px;
+}
+.jelly-thinking {
+  margin: 0;
+  font: 400 20px var(--font-hand);
+  color: var(--berry);
+  animation: jelly-pulse 1.6s ease-in-out infinite;
+}
+.jelly-chips {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jelly-chips:empty {
+  display: none;
+}
+.jelly-chips button {
+  flex: none;
+  max-width: 240px;
+  padding: 7px 12px;
+  border: 1.5px dashed rgba(178, 48, 95, 0.3);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--burgundy);
+  font: 600 12.5px var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.jelly-chips button:disabled {
+  opacity: 0.5;
+}
+.jelly-about {
+  margin: 8px 14px 0;
+  font: 600 12px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jelly-ask {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 14px;
+}
+.jelly-ask .h-input {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .cn-ask {
+    margin-right: 96px; /* room for Jelly */
+  }
+}
+@media (max-width: 520px) {
+  .jelly {
+    right: 12px;
+  }
+  .jelly-pet {
+    width: 72px;
+    height: 72px;
+  }
+  .cn-ask {
+    margin-right: 80px;
+  }
+  .jelly-panel {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 120px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jelly-pet,
+  .jelly-pet img,
+  .jelly-pet.chatty,
+  .jelly-pet.squish img,
+  .jelly-bubbles i,
+  .jelly-bubble,
+  .jelly-panel,
+  .jelly-thinking {
+    animation: none;
+  }
 }

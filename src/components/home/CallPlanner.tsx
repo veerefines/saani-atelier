@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNow } from './Clock';
 import { usePeople, type Other } from './usePeople';
+import { clock12, hour12 } from '@/lib/time';
 
 type Group = { tz: string; city: string; names: string[] };
 
-const AWAKE = { from: 8 * 60, to: 23 * 60 }; // 08:00–23:00, when people are happy to pick up
+const AWAKE = { from: 8 * 60, to: 23 * 60 }; // 8 AM–11 PM, when people are happy to pick up
 const SLOT = 30; // minutes; India is on a half hour
 
 const fmts = new Map<string, Intl.DateTimeFormat>();
@@ -21,7 +22,7 @@ const awake = (d: Date, tz: string) => {
   const m = minutesIn(d, tz);
   return m >= AWAKE.from && m < AWAKE.to;
 };
-const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const hhmm = (m: number) => clock12(Math.floor(m / 60), m % 60);
 const clock = (d: Date, tz: string) => hhmm(minutesIn(d, tz));
 const names = (n: string[]) => (n.length > 2 ? `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}` : n.join(' and '));
 
@@ -83,15 +84,15 @@ function Row({ p, g, me1 }: { p: Plan; g: Group; me1: string }) {
       </p>
       <div className="today-hours" aria-hidden="true">
         {p.hours.map((x) => (
-          <i key={x.h} className={x.cls} title={`${String(x.h).padStart(2, '0')}:00 your time`} />
+          <i key={x.h} className={x.cls} title={`${hour12(x.h)} your time`} />
         ))}
       </div>
       <div className="today-hours-scale" aria-hidden="true">
-        <span>00</span>
-        <span>06</span>
-        <span>12</span>
-        <span>18</span>
-        <span>24</span>
+        <span>12 AM</span>
+        <span>6 AM</span>
+        <span>12 PM</span>
+        <span>6 PM</span>
+        <span>12 AM</span>
       </div>
       <small>
         {p.same

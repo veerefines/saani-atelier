@@ -126,10 +126,44 @@ check "workspace opens on the assistant tab" 200 -b "$SA" "$B/home/corner/$P?tab
 expect "with the saved conversation" "CHAT-RENAMED"
 check "signed out 401" 401 -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
 
+# Jelly: one running chat that sees every project (a fresh minute before each answer, as the free tier allows one or two)
+fresh_minute() { node -e "const f='$ROOT/.data/groq-usage.json',u=JSON.parse(require('fs').readFileSync(f,'utf8'));Object.assign(u['free-tier'],{minuteRequests:0,minuteTokens:0,minuteOutput:0});require('fs').writeFileSync(f,JSON.stringify(u))"; }
+check "jelly is awake" 200 -b "$SA" $B/api/corner/jelly
+expect "ready" '"ready":true'
+expect "knows the projects" '"title":"AI test"'
+check "a second project" 201 -b "$SA" -X POST "${J[@]}" -d '{"title":"OTHER-PROJECT","description":"OTHER-DESC","category":"Fashion Research"}' $B/api/corner/projects
+check "empty question 400" 400 -b "$SA" -X POST "${J[@]}" -d '{"question":" "}' $B/api/corner/jelly
+fresh_minute
+check "ask jelly" 200 -b "$SA" -X POST "${J[@]}" -d '{"question":"JELLY-Q what next?"}' $B/api/corner/jelly
+expect "reply comes back" "FAKE-GROQ-REPLY"
+expect "with follow-ups" '"suggestions":\["FOLLOW-ONE?"'
+JC=$(jget .chat.id)
+cp "$D/groq-req-last.json" "$D/body"
+expect "jelly's own system prompt" "You are Jelly"
+expect "every project at a glance" "OTHER-DESC"
+expect "and the first one" "AI-DESC"
+expect "no project in full when none is open" "Open now, in full" absent
+fresh_minute
+check "ask from a project page" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"JELLY-Q2\",\"projectId\":\"$P\"}" $B/api/corner/jelly
+same "same running chat" "$(jget .chat.id)" "$JC"
+cp "$D/groq-req-last.json" "$D/body"
+expect "the open project in full" "Open now, in full"
+expect "with its brief" "AI-AUDIENCE"
+expect "and its documents" "PDF-TREND-WORDS"
+expect "the earlier question comes along" "JELLY-Q what next?"
+check "the chat is saved" 200 -b "$SA" $B/api/corner/jelly
+expect "with both questions" "JELLY-Q2"
+check "friend can't talk to jelly 403" 403 -b "$D/ai-fr.jar" $B/api/corner/jelly
+check "friend can't ask 403" 403 -b "$D/ai-fr.jar" -X POST "${J[@]}" -d '{"question":"hi"}' $B/api/corner/jelly
+check "new chat" 200 -b "$SA" -X DELETE $B/api/corner/jelly
+check "starts empty" 200 -b "$SA" $B/api/corner/jelly
+expect "no chat" '"chat":null'
+check "her picture is served" 200 $B/corner/jelly.png
+
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 3
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 5
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant

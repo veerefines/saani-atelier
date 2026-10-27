@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { timeIn12 } from '@/lib/time';
 
 export function useNow(ms = 30_000) {
   const [now, setNow] = useState<Date | null>(null);
@@ -14,7 +15,7 @@ export function useNow(ms = 30_000) {
 
 export function timeIn(now: Date | null, zone: string) {
   if (!now) return '--:--';
-  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: zone }).format(now);
+  return timeIn12(now, zone);
 }
 
 export function hourIn(now: Date, zone: string) {

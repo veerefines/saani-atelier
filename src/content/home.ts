@@ -44,7 +44,7 @@ export const bingo: Square[] = [
 
   { id: 'pasta', label: 'Cook pasta for your flatmates', group: 'You', reward: { kind: 'certificate', title: 'Nonna-Approved (Pending Review)', line: 'Did you salt the water like the sea? Good.' } },
   { id: 'tram', label: 'Ride the old orange tram', group: 'Milano', reward: { kind: 'cheer', line: 'Rattly, slow, perfect.' } },
-  { id: 'all-nighter', label: 'Pull one studio all-nighter (only one)', group: 'School', reward: { kind: 'certificate', title: 'Order of the 3am Hem', line: 'Now sleep. That’s an order.' } },
+  { id: 'all-nighter', label: 'Pull one studio all-nighter (only one)', group: 'School', reward: { kind: 'certificate', title: 'Order of the 3 AM Hem', line: 'Now sleep. That’s an order.' } },
   { id: 'venice', label: 'Get lost in Venice', group: 'Italia', reward: { kind: 'bouquet', line: 'Every wrong turn was the right one.' } },
   { id: 'outfit', label: 'Wear the boldest outfit you own to class', group: 'You', reward: { kind: 'cheer', line: 'Milan has been notified.' } },
 
