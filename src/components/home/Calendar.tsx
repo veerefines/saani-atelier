@@ -110,7 +110,7 @@ export default function Calendar({ initial, today }: { initial: { month: string;
             </a>
           )}
         </div>
-        <img className="cal2-hero-art" src="/corner/home/items/hourglass.webp" alt="" />
+        <img className="cal2-hero-art" src="/corner/jelly/hd/joyful.webp" alt="" width={680} height={680} />
       </section>
 
       <div className="cal2-body">

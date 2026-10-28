@@ -8883,7 +8883,10 @@ a.mb-q:hover {
 .cal2-hero-art {
   position: relative;
   z-index: 1;
-  width: clamp(70px, 14vw, 120px);
+  flex: none;
+  width: clamp(96px, 18vw, 170px);
+  height: auto;
+  margin: -14px -6px -18px 0;
   filter: drop-shadow(0 14px 16px rgba(107, 30, 58, 0.25));
   animation: soldi-bob 4s ease-in-out infinite;
 }
