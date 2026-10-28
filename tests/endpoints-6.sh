@@ -86,6 +86,9 @@ check "back from Google" 307 -b "$SA" "$B/api/google/callback?code=GOOD&state=$S
 same "connected" "$(grep -i '^location:' "$D/headers" | grep -c 'google=linked')" "1"
 check "now linked" 200 -b "$SA" $B/api/meetups
 same "linked" "$(jget .google.linked)" "true"
+same "shows which account" "$(jget .google.email)" "saani.test@gmail.com"
+check "switch account: Google's account picker" 307 -b "$SA" "$B/api/google/connect?switch=1"
+same "asks to pick an account" "$(grep -i '^location:' "$D/headers" | grep -c 'select_account')" "1"
 check "a friend's email (admin)" 200 -b "$FR" -X POST "${J[@]}" -d "{\"id\":\"$F1\",\"email\":\"Friend.One@Example.com\"}" $B/api/admin/friends/email
 same "kept lower-case" "$(jget .email)" "friend.one@example.com"
 check "a bad email" 400 -b "$FR" -X POST "${J[@]}" -d "{\"id\":\"$F1\",\"email\":\"nope\"}" $B/api/admin/friends/email
@@ -127,6 +130,7 @@ expect "cancelled in Google too" '"method":"DELETE"'
 check "the friend's list" 200 -b "$FR" $B/api/meetups
 expect "it's gone" "Chai & chisme" absent
 check "disconnect Google" 200 -b "$SA" -X POST $B/api/google/disconnect
+same "access revoked at Google" "$(grep -c 'token=rt-1' "$D/google-revoked")" "1"
 check "and it's off" 200 -b "$SA" $B/api/meetups
 same "not linked" "$(jget .google.linked)" "false"
 

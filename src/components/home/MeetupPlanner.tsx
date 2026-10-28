@@ -10,7 +10,7 @@ import { checkSoon } from '@/components/jelly/bus';
 
 type Friend = { id: string; name: string; hasEmail: boolean; tz: string; city: string };
 type Shown = Meetup & { friends: { id: string; name: string; rsvp: Rsvp | null }[] };
-type Data = { google: { ready: boolean; linked: boolean }; me: { tz: string; city: string }; friends: Friend[]; meetups: Shown[] };
+type Data = { google: { ready: boolean; linked: boolean; email: string | null }; me: { tz: string; city: string }; friends: Friend[]; meetups: Shown[] };
 
 const first = (n: string) => n.split(' ')[0];
 const when = (iso: string, tz: string) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(iso)).replace(':00', '');
@@ -91,6 +91,32 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
   return (
     <div className="mt">
       {note && <p className="mt-note">{note}</p>}
+
+      {d.google.linked && (
+        <section className="mt-account">
+          <span className="mt-account-dot" aria-hidden="true" />
+          <p>
+            <b>Google connected</b>
+            <small>{d.google.email ?? 'calls go in this Google Calendar'}</small>
+          </p>
+          <a href="/api/google/connect?switch=1" className="mt-account-btn">
+            Switch account
+          </a>
+          <button
+            type="button"
+            className="mt-account-btn quiet"
+            onClick={async () => {
+              if (!confirm('Disconnect Google? Calls already planned stay in your calendar; new ones need Google connected again.')) return;
+              await api('/api/google/disconnect', 'POST').catch(() => {});
+              sfx('paper');
+              setNote('Google disconnected. Connect again any time 💌');
+              load();
+            }}
+          >
+            Disconnect
+          </button>
+        </section>
+      )}
 
       {!d.google.linked && (
         <section className="mt-connect">

@@ -8,31 +8,55 @@ import * as db from './db';
  * GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET switch it on; GOOGLE_API_BASE points at a fake in tests.
  */
 
-const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+// calendar events for the meetups, and her email (only to show which account is connected)
+const SCOPE = 'openid email https://www.googleapis.com/auth/calendar.events';
+const REVOKE = () => (process.env.GOOGLE_API_BASE ? `${process.env.GOOGLE_API_BASE}/revoke` : 'https://oauth2.googleapis.com/revoke');
 const AUTH = () => process.env.GOOGLE_AUTH_URL || 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN = () => (process.env.GOOGLE_API_BASE ? `${process.env.GOOGLE_API_BASE}/token` : 'https://oauth2.googleapis.com/token');
 const CAL = () => (process.env.GOOGLE_API_BASE ? `${process.env.GOOGLE_API_BASE}/calendar/v3` : 'https://www.googleapis.com/calendar/v3');
 
 export const googleReady = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
-type Link = { id: 'saani'; createdAt: string; refreshToken: string };
+type Link = { id: 'saani'; createdAt: string; refreshToken: string; email?: string | null };
 const COL = 'google';
 export const googleLinked = async () => Boolean((await db.get<Link>(COL, 'saani'))?.refreshToken);
-export const unlinkGoogle = () => db.remove(COL, 'saani');
+/** Which Google account is connected (null if not, or connected before we kept the email). */
+export async function googleAccount() {
+  const l = await db.get<Link>(COL, 'saani');
+  return l?.refreshToken ? { email: l.email ?? null, since: l.createdAt } : null;
+}
+/** Forget the connection, and tell Google to revoke the site's access too (best effort). */
+export async function unlinkGoogle() {
+  const l = await db.get<Link>(COL, 'saani');
+  await db.remove(COL, 'saani');
+  cached = null;
+  if (l?.refreshToken)
+    await fetch(REVOKE(), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: l.refreshToken }), signal: AbortSignal.timeout(10_000) }).catch(() => {});
+}
+/** The email in Google's id_token (it comes straight from Google's token endpoint over TLS). */
+function emailOf(idToken: unknown) {
+  if (typeof idToken !== 'string') return null;
+  try {
+    const p = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64url').toString('utf8'));
+    return typeof p.email === 'string' ? p.email : null;
+  } catch {
+    return null;
+  }
+}
 
 export const redirectUri = (origin: string) => `${origin}/api/google/callback`;
 export const newState = () => crypto.randomBytes(18).toString('base64url');
 
 /** Where to send her to say yes to Google. */
-export function consentUrl(origin: string, state: string) {
+export function consentUrl(origin: string, state: string, pickAccount = false) {
   const p = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
     redirect_uri: redirectUri(origin),
     response_type: 'code',
     scope: SCOPE,
     access_type: 'offline',
-    // always ask, so Google sends a refresh token every time she connects
-    prompt: 'consent',
+    // always ask, so Google sends a refresh token every time she connects (and let her pick an account when switching)
+    prompt: pickAccount ? 'select_account consent' : 'consent',
     include_granted_scopes: 'true',
     state,
   });
@@ -49,7 +73,11 @@ export async function linkGoogle(code: string, origin: string) {
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.refresh_token) throw new Error(j.error_description || j.error || 'Google didn’t send a token');
-  await db.put<Link>(COL, { id: 'saani', createdAt: new Date().toISOString(), refreshToken: j.refresh_token });
+  // switching accounts: let go of the old one first
+  const old = await db.get<Link>(COL, 'saani');
+  if (old?.refreshToken && old.refreshToken !== j.refresh_token)
+    await fetch(REVOKE(), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: old.refreshToken }), signal: AbortSignal.timeout(10_000) }).catch(() => {});
+  await db.put<Link>(COL, { id: 'saani', createdAt: new Date().toISOString(), refreshToken: j.refresh_token, email: emailOf(j.id_token) });
   cached = j.access_token ? { token: j.access_token, until: Date.now() + (Number(j.expires_in) || 3000) * 1000 - 60_000 } : null;
 }
 

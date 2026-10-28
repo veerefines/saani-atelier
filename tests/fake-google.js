@@ -19,11 +19,16 @@ http
       const body = Buffer.concat(chunks).toString();
       const url = req.url || '';
       fs.writeFileSync(path.join(dir, 'google-last.json'), JSON.stringify({ method: req.method, url, body }));
+      if (url.startsWith('/revoke')) {
+        fs.writeFileSync(path.join(dir, 'google-revoked'), body);
+        return send(res, 200, {});
+      }
       if (url.startsWith('/token')) {
         const p = new URLSearchParams(body);
         if (p.get('grant_type') === 'authorization_code') {
           if (p.get('code') !== 'GOOD') return send(res, 400, { error: 'invalid_grant' });
-          return send(res, 200, { access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
+          const idToken = ['x', Buffer.from(JSON.stringify({ email: 'saani.test@gmail.com' })).toString('base64url'), 'sig'].join('.');
+          return send(res, 200, { access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600, id_token: idToken });
         }
         return send(res, 200, { access_token: 'at-2', expires_in: 3600 });
       }

@@ -1,4 +1,4 @@
-import { createMeet, friendEmails, googleLinked, googleReady, GoogleNotLinked } from '@/lib/google';
+import { createMeet, friendEmails, googleAccount, googleLinked, googleReady, GoogleNotLinked } from '@/lib/google';
 import { listMeetups, newMeetupId, saveMeetup, upcoming } from '@/lib/meetups';
 import { getInvites } from '@/lib/invites';
 import { people } from '@/lib/zones';
@@ -20,7 +20,7 @@ export async function GET() {
     return json({ meetups: list.map((m) => ({ ...m, friends: m.friendIds.map((id) => ({ id, name: names[id] ?? 'a friend' })), mine: m.rsvp[s.id] ?? null })) });
   }
   return json({
-    google: { ready: googleReady(), linked: await googleLinked() },
+    google: await googleAccount().then((a) => ({ ready: googleReady(), linked: Boolean(a), email: a?.email ?? null })),
     me: zone[s.id] ?? { tz: 'Europe/Rome', city: 'Milano' },
     friends: invites.filter((i) => i.role === 'wellwisher').map((i) => ({ id: i.id, name: i.name, hasEmail: Boolean(emails[i.id]), ...(zone[i.id] ?? { tz: 'Asia/Kolkata', city: 'Mumbai' }) })),
     meetups: list.map((m) => ({ ...m, friends: m.friendIds.map((id) => ({ id, name: names[id] ?? 'a friend', rsvp: m.rsvp[id] ?? null })) })),
