@@ -21,6 +21,9 @@ const HEARTS: [number, number, string, number][] = [
   [50, 58, '#e9c6f2', 22],
 ];
 const NOTE_COLORS = ['#fff7d6', '#ffe1ea', '#e9f4ef', '#efe6f7', '#fde7d6', '#fffdf8'];
+// each feeling's own colour: its card, the jar's glow, and the note's ribbon
+const TINT: Record<string, string> = { happy: '#ffe3a3', sad: '#cfe3f7', homesick: '#ffd6c4', unmotivated: '#d9efcf', anxious: '#e3d8f8', proud: '#ffd3e1' };
+const WORD: Record<string, string> = { happy: 'yay!', sad: 'a hug', homesick: 'home', unmotivated: 'a nudge', anxious: 'breathe', proud: 'brava!' };
 
 export default function Jar({ counts }: { counts: Record<string, number> }) {
   const [mood, setMood] = useState<Mood | null>(null);
@@ -52,27 +55,52 @@ export default function Jar({ counts }: { counts: Record<string, number> }) {
 
   return (
     <div className="jar-stage">
-      <p className="hand" style={{ fontSize: 24, color: 'var(--burgundy)', margin: '0 0 10px' }}>
-        I’m feeling…
-      </p>
-      <div className="h-chips" role="group" aria-label="How are you feeling?">
-        {moods.map((m) => (
-          <button
+      <p className="hand jar-ask">I’m feeling…</p>
+      <div className="jar-moods" role="group" aria-label="How are you feeling?">
+        {moods.map((m, i) => (
+          <motion.button
             key={m.id}
-            className="h-chip"
+            type="button"
+            className="jar-mood"
             aria-pressed={mood === m.id}
+            style={{ ['--tint' as string]: TINT[m.id] ?? '#fde3ea' }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * i } }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => {
+              sfx('pop');
               setMood(m.id);
               setNote(null);
               setEmpty(false);
             }}
+            data-quiet
           >
-            {m.emoji} {m.label}
-            {counts[m.id] ? <small style={{ opacity: 0.6 }}> · {counts[m.id]}</small> : null}
-          </button>
+            <span className="jar-mood-face" aria-hidden="true">
+              {m.emoji}
+            </span>
+            <b>{m.label}</b>
+            <small>{counts[m.id] ? `${counts[m.id]} ${counts[m.id] === 1 ? 'note' : 'notes'}` : 'no notes yet'}</small>
+            {mood === m.id && (
+              <motion.span className="jar-mood-tick" layoutId="jar-mood-tick" aria-hidden="true">
+                ♥
+              </motion.span>
+            )}
+          </motion.button>
         ))}
       </div>
 
+      <div className={`jar-shelf${mood ? ' ready' : ''}${busy ? ' busy' : ''}`} style={{ ['--tint' as string]: mood ? (TINT[mood] ?? '#fde3ea') : '#f6e3ee' }}>
+        <span className="jar-halo" aria-hidden="true" />
+        <span className="jar-sparkles" aria-hidden="true">
+          <i>✦</i>
+          <i>✧</i>
+          <i>✦</i>
+          <i>♡</i>
+          <i>✧</i>
+        </span>
+        <span className="jar-tag" aria-hidden="true">
+          {mood ? `for ${WORD[mood] ?? 'you'} ♡` : 'shake me ♡'}
+        </span>
       <button className="jar-big" onClick={shake} disabled={!mood || busy} aria-label={mood ? 'Shake the jar for a note' : 'Pick a feeling first'}>
         <motion.svg viewBox="0 0 120 150" animate={jar} style={{ originY: 0.9 }}>
           <defs>
@@ -87,6 +115,14 @@ export default function Jar({ counts }: { counts: Record<string, number> }) {
           <rect x="34" y="8" width="52" height="18" rx="4" fill="#c99a68" />
           <rect x="34" y="8" width="52" height="6" rx="3" fill="#dcb385" />
           <path d="M40 26 q20 6 40 0" stroke="#d8b06a" strokeWidth="3" fill="none" />
+          {/* a satin bow on the lid */}
+          <g transform="translate(60 25)">
+            <path d="M0 0 C -10 -8 -18 -2 -14 4 C -11 8 -4 4 0 0 Z" fill="#f48fb1" />
+            <path d="M0 0 C 10 -8 18 -2 14 4 C 11 8 4 4 0 0 Z" fill="#f48fb1" />
+            <path d="M-1 1 L -7 13 L -3 12 L 0 15 Z M1 1 L 7 13 L 3 12 L 0 15 Z" fill="#e66f9a" />
+            <circle r="3" fill="#e66f9a" />
+            <path d="M-10 -3 q3 -2 6 0" stroke="#fff" strokeOpacity=".6" strokeWidth="1" fill="none" />
+          </g>
           <path d="M30 28 h60 q6 0 6 8 v86 q0 16 -16 16 h-40 q-16 0 -16 -16 v-86 q0 -8 6 -8z" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.9)" strokeWidth="2" />
           {HEARTS.map(([x, y, c, r], k) => (
             <motion.g
@@ -103,26 +139,33 @@ export default function Jar({ counts }: { counts: Record<string, number> }) {
           <path d="M36 40 q-2 30 0 72" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" opacity="0.75" fill="none" />
         </motion.svg>
       </button>
-      <p className="hand jar-hint">{mood ? (busy ? 'shaking…' : 'tap the jar') : 'pick a feeling first'}</p>
+        <span className="jar-wood" aria-hidden="true" />
+      </div>
+      <button type="button" className={`jar-cta${mood ? ' on' : ''}`} onClick={shake} disabled={!mood || busy} data-quiet>
+        {mood ? (busy ? 'shaking… 🫧' : note || empty ? 'shake again ↻' : '✨ shake the jar') : 'pick a feeling first'}
+      </button>
 
       <AnimatePresence mode="wait">
         {note && (
           <motion.div
             key={note.id}
             className="jar-note"
-            style={{ background: NOTE_COLORS[note.color % NOTE_COLORS.length] }}
+            style={{ background: NOTE_COLORS[note.color % NOTE_COLORS.length], ['--tint' as string]: (mood && TINT[mood]) || '#ffd3e1' }}
             initial={{ y: -120, scale: 0.2, rotate: -25, opacity: 0 }}
             animate={{ y: 0, scale: 1, rotate: -1.5, opacity: 1 }}
             exit={{ y: 40, opacity: 0, rotate: 8 }}
             transition={{ type: 'spring', stiffness: 130, damping: 13 }}
           >
-            {note.text}
-            <span className="love-from">from {note.authorName}</span>
+            <span className="jar-note-tape" aria-hidden="true" />
+            <span className="jar-note-text">{note.text}</span>
+            <span className="love-from">
+              <i aria-hidden="true">♥</i> from {note.authorName}
+            </span>
           </motion.div>
         )}
         {empty && (
-          <motion.p key="empty" className="whisper" style={{ fontSize: 19, marginTop: 18 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            No notes for this feeling yet. Your people will add some.
+          <motion.p key="empty" className="jar-empty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <span aria-hidden="true">🫙</span> No notes for this feeling yet. Your people will add some soon ♡
           </motion.p>
         )}
       </AnimatePresence>

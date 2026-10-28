@@ -7897,3 +7897,339 @@ a.mb-q:hover {
     font-size: 21px;
   }
 }
+
+/* ---------- the jar page, made cute (Oct 2026) ---------- */
+.jar-ask {
+  margin: 0 0 12px;
+  font-size: 28px;
+  color: var(--burgundy);
+}
+.jar-moods {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, 860px);
+}
+@media (max-width: 760px) {
+  .jar-moods {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+.jar-mood {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 14px 8px 12px;
+  border: 0;
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--tint) 90%, #fff), transparent 70%),
+    linear-gradient(175deg, #fffaf6, color-mix(in srgb, var(--tint) 30%, #fffaf6));
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    0 12px 22px -16px rgba(107, 30, 58, 0.55);
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.3, 0.7, 0.2, 1.5),
+    box-shadow 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.jar-mood:hover {
+  transform: translateY(-4px) rotate(-1deg);
+}
+.jar-mood[aria-pressed='true'] {
+  transform: translateY(-5px);
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 0 3px color-mix(in srgb, var(--tint) 80%, var(--berry)),
+    0 18px 30px -16px rgba(107, 30, 58, 0.6);
+}
+.jar-mood-face {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, #fff 0 16%, transparent 46%),
+    var(--tint);
+  box-shadow:
+    inset 0 -5px 10px rgba(107, 30, 58, 0.08),
+    0 8px 12px -8px rgba(107, 30, 58, 0.45);
+  font-size: 28px;
+  transition: transform 0.4s cubic-bezier(0.3, 0.7, 0.2, 1.8);
+}
+.jar-mood:hover .jar-mood-face,
+.jar-mood[aria-pressed='true'] .jar-mood-face {
+  transform: scale(1.1) rotate(-8deg);
+}
+.jar-mood b {
+  font: 600 21px / 1 var(--font-hand);
+  color: var(--burgundy);
+  text-align: center;
+}
+.jar-mood small {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.85);
+  font: 600 11px var(--font-body);
+  color: #8a6a7b;
+}
+.jar-mood-tick {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f48fb1, var(--berry));
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 4px 8px -3px rgba(178, 48, 95, 0.7);
+}
+
+/* the jar on its little shelf, glowing in the colour of her feeling */
+.jar-shelf {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(92vw, 420px);
+  margin-top: 26px;
+  padding: 30px 0 0;
+}
+.jar-halo {
+  position: absolute;
+  top: 6%;
+  width: 82%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint) 90%, #fff) 0%, transparent 66%);
+  opacity: 0.75;
+  transition: background 0.5s;
+  animation: jar-halo 4s ease-in-out infinite;
+}
+.jar-shelf.ready .jar-halo {
+  opacity: 1;
+}
+@keyframes jar-halo {
+  50% {
+    transform: scale(1.08);
+  }
+}
+.jar-sparkles i {
+  position: absolute;
+  font-style: normal;
+  color: color-mix(in srgb, var(--tint) 40%, var(--berry));
+  opacity: 0.7;
+  animation: jar-twinkle 2.8s ease-in-out infinite;
+}
+.jar-sparkles i:nth-child(1) { top: 14%; left: 14%; font-size: 18px; }
+.jar-sparkles i:nth-child(2) { top: 26%; right: 12%; font-size: 14px; animation-delay: 0.7s; }
+.jar-sparkles i:nth-child(3) { top: 58%; left: 8%; font-size: 12px; animation-delay: 1.4s; }
+.jar-sparkles i:nth-child(4) { top: 48%; right: 8%; font-size: 16px; animation-delay: 2.1s; color: #f27ca2; }
+.jar-sparkles i:nth-child(5) { top: 6%; right: 30%; font-size: 12px; animation-delay: 1s; }
+@keyframes jar-twinkle {
+  50% {
+    opacity: 0.15;
+    transform: scale(0.7) rotate(20deg);
+  }
+}
+.jar-big {
+  position: relative;
+  z-index: 1;
+  width: min(62vw, 270px);
+  animation: jar-idle 3.6s ease-in-out infinite;
+}
+.jar-shelf.busy .jar-big {
+  animation: none;
+}
+@keyframes jar-idle {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.jar-big svg {
+  filter: drop-shadow(0 18px 20px rgba(107, 30, 58, 0.18));
+}
+.jar-tag {
+  position: absolute;
+  z-index: 2;
+  top: 21%;
+  right: 12%;
+  padding: 6px 12px 6px 16px;
+  border-radius: 4px 14px 14px 4px;
+  background: #fffaf1;
+  box-shadow: 0 8px 14px -8px rgba(107, 30, 58, 0.5);
+  font: 600 18px var(--font-hand);
+  color: var(--burgundy);
+  transform-origin: -30px 0;
+  animation: jar-tag 3s ease-in-out infinite;
+}
+.jar-tag::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tint) 50%, var(--berry));
+}
+.jar-tag::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 34px;
+  height: 1.5px;
+  background: rgba(178, 120, 80, 0.6);
+  transform: rotate(-24deg);
+  transform-origin: right;
+}
+@keyframes jar-tag {
+  0%,
+  100% {
+    rotate: 6deg;
+  }
+  50% {
+    rotate: -2deg;
+  }
+}
+.jar-wood {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 16px;
+  margin-top: -10px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 70, 40, 0.08) 0 2px, transparent 2px 38px),
+    linear-gradient(180deg, #e9c9a3, #cf9f74);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.5) inset,
+    0 14px 20px -12px rgba(107, 60, 30, 0.6);
+}
+.jar-wood::before {
+  /* a little lace doily under the jar */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 58%;
+  height: 12px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 0, #fff 0 60%, transparent 62%) 0 0 / 12px 12px repeat-x, rgba(255, 255, 255, 0.9);
+}
+.jar-cta {
+  margin-top: 18px;
+  padding: 12px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(178, 48, 95, 0.2),
+    0 10px 18px -14px rgba(107, 30, 58, 0.5);
+  font: 600 22px var(--font-hand);
+  color: #8a6a7b;
+  cursor: default;
+}
+.jar-cta.on {
+  background: linear-gradient(180deg, #e26a95, var(--berry));
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 14px 22px -12px rgba(178, 48, 95, 0.8);
+  animation: jar-cta 2.4s ease-in-out infinite;
+}
+.jar-cta.on:disabled {
+  animation: none;
+  opacity: 0.85;
+}
+@keyframes jar-cta {
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* the note that falls out */
+.jar-note {
+  margin-top: 26px;
+  padding: 34px 26px 22px;
+  border-radius: 4px 4px 18px 4px;
+  font-size: 25px;
+  text-align: center;
+  background-image:
+    repeating-linear-gradient(transparent 0 33px, rgba(107, 30, 58, 0.08) 33px 34px) !important;
+  background-blend-mode: multiply;
+}
+.jar-note::after {
+  /* a folded corner */
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 0 0 18px 0;
+  background: linear-gradient(315deg, transparent 50%, rgba(107, 30, 58, 0.12) 50%);
+}
+.jar-note-tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 110px;
+  height: 26px;
+  translate: -50% 0;
+  rotate: -3deg;
+  background: color-mix(in srgb, var(--tint) 80%, #fff);
+  opacity: 0.9;
+  box-shadow: 0 2px 4px rgba(107, 30, 58, 0.1);
+  -webkit-mask: linear-gradient(90deg, transparent 0 2px, #000 2px calc(100% - 2px), transparent 0) , repeating-linear-gradient(transparent 0 3px, #000 3px 6px);
+}
+.jar-note-text {
+  display: block;
+}
+.jar-note .love-from {
+  display: block;
+  margin-top: 14px;
+  font-size: 19px;
+  color: var(--berry);
+}
+.jar-note .love-from i {
+  font-style: normal;
+}
+.jar-empty {
+  margin-top: 22px;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.8);
+  font: italic 400 18px var(--font-whisper);
+  color: #5a3f4c;
+  text-align: center;
+}
+.jar-calm {
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.8), transparent 50%),
+    linear-gradient(160deg, #fff8dc, #eaf5e4);
+}
+.jar-calm-places a {
+  transition: transform 0.25s;
+}
+.jar-calm-places a:hover {
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .jar-halo,
+  .jar-sparkles i,
+  .jar-big,
+  .jar-tag,
+  .jar-cta.on {
+    animation: none;
+  }
+}
