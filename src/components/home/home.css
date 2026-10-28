@@ -900,62 +900,238 @@
   font-size: 17px;
 }
 
-/* ---------- bingo ---------- */
+/* ---------- bingo: a sticker board of little adventures ---------- */
+.bingo-card {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 14px 10px 12px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12px 12px, rgba(244, 166, 192, 0.22) 2px, transparent 2.5px) 0 0 / 22px 22px,
+    radial-gradient(120% 80% at 0% 0%, #fff1f6, transparent 60%),
+    radial-gradient(120% 80% at 100% 100%, #f1eafd, transparent 60%),
+    #fffaf6;
+  box-shadow:
+    0 0 0 2px #fff inset,
+    0 0 0 2px rgba(244, 166, 192, 0.45),
+    0 28px 50px -30px rgba(107, 30, 58, 0.6);
+}
+@media (min-width: 640px) {
+  .bingo-card {
+    padding: 20px 18px 18px;
+    border-radius: 34px;
+  }
+}
+/* washi tape and sparkles */
+.bingo-tape {
+  position: absolute;
+  z-index: 3;
+  width: 92px;
+  height: 26px;
+  background: repeating-linear-gradient(45deg, rgba(244, 166, 192, 0.85) 0 8px, rgba(255, 220, 232, 0.85) 8px 16px);
+  box-shadow: 0 4px 8px -6px rgba(107, 30, 58, 0.5);
+  pointer-events: none;
+}
+.bingo-tape.t1 {
+  top: -10px;
+  left: -14px;
+  transform: rotate(-12deg);
+}
+.bingo-tape.t2 {
+  right: -14px;
+  bottom: -8px;
+  background: repeating-linear-gradient(45deg, rgba(205, 180, 240, 0.85) 0 8px, rgba(236, 226, 252, 0.85) 8px 16px);
+  transform: rotate(-10deg);
+}
+.bingo-spark {
+  position: absolute;
+  z-index: 3;
+  color: #f2b73e;
+  pointer-events: none;
+  animation: bingo-twinkle 2.4s ease-in-out infinite;
+}
+.bingo-spark.s1 {
+  top: -14px;
+  right: 18%;
+  font-size: 22px;
+}
+.bingo-spark.s2 {
+  left: -10px;
+  top: 46%;
+  font-size: 16px;
+  color: #e48aae;
+  animation-delay: 0.8s;
+}
+.bingo-spark.s3 {
+  right: -8px;
+  top: 28%;
+  font-size: 14px;
+  color: #a98ae0;
+  animation-delay: 1.6s;
+}
+/* B I N G O, one candy letter per column */
+.bingo-letters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.bingo-letters span {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: clamp(36px, 11vw, 56px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font: 400 clamp(20px, 6vw, 32px) / 1 var(--font-display);
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(107, 30, 58, 0.25);
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.1),
+    inset 0 3px 0 rgba(255, 255, 255, 0.5),
+    0 8px 14px -8px rgba(107, 30, 58, 0.6);
+  animation: bingo-bob 3s ease-in-out infinite;
+}
+.bingo-letters span:nth-child(1) { background: linear-gradient(160deg, #ff9fbf, #e45d8f); }
+.bingo-letters span:nth-child(2) { background: linear-gradient(160deg, #ffc58f, #f08a4b); animation-delay: 0.2s; }
+.bingo-letters span:nth-child(3) { background: linear-gradient(160deg, #ffe08a, #e9b440); animation-delay: 0.4s; }
+.bingo-letters span:nth-child(4) { background: linear-gradient(160deg, #9be3c1, #4fb98d); animation-delay: 0.6s; }
+.bingo-letters span:nth-child(5) { background: linear-gradient(160deg, #c7b0f5, #8f6ad8); animation-delay: 0.8s; }
+
 .bingo {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
-  padding: 10px;
-  border-radius: 16px;
-  background: rgba(255, 251, 246, 0.8);
-  border: 2px dashed rgba(178, 48, 95, 0.35);
-  box-shadow: 0 20px 34px -22px rgba(107, 30, 58, 0.5);
-  max-width: 640px;
-  margin: 0 auto;
 }
 @media (min-width: 640px) {
-  .bingo {
+  .bingo,
+  .bingo-letters {
     gap: 10px;
-    padding: 16px;
   }
 }
+/* each square is a little sticker, tinted by what kind of adventure it is */
 .sq {
+  --tint: #fde4ee;
+  --deep: #e45d8f;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 0.8vw, 6px);
   aspect-ratio: 1;
-  border: 0;
-  border-radius: 10px;
   padding: 4px;
-  background: #fff;
-  box-shadow:
-    inset 0 0 0 1.5px rgba(178, 48, 95, 0.18),
-    0 3px 6px -4px rgba(107, 30, 58, 0.35);
-  font: 500 clamp(9px, 2.6vw, 14px) / 1.12 var(--font-body);
-  color: #3b2a33;
-  cursor: pointer;
   overflow: hidden;
-  display: grid;
-  place-items: center;
+  border: 0;
+  border-radius: clamp(10px, 2.6vw, 18px);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.95), transparent 70%),
+    var(--tint);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 0 0 1px color-mix(in srgb, var(--deep) 22%, transparent),
+    0 6px 10px -7px rgba(107, 30, 58, 0.45);
+  font: 600 clamp(8.5px, 2.35vw, 13.5px) / 1.15 var(--font-body);
+  color: #3b2a33;
   text-align: center;
-  transition: transform 0.3s cubic-bezier(0.3, 0.7, 0.2, 1.5);
+  cursor: pointer;
+  transform: rotate(calc(var(--tilt) * 0.5deg));
+  transition:
+    transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1),
+    box-shadow 0.25s;
 }
+.sq.g-Milano { --tint: #fde1eb; --deep: #e45d8f; }
+.sq.g-School { --tint: #ece3fb; --deep: #8f6ad8; }
+.sq.g-Italia { --tint: #dff3e8; --deep: #4fb98d; }
+.sq.g-You { --tint: #fff0d9; --deep: #f08a4b; }
 .sq:hover {
-  transform: translateY(-2px);
+  transform: rotate(0deg) translateY(-3px) scale(1.04);
+  box-shadow:
+    inset 0 0 0 1.5px #fff,
+    0 0 0 2px color-mix(in srgb, var(--deep) 45%, transparent),
+    0 14px 18px -10px rgba(107, 30, 58, 0.5);
+  z-index: 2;
+}
+.sq:hover .sq-icon {
+  animation: bingo-wiggle 0.6s ease-in-out;
 }
 .sq:active {
   transform: scale(0.94);
 }
-.sq.done {
-  background: #ffe1ea;
-}
-.sq.free {
-  background: linear-gradient(140deg, #fff4df, #ffe1ea);
+.sq .sq-icon {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(17px, 5.4vw, 32px);
+  line-height: 1;
+  filter: drop-shadow(0 3px 3px rgba(107, 30, 58, 0.2));
 }
 .sq .sq-label {
   position: relative;
   z-index: 1;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+@media (max-width: 480px) {
+  .sq {
+    gap: 1px;
+    padding: 3px;
+    font-size: clamp(8px, 2.25vw, 10px);
+    line-height: 1.1;
+  }
+  .sq .sq-icon {
+    font-size: clamp(15px, 4.6vw, 20px);
+  }
+}
+/* the middle square: where it all begins */
+.sq.free {
+  background:
+    radial-gradient(circle at 50% 40%, #fff, transparent 70%),
+    conic-gradient(from 0deg, #ffe08a, #ffb3c9, #c7b0f5, #9fd8ee, #ffe08a);
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 0 2px rgba(233, 180, 64, 0.6),
+    0 10px 18px -8px rgba(180, 120, 30, 0.6);
+}
+.sq-start {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  z-index: 2;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: #fff;
+  font: 800 clamp(6.5px, 1.7vw, 9.5px) var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b07a14;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.sq.free .sq-start ~ .sq-icon {
+  margin-top: 8%;
+}
+/* done: stamped, stitched and in bloom */
+.sq.done {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.6), transparent 70%),
+    color-mix(in srgb, var(--tint) 55%, var(--deep) 30%);
 }
 .sq.done .sq-label {
-  opacity: 0.35;
+  opacity: 0.45;
+}
+.sq.done .sq-icon {
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+.sq.in-line {
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 0 3px rgba(233, 180, 64, 0.75),
+    0 0 18px 2px rgba(247, 200, 115, 0.6);
+  animation: bingo-glow 2.4s ease-in-out infinite;
 }
 .sq svg.stitch {
   position: absolute;
@@ -969,34 +1145,123 @@
   position: absolute;
   right: 3px;
   bottom: 2px;
-  font-size: clamp(12px, 3.4vw, 20px);
   z-index: 3;
+  font-size: clamp(12px, 3.4vw, 20px);
+  animation: bingo-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
+
+/* progress and the legend */
 .bingo-progress {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 10px;
-  margin: 0 0 18px;
+  margin: 0 0 12px;
 }
 .bingo-bar {
   width: min(60vw, 280px);
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
-  background: rgba(255, 251, 246, 0.8);
+  background: rgba(255, 251, 246, 0.9);
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(107, 30, 58, 0.2);
+  box-shadow:
+    inset 0 1px 2px rgba(107, 30, 58, 0.2),
+    0 0 0 2px #fff;
 }
 .bingo-bar span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: repeating-linear-gradient(90deg, var(--berry) 0 8px, #e55c8f 8px 12px);
+  background: linear-gradient(90deg, #ff9fbf, #ffc58f, #ffe08a, #9be3c1, #c7b0f5);
   transition: width 0.8s cubic-bezier(0.3, 0.7, 0.2, 1);
 }
 .bingo-count {
-  font: 600 22px var(--font-hand);
+  font: 600 24px var(--font-hand);
   color: var(--burgundy);
+}
+.bingo-lines {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff4d6, #ffe0ea);
+  box-shadow: 0 0 0 1.5px rgba(233, 180, 64, 0.5);
+  font: 800 13px var(--font-body);
+  color: #a26a12;
+  animation: bingo-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.bingo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 22px;
+}
+.bingo-chip {
+  --tint: #fde1eb;
+  --deep: #e45d8f;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px 5px 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--deep) 30%, transparent);
+  font: 700 12.5px var(--font-body);
+  color: #3b2a33;
+}
+.bingo-chip.g-School { --tint: #ece3fb; --deep: #8f6ad8; }
+.bingo-chip.g-Italia { --tint: #dff3e8; --deep: #4fb98d; }
+.bingo-chip.g-You { --tint: #fff0d9; --deep: #f08a4b; }
+.bingo-chip b {
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: #fff;
+  font-size: 11.5px;
+  color: var(--deep);
+}
+@keyframes bingo-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+@keyframes bingo-wiggle {
+  25% {
+    transform: rotate(-12deg) scale(1.15);
+  }
+  60% {
+    transform: rotate(10deg) scale(1.1);
+  }
+}
+@keyframes bingo-twinkle {
+  50% {
+    transform: scale(0.6) rotate(30deg);
+    opacity: 0.5;
+  }
+}
+@keyframes bingo-glow {
+  50% {
+    box-shadow:
+      inset 0 0 0 2px #fff,
+      0 0 0 3px rgba(233, 180, 64, 0.95),
+      0 0 26px 4px rgba(247, 200, 115, 0.8);
+  }
+}
+@keyframes bingo-pop {
+  from {
+    transform: scale(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bingo-letters span,
+  .bingo-spark,
+  .sq.in-line,
+  .sq:hover .sq-icon {
+    animation: none;
+  }
 }
 
 .sheet {
@@ -2125,8 +2390,8 @@ a.pc-rating:hover {
 }
 .sq .sq-dare {
   position: absolute;
-  left: 3px;
-  bottom: 2px;
+  top: 3px;
+  left: 4px;
   font: 600 clamp(10px, 2.6vw, 13px) var(--font-body);
   z-index: 3;
 }
