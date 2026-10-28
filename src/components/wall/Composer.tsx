@@ -132,7 +132,7 @@ export default function Composer({
   children?: React.ReactNode;
   /** everything sent here goes onto this group scrapbook page */
   pageId?: string;
-  /** upcoming festivals and special days, for "seal it for…" */
+  /** upcoming festivals and special days (all of them), for "seal it for…" and "deliver it on…" */
   occasions?: OccasionChip[];
 }) {
   const tabs = TABS.filter((t) => only.includes(t.id));
@@ -466,6 +466,19 @@ export default function Composer({
         {(tab === 'message' || tab === 'voice' || tab === 'video') && (
           <details className="w-later" open={Boolean(deliver)}>
             <summary>🎁 Make it a surprise for a later day</summary>
+            {occasions.length > 0 && (
+              <>
+                <p className="w-label">Deliver it on a special day</p>
+                <div className="h-chips w-occasions" style={{ justifyContent: 'flex-start' }}>
+                  {occasions.map((o) => (
+                    <button type="button" key={o.date + o.title} className="h-chip" aria-pressed={deliver === o.date} onClick={() => setDeliver(deliver === o.date ? '' : o.date)}>
+                      {o.emoji} {o.title}
+                      <small> · {new Date(`${o.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <label className="w-label" htmlFor="dl">
               Deliver it on
             </label>
@@ -500,6 +513,7 @@ export default function Composer({
                       }}
                     >
                       {o.emoji} {o.title}
+                      <small> · {new Date(`${o.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
                     </button>
                   ))}
                 </div>

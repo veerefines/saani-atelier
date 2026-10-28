@@ -3,14 +3,15 @@ import Composer from '@/components/wall/Composer';
 import Keepsakes from '@/components/Keepsakes';
 import { getSession } from '@/lib/auth';
 import { getMine } from '@/lib/wall';
+import { upcomingOccasions } from '@/lib/extras';
 
 export default async function WallLove() {
-  const mine = await getMine((await getSession())!);
+  const [mine, occasions] = await Promise.all([getMine((await getSession())!), upcomingOccasions()]);
   return (
     <main className="h-page w-page">
       <Keepsakes set="love" />
       <PageHead back="/wall" kicker="pinned up, just for her" title="Yaadon ka Samandar!" sub="A message, a whole photo album, a voice note or a little film." />
-      <Composer mine={{ ...mine, posts: mine.posts.filter((p) => !p.pageId) }} only={['message', 'voice', 'video']} />
+      <Composer mine={{ ...mine, posts: mine.posts.filter((p) => !p.pageId) }} only={['message', 'voice', 'video']} occasions={occasions} />
     </main>
   );
 }

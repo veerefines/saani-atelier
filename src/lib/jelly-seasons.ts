@@ -31,6 +31,7 @@ export type Season = {
 export const SEASON_KEYS = [
   'halloween', 'natale', 'diwali', 'holi', 'capodanno', 'gudi', 'pasqua', 'valentino', 'carnevale', 'graduation', 'study', 'inverno',
   'sankranti', 'pongal', 'shivratri', 'eid', 'rakhi', 'janmashtami', 'ganesh', 'onam', 'navratri', 'dussehra', 'karvachauth',
+  'birthday',
 ] as const;
 export type SeasonKey = (typeof SEASON_KEYS)[number];
 /** Jelly dressed for it (public/corner/jelly/festive, from the festive pack) */
@@ -148,6 +149,11 @@ const T: Record<SeasonKey, Template> = {
     hello: 'Happy Dussehra! 🏹 Good always wins, Saani. Jelly’s bow is ready.', backdrop: 'diwali',
     quest: { id: 'season-dussehra', tier: 3, icon: '🏹', title: 'Dussehra: tick off something you’ve been putting off', metric: 'checklist', n: 1, href: '/home/checklist' },
   },
+  birthday: {
+    key: 'birthday', name: 'Your birthday', emoji: '🎂', fall: 'confetti', tint: 'rgba(255, 214, 224, 0.22)', pearls: 50,
+    hello: 'Tanti auguri a te, Saani! 🎂 Happy birthday! Jelly has a present (and a flower crown) just for you.', backdrop: 'birthday',
+    quest: { id: 'season-birthday', tier: 3, icon: '🎂', title: 'Birthday: open a letter or a note from your people', metric: 'lettersOpened', n: 1, href: '/home/letters' },
+  },
   karvachauth: {
     key: 'karvachauth', name: 'Karva Chauth', emoji: '🌕', fall: 'sparks', tint: 'rgba(200, 60, 80, 0.12)', pearls: 20,
     hello: 'Happy Karva Chauth! 🌕 Jelly has her chalni ready to spot the moon.', backdrop: 'moonlit',
@@ -211,14 +217,19 @@ export const SEASON_BACKDROPS = [
   { id: 'moonlit', name: 'Moonlit night', sky: 'radial-gradient(circle at 76% 20%, #fff6d0 0 20px, rgba(255, 246, 208, 0.25) 22px 38px, transparent 40px), radial-gradient(circle at 25% 30%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 55% 15%, #fff 0 1.5px, transparent 2.5px), linear-gradient(180deg, #1f2550 0%, #3d3a78 55%, #8a6fa8 100%)', floor: '#5d5486' },
   { id: 'peacock', name: 'Peacock blue', sky: 'radial-gradient(circle at 30% 30%, #2fb3a399 0 30px, transparent 60px), radial-gradient(circle at 70% 25%, #3f6fd199 0 34px, transparent 64px), linear-gradient(180deg, #2a4b8c 0%, #4f8fb8 55%, #cfe9e4 100%)', floor: '#8fb9a8' },
   { id: 'garba', name: 'Garba night', sky: 'radial-gradient(circle at 20% 25%, #ffcf5a 0 3px, transparent 4px), radial-gradient(circle at 50% 18%, #ff6f91 0 3px, transparent 4px), radial-gradient(circle at 80% 28%, #7fd0ff 0 3px, transparent 4px), linear-gradient(180deg, #5a1846 0%, #b2305f 55%, #ffb36b 100%)', floor: '#c9774f' },
+  { id: 'birthday', name: 'Birthday balloons', sky: 'radial-gradient(circle at 18% 30%, #f4a6c0 0 12px, transparent 13px), radial-gradient(circle at 80% 24%, #cdb4f0 0 12px, transparent 13px), radial-gradient(circle at 62% 40%, #f7e3a1 0 10px, transparent 11px), linear-gradient(180deg, #ffe8f0 0%, #fff4e0 60%, #fffaf2 100%)', floor: '#f9e2c8' },
   { id: 'graduation', name: 'Gold confetti', sky: 'radial-gradient(circle at 18% 30%, #f2c84b 0 3px, transparent 4px), radial-gradient(circle at 70% 20%, #f2c84b 0 3px, transparent 4px), radial-gradient(circle at 45% 45%, #fff 0 2px, transparent 3px), linear-gradient(180deg, #2b2730 0%, #5a4a5e 55%, #e9d9b8 100%)', floor: '#d9c39a' },
 ];
 
-/** Her graduation, from the occasions her people set up (one with "graduation" or "laurea" in its title). */
+/**
+ * Special days added in admin that have their own festival: her birthday (an occasion with
+ * "birthday" or "compleanno" in its title) and her graduation ("graduation", "laurea").
+ */
 export function occasionSeasons(occasions: { date: string; title: string }[]): Season[] {
-  return occasions
-    .filter((o) => /graduat|laurea|convocation/i.test(o.title))
-    .map((o) => ({ ...T.graduation, id: `graduation-${o.date}`, start: o.date, end: o.date }));
+  return occasions.flatMap((o) => {
+    const key: SeasonKey | null = /birthday|b'?day|compleanno/i.test(o.title) ? 'birthday' : /graduat|laurea|convocation/i.test(o.title) ? 'graduation' : null;
+    return key ? [{ ...T[key], id: `${key}-${o.date}`, start: o.date, end: o.date }] : [];
+  });
 }
 
 /** What's on today: the shortest (most special) of anything running. */

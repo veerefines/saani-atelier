@@ -195,11 +195,11 @@ echo "--- seasons"
 SEASONS=$(cd "$ROOT" && node --experimental-strip-types --no-warnings -e "
 import('./src/lib/jelly-seasons.ts').then(({ seasonOn, occasionSeasons }) => {
   const k = (d, x) => seasonOn(d, x)?.key ?? 'none';
-  const grad = occasionSeasons([{ date: '2027-07-01', title: 'Saani’s graduation' }]);
-  console.log([k('2026-10-27'), k('2026-11-08'), k('2026-11-20'), k('2026-12-25'), k('2027-01-01'), k('2027-01-20'), k('2027-02-05'), k('2027-02-14'), k('2027-03-22'), k('2027-03-28'), k('2027-04-07'), k('2027-07-01', grad), k('2027-08-01'), k('2026-10-29'), k('2027-01-14'), k('2027-01-16'), k('2027-03-06'), k('2027-03-10'), k('2027-08-17'), k('2027-08-24'), k('2027-09-05'), k('2027-09-12'), k('2027-10-02'), k('2027-10-09'), k('2027-10-18')].join(','));
+  const grad = occasionSeasons([{ date: '2027-07-01', title: 'Saani’s graduation' }, { date: '2027-08-17', title: 'Saanika’s Birthday' }]);
+  console.log([k('2026-10-27'), k('2026-11-08'), k('2026-11-20'), k('2026-12-25'), k('2027-01-01'), k('2027-01-20'), k('2027-02-05'), k('2027-02-14'), k('2027-03-22'), k('2027-03-28'), k('2027-04-07'), k('2027-07-01', grad), k('2027-08-01'), k('2026-10-29'), k('2027-01-14'), k('2027-01-16'), k('2027-03-06'), k('2027-03-10'), k('2027-08-17'), k('2027-08-17', grad), k('2027-08-24'), k('2027-09-05'), k('2027-09-12'), k('2027-10-02'), k('2027-10-09'), k('2027-10-18')].join(','));
 });" 2>&1)
-same "the right festival each day" "$SEASONS" "halloween,diwali,study,natale,capodanno,inverno,carnevale,valentino,holi,pasqua,gudi,graduation,none,karvachauth,sankranti,pongal,shivratri,eid,rakhi,janmashtami,ganesh,onam,navratri,dussehra,karvachauth"
-for k in halloween natale diwali holi capodanno gudi pasqua valentino carnevale graduation study inverno sankranti pongal shivratri eid rakhi janmashtami ganesh onam navratri dussehra karvachauth; do
+same "the right festival each day" "$SEASONS" "halloween,diwali,study,natale,capodanno,inverno,carnevale,valentino,holi,pasqua,gudi,graduation,none,karvachauth,sankranti,pongal,shivratri,eid,rakhi,birthday,janmashtami,ganesh,onam,navratri,dussehra,karvachauth"
+for k in halloween natale diwali holi capodanno gudi pasqua valentino carnevale graduation study inverno sankranti pongal shivratri eid rakhi janmashtami ganesh onam navratri dussehra karvachauth birthday; do
   check "Jelly's $k outfit" 200 "$B/corner/jelly/festive/$k.webp"
 done
 NOWK=$(cd "$ROOT" && node --experimental-strip-types --no-warnings -e "import('./src/lib/jelly-seasons.ts').then(({ seasonOn }) => console.log(seasonOn(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date()))?.key ?? 'none'))")

@@ -147,6 +147,14 @@ check "a special day tomorrow" 201 -b "$FR" -X POST "${J[@]}" -d "{\"date\":\"$T
 check "friend desk shows it coming up" 200 -b "$FR" $B/wall
 expect "special day banner" "w-soon"
 expect "says tomorrow" "SOON-DAY"
+# a special day far off, after all the others: it still shows wherever a date can be picked
+check "a birthday far away" 201 -b "$FR" -X POST "${J[@]}" -d '{"date":"2030-08-17","title":"FAR-BIRTHDAY","emoji":"🎂","remindDays":3}' $B/api/admin/occasions
+check "letters page" 200 -b "$FR" $B/wall/letters
+expect "seal it for tomorrow's day" "SOON-DAY"
+expect "and for the far one" "FAR-BIRTHDAY"
+check "love wall" 200 -b "$FR" $B/wall/love
+expect "deliver on a special day" "Deliver it on a special day"
+expect "with the far one" "FAR-BIRTHDAY"
 
 echo "--- the journey's words, edited from admin"
 check "words: friend (not admin) 403" 403 -b "$EF" -X POST "${J[@]}" -d '{"key":"once.title","value":"x"}' $B/api/admin/journey/text

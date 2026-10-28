@@ -221,7 +221,7 @@ export async function platformContext(s: JellyState, path: string | null, max = 
     );
   }
 
-  const soon = occasions.filter((o) => o.date >= today && o.date <= addDays(today, 45)).slice(0, 3);
+  const soon = occasions.filter((o) => o.date >= today && o.date <= addDays(today, 60)).slice(0, 6);
   if (soon.length) L.push(`Coming up: ${soon.map((o) => `${o.emoji} ${o.title} (${fmt(o.date)})`).join(', ')}.`);
   const events = happenings
     .flatMap((h) => (h.editions ?? []).filter((e) => e.end >= today).map((e) => ({ h, e })))

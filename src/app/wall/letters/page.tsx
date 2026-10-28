@@ -3,12 +3,11 @@ import Composer from '@/components/wall/Composer';
 import Keepsakes from '@/components/Keepsakes';
 import { getSession } from '@/lib/auth';
 import { getMine } from '@/lib/wall';
-import { listOccasions, milanDay } from '@/lib/extras';
+import { upcomingOccasions } from '@/lib/extras';
 
 export default async function WallLetters() {
-  const [mine, occasions] = await Promise.all([getMine((await getSession())!), listOccasions()]);
-  const today = milanDay();
-  const upcoming = occasions.filter((o) => o.date > today).slice(0, 6).map((o) => ({ date: o.date, title: o.title, emoji: o.emoji }));
+  // every special day to come, festivals and anything added in admin
+  const [mine, upcoming] = await Promise.all([getMine((await getSession())!), upcomingOccasions()]);
   return (
     <main className="h-page w-page">
       <Keepsakes set="letters" />

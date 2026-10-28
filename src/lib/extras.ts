@@ -52,6 +52,11 @@ export async function listOccasions(): Promise<Occasion[]> {
   }
   return (await db.list<Occasion>('occasions')).sort((a, b) => (a.date < b.date ? -1 : 1));
 }
+/** Every special day still to come (all of them: festivals and anything added in admin), for date pickers. */
+export async function upcomingOccasions() {
+  const today = milanDay();
+  return (await listOccasions()).filter((o) => o.date > today).map((o) => ({ date: o.date, title: o.title, emoji: o.emoji }));
+}
 export const saveOccasion = (o: Occasion) => db.put<Occasion>('occasions', o);
 export const removeOccasion = (id: string) => db.remove('occasions', id);
 export const newOccasionId = () => db.newId('o_');
