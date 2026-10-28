@@ -188,9 +188,9 @@ export default function RadioChip({ friend = false }: { friend?: boolean }) {
           </span>
         )}
       </button>
-      {waiting && !open && (
-        <span className="radio-peek hint" aria-live="polite">
-          <b>Tap anywhere</b> for music 🎶
+      {waiting && !open && prefs.on && prefs.music > 0 && (
+        <span className="radio-hint" aria-live="polite">
+          <b>Tap anywhere</b> for music <i aria-hidden="true">🎶</i>
         </span>
       )}
       {peek && !waiting && !open && playing === 'italia' && mood && (

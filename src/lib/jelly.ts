@@ -3,7 +3,7 @@ import { cleanPrefs, DEFAULT_PREFS, type AudioPrefs } from './audio-prefs';
 import { milanDay, addDays } from './extras';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, BACKDROPS, goalOf, itemById, MAX_PLACED, type Placed, type Stats } from './jelly-catalog';
-import { FEATURED_OFF, type Season } from './jelly-seasons';
+import { SEASON_NAMES, type Season, type SeasonKey } from './jelly-seasons';
 import { ALL_BONUS, EVENTS, pickQuests, questById, TIER_PEARLS, valueOf, type EventName, type Quest, type QuestState } from './quests';
 
 /**
@@ -271,12 +271,13 @@ export const setPrefs = (patch: Partial<AudioPrefs>) =>
 export const setSpotify = (uri: string | null) => change((s) => ({ ...s, spotify: uri }));
 
 /** Buy a thing (or a backdrop) for Jelly's home. Returns an error message, or the new state. */
-export async function buy(id: string, featured: string[] = []): Promise<string | JellyState> {
+export async function buy(id: string, season: SeasonKey | null = null): Promise<string | JellyState> {
   const item = itemById(id);
   const bd = BACKDROPS.find((b) => b.id === id);
-  // the season's themed things are 30% off
-  const price = item?.price !== undefined && featured.includes(id) ? Math.round(item.price * (1 - FEATURED_OFF)) : (item?.price ?? bd?.price);
+  const price = item?.price ?? bd?.price;
   if (!item && !bd) return 'That isn’t in the shop.';
+  // a festival's own things are only in the shop while it's on
+  if (item?.season && item.season !== season) return `That one’s only in the shop for ${SEASON_NAMES[item.season]}.`;
   if (price === undefined) return 'That one can’t be bought: it’s unlocked by an achievement.';
   let err = '';
   const s = await change((s) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/upload-client';
 import { sfx } from '@/lib/sound';
@@ -42,6 +42,16 @@ export default function Money({ initial }: { initial: Month }) {
       .then(setM)
       .catch(() => {});
 
+  // crossing the budget line gets a kind "uh-oh"; a month back under it, a shower of coins
+  const wasOver = useRef(initial.summary.left !== null && initial.summary.left < 0);
+  useEffect(() => {
+    const over = m.summary.left !== null && m.summary.left < 0;
+    if (m.month !== thisMonth) return;
+    if (over && !wasOver.current) setTimeout(() => sfx('oops'), 900);
+    if (!over && wasOver.current) setTimeout(() => sfx('coins'), 600);
+    wasOver.current = over;
+  }, [m.summary.left, m.month, thisMonth]);
+
   const byDay = useMemo(() => {
     const g: Record<string, Expense[]> = {};
     for (const x of m.expenses) (g[x.day] ??= []).push(x);
@@ -60,11 +70,11 @@ export default function Money({ initial }: { initial: Month }) {
       <RateCard rate={rate} />
       <section className="soldi-month" aria-label="This month">
         <div className="soldi-monthbar">
-          <button type="button" onClick={() => load(shift(m.month, -1))} aria-label="Previous month">
+          <button type="button" onClick={() => (sfx('page'), load(shift(m.month, -1)))} aria-label="Previous month" data-quiet>
             ‹
           </button>
           <b>{monthName(m.month)}</b>
-          <button type="button" onClick={() => load(shift(m.month, 1))} disabled={m.month >= thisMonth} aria-label="Next month">
+          <button type="button" onClick={() => (sfx('page'), load(shift(m.month, 1)))} disabled={m.month >= thisMonth} aria-label="Next month" data-quiet>
             ›
           </button>
         </div>
@@ -115,7 +125,7 @@ export default function Money({ initial }: { initial: Month }) {
                   const c = categoryOf(x.category);
                   return (
                     <motion.li key={x.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -30 }}>
-                      <button type="button" className="soldi-item" onClick={() => setEditing(x)} aria-label={`Change ${c.label} ${eur(x.eur)}`}>
+                      <button type="button" className="soldi-item" onClick={() => (sfx('coin'), setEditing(x))} data-quiet aria-label={`Change ${c.label} ${eur(x.eur)}`}>
                         <span className="soldi-item-icon" aria-hidden="true">
                           {c.icon}
                         </span>
@@ -195,7 +205,7 @@ function RateCard({ rate }: { rate: Rate | null }) {
           <span>{side === 'EUR' ? '€' : '₹'}</span>
           <input inputMode="decimal" value={val} onChange={(e) => setVal(e.target.value.replace(/[^\d.,]/g, ''))} aria-label={side === 'EUR' ? 'Euros' : 'Rupees'} />
         </label>
-        <button type="button" className="soldi-swap" onClick={() => (sfx('blip'), setSide(side === 'EUR' ? 'INR' : 'EUR'))} aria-label="Swap currencies">
+        <button type="button" className="soldi-swap" onClick={() => (sfx('flip'), setSide(side === 'EUR' ? 'INR' : 'EUR'))} data-quiet aria-label="Swap currencies">
           ⇄
         </button>
         <output>{out}</output>
@@ -289,7 +299,7 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
     setErr('');
     try {
       await api('/api/expenses', 'POST', { amount: n, currency: cur, category: cat, note, day });
-      sfx('clink');
+      sfx('kaching');
       checkSoon();
       setAmount('');
       setNote('');
@@ -307,7 +317,7 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
       <div className="soldi-add-row">
         <div className="soldi-cur" role="group" aria-label="Currency">
           {(['EUR', 'INR'] as Currency[]).map((c) => (
-            <button key={c} type="button" className={cur === c ? 'on' : ''} aria-pressed={cur === c} onClick={() => setCur(c)}>
+            <button key={c} type="button" className={cur === c ? 'on' : ''} aria-pressed={cur === c} onClick={() => (sfx('flip'), setCur(c))} data-quiet>
               {c === 'EUR' ? '€' : '₹'}
             </button>
           ))}
@@ -317,7 +327,7 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
       </div>
       <div className="soldi-chips" role="radiogroup" aria-label="Category">
         {CATEGORIES.map((c) => (
-          <button key={c.id} type="button" role="radio" aria-checked={cat === c.id} className={cat === c.id ? 'on' : ''} onClick={() => setCat(c.id)}>
+          <button key={c.id} type="button" role="radio" aria-checked={cat === c.id} className={cat === c.id ? 'on' : ''} onClick={() => (sfx('coin'), setCat(c.id))} data-quiet>
             <span aria-hidden="true">{c.icon}</span> {c.label}
           </button>
         ))}
@@ -358,7 +368,7 @@ function EditSpend({ x, onClose, onSaved, onDelete }: { x: Expense; onClose: () 
     e.preventDefault();
     try {
       await api(`/api/expenses/${x.id}`, 'PATCH', { amount: Number(amount.replace(',', '.')), category: cat, note, day });
-      sfx('pop');
+      sfx('coin');
       onSaved();
     } catch (z) {
       setErr((z as Error).message);
@@ -403,7 +413,7 @@ function BudgetEditor({ b, onClose, onSaved }: { b: Budget; onClose: () => void;
     e.preventDefault();
     try {
       await api('/api/expenses/budget', 'PUT', { monthly: Number(monthly || 0), caps: Object.fromEntries(Object.entries(caps).map(([k, v]) => [k, Number(v)])) });
-      sfx('chime');
+      sfx('coins');
       onSaved();
     } catch (z) {
       setErr((z as Error).message);

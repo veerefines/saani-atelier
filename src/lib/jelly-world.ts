@@ -7,7 +7,7 @@ import { monthOf, summary } from './money';
 import { getBudget, listExpenses } from './money-store';
 import { memories, memoryText } from './jelly-memory';
 import { listReminders } from './reminders';
-import { birthdaySeasons, seasonOn, type Season } from './jelly-seasons';
+import { occasionSeasons, seasonOn, type Season } from './jelly-seasons';
 import { questById, TIER_PEARLS, valueOf, type QuestView } from './quests';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, goalOf, itemById, progressOf, type Stats } from './jelly-catalog';
@@ -118,7 +118,7 @@ function underBudget(w: World) {
 export async function today(): Promise<{ inMilano: boolean; season: Season | null }> {
   const day = milanDay();
   const occasions = await listOccasions().catch(() => []);
-  return { inMilano: day >= milano.arrival, season: seasonOn(day, birthdaySeasons(occasions)) };
+  return { inMilano: day >= milano.arrival, season: seasonOn(day, occasionSeasons(occasions)) };
 }
 
 /** Today's quests and how far along each one is, without awarding anything. */
@@ -233,7 +233,7 @@ export async function platformContext(s: JellyState, path: string | null, max = 
   if (upcoming.length) L.push(`Her reminders (you set these for her): ${upcoming.map((r) => `“${short(r.text, 60)}” ${new Intl.DateTimeFormat('en-GB', { timeZone: r.tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(r.at))}${r.repeat !== 'none' ? ` (${r.repeat})` : ''}`).join('; ')}.`);
   const q = s.quests?.day === today ? s.quests : null;
   if (q) L.push(`Today’s daily quests: ${q.ids.map((id) => `${questById(id)?.title ?? id}${q.done.includes(id) ? ' (done)' : ''}`).join('; ')}.`);
-  const on = seasonOn(today, birthdaySeasons(occasions));
+  const on = seasonOn(today, occasionSeasons(occasions));
   if (on) L.push(`It’s ${on.name} ${on.emoji} right now: you’re dressed up for it; be festive about it.`);
 
   // Jelly's own corner: her home, and what Saani is close to unlocking

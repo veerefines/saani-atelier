@@ -29,8 +29,7 @@ import { sfx, useSound, voice } from '@/lib/sound';
 import JellyChats from './JellyChats';
 import Games from './Games';
 import JellyMemory from './JellyMemory';
-import SeasonLook from './SeasonLook';
-import { FEATURED_OFF, type SeasonView } from '@/lib/jelly-seasons';
+import { SEASON_NAMES, type SeasonView } from '@/lib/jelly-seasons';
 import type { Chat } from '@/lib/corner-model';
 import './jelly.css';
 
@@ -44,8 +43,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'memory', label: 'Remembers', icon: '🫧' },
   { id: 'chats', label: 'Chats', icon: '💬' },
 ];
-/** What a thing costs today: the season's themed things are 30% off. */
-const priceOf = (price: number, id: string, season: SeasonView | null) => (season?.featured.includes(id) ? Math.round(price * (1 - FEATURED_OFF)) : price);
+
 
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
 const GROUPS: AchGroup[] = ['Jelly', 'Every day', 'Milano', 'Settling in', 'Soldi', 'Bingo', 'Your story', 'Your people', 'My Corner'];
@@ -259,8 +257,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
       {/* who she is, and how they're doing */}
       <header className="jh-hero">
         <button type="button" data-quiet className={`jh-me mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
-          <img key={mood} src={moodHd(mood)} alt="" width={96} height={96} />
-          {season && <SeasonLook look={season.look} />}
+          <img key={season && !react ? 'festive' : mood} src={season && !react ? season.jelly : moodHd(mood)} alt="" width={96} height={96} />
         </button>
         <div className="jh-hello">
           <b>Jelly</b>
@@ -517,25 +514,22 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
           {season && (
             <div className="jh-featured">
               <h3>
-                {season.emoji} {season.name} shelf <small>30% off until {new Date(`${season.end}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
+                <img src={season.jelly} alt="" width={44} height={44} />
+                {season.name} shelf <small>only until {new Date(`${season.end}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
               </h3>
               <div className="jh-featured-row">
-                {season.featured.flatMap((id) => {
-                  const it = itemById(id);
-                  if (!it || it.price === undefined) return [];
-                  const now = priceOf(it.price, id, season);
-                  return [
-                    <article key={id} className={`jh-card mini${home.owned[id] ? ' owned' : ''}${bought === id ? ' bought' : ''}`}>
-                      <span className="jh-card-art">
-                        <img src={itemSrc(id)} alt="" loading="lazy" />
-                      </span>
-                      <b>{it.name}</b>
-                      <button type="button" className="jh-buy" disabled={home.pearls < now || buying === id} onClick={() => buy(id, it.name)}>
-                        <Pearl /> {now} <s>{it.price}</s>
-                      </button>
-                    </article>,
-                  ];
-                })}
+                {ITEMS.filter((it) => it.season === season.key).map((it) => (
+                  <article key={it.id} className={`jh-card mini${home.owned[it.id] ? ' owned' : ''}${bought === it.id ? ' bought' : ''}`}>
+                    {(home.owned[it.id] ?? 0) > 0 && <span className="jh-count">×{home.owned[it.id]}</span>}
+                    <span className="jh-card-art">
+                      <img src={itemSrc(it.id)} alt="" loading="lazy" />
+                    </span>
+                    <b>{it.name}</b>
+                    <button type="button" className="jh-buy" disabled={home.pearls < it.price! || buying === it.id} onClick={() => buy(it.id, it.name)}>
+                      <Pearl /> {it.price}
+                    </button>
+                  </article>
+                ))}
               </div>
             </div>
           )}
@@ -578,6 +572,8 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                   const n = home.owned[it.id] ?? 0;
                   const by = unlockedBy(it.id);
                   const exclusive = it.price === undefined;
+                  // a festival's things wait for their festival (once hers, they're hers)
+                  const away = Boolean(it.season && it.season !== season?.key);
                   return (
                     <article key={it.id} className={`jh-card k-${it.kind}${n ? ' owned' : ''}${exclusive ? ' exclusive' : ''}${exclusive && !n ? ' locked' : ''}${bought === it.id ? ' bought' : ''}`}>
                       {exclusive && <span className="jh-ribbon">Exclusive</span>}
@@ -587,10 +583,13 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                       </span>
                       <b>{it.name}</b>
                       {!exclusive ? (
-                        <button type="button" className="jh-buy" disabled={home.pearls < priceOf(it.price!, it.id, season) || buying === it.id} onClick={() => buy(it.id, it.name)}>
-                          <Pearl /> {priceOf(it.price!, it.id, season)}
-                          {priceOf(it.price!, it.id, season) !== it.price && <s>{it.price}</s>}
-                        </button>
+                        away ? (
+                          <span className="jh-lock">{n ? '✓ Jelly’s' : `🗓️ back for ${SEASON_NAMES[it.season!]}`}</span>
+                        ) : (
+                          <button type="button" className="jh-buy" disabled={home.pearls < it.price! || buying === it.id} onClick={() => buy(it.id, it.name)}>
+                            <Pearl /> {it.price}
+                          </button>
+                        )
                       ) : n ? (
                         <span className="jh-owned">✓ Won</span>
                       ) : (

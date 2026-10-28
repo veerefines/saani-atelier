@@ -193,12 +193,20 @@ same "nothing left" "$(jget .facts.length)" "0"
 
 echo "--- seasons"
 SEASONS=$(cd "$ROOT" && node --experimental-strip-types --no-warnings -e "
-import('./src/lib/jelly-seasons.ts').then(({ seasonOn, birthdaySeasons }) => {
+import('./src/lib/jelly-seasons.ts').then(({ seasonOn, occasionSeasons }) => {
   const k = (d, x) => seasonOn(d, x)?.key ?? 'none';
-  const bday = birthdaySeasons([{ date: '2027-02-10', title: 'Saani’s birthday' }]);
-  console.log([k('2026-10-27'), k('2026-11-08'), k('2026-11-10'), k('2026-12-25'), k('2027-01-01'), k('2027-02-14'), k('2027-02-10', bday), k('2027-03-22'), k('2027-02-25'), k('2027-07-01')].join(','));
+  const grad = occasionSeasons([{ date: '2027-07-01', title: 'Saani’s graduation' }]);
+  console.log([k('2026-10-27'), k('2026-11-08'), k('2026-11-20'), k('2026-12-25'), k('2027-01-01'), k('2027-01-15'), k('2027-02-05'), k('2027-02-14'), k('2027-03-22'), k('2027-03-28'), k('2027-04-07'), k('2027-07-01', grad), k('2027-08-01')].join(','));
 });" 2>&1)
-same "the right season each day" "$SEASONS" "halloween,diwali,arrival,natale,capodanno,valentino,birthday,holi,mfw,none"
+same "the right festival each day" "$SEASONS" "halloween,diwali,study,natale,capodanno,inverno,carnevale,valentino,holi,pasqua,gudi,graduation,none"
+for k in halloween natale diwali holi capodanno gudi pasqua valentino carnevale graduation study inverno; do
+  check "Jelly's $k outfit" 200 "$B/corner/jelly/festive/$k.webp"
+done
+NOWK=$(cd "$ROOT" && node --experimental-strip-types --no-warnings -e "import('./src/lib/jelly-seasons.ts').then(({ seasonOn }) => console.log(seasonOn(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date()))?.key ?? 'none'))")
+OFF=santa-hat; [[ "$NOWK" == natale ]] && OFF=bat
+check "a festival's things wait for their festival" 400 -b "$SA" -X POST "${J[@]}" -d "{\"id\":\"$OFF\"}" $B/api/jelly/shop
+expect "says when" "only in the shop for"
+check "an every-day new thing is in the shop" 200 "$B/corner/home/items/cappuccino.webp"
 check "Jelly's Corner with the new tabs" 200 -b "$SA" "$B/home/jelly?tab=games"
 expect "games tab" "Pearl Catch"
 

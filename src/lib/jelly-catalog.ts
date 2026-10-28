@@ -3,7 +3,7 @@
  * Shared by the server (which checks and awards) and the browser (which shows progress).
  * No database code here.
  */
-import { SEASON_BACKDROPS } from './jelly-seasons';
+import { SEASON_BACKDROPS, type SeasonKey } from './jelly-seasons';
 
 /* ---------- what Saani has done across the whole Atelier ---------- */
 export type Stats = {
@@ -55,7 +55,7 @@ export type Stats = {
 export type Metric = keyof Stats;
 
 /* ---------- things for her home (pictures in public/corner/home/items) ---------- */
-export type ItemKind = 'furniture' | 'lights' | 'plants' | 'treasures' | 'decor' | 'friends';
+export type ItemKind = 'furniture' | 'lights' | 'plants' | 'treasures' | 'decor' | 'friends' | 'festive';
 export const KINDS: { id: ItemKind; label: string }[] = [
   { id: 'furniture', label: 'Furniture' },
   { id: 'lights', label: 'Lights' },
@@ -63,13 +63,15 @@ export const KINDS: { id: ItemKind; label: string }[] = [
   { id: 'treasures', label: 'Treasures' },
   { id: 'decor', label: 'Decor' },
   { id: 'friends', label: 'Sea friends' },
+  { id: 'festive', label: 'Festive' },
 ];
 
 /**
  * price: bought with pearls. Without a price it's exclusive: only an achievement unlocks it.
  * w: how wide it stands in her room, as a % of the room's width (before she resizes it).
+ * season: festive things are only in the shop while their festival is on (she keeps them after).
  */
-export type Thing = { id: string; name: string; kind: ItemKind; w: number; price?: number };
+export type Thing = { id: string; name: string; kind: ItemKind; w: number; price?: number; season?: SeasonKey };
 export const itemSrc = (id: string) => `/corner/home/items/${id}.webp`;
 
 export const ITEMS: Thing[] = [
@@ -245,6 +247,78 @@ export const ITEMS: Thing[] = [
   { id: 'narwhal', name: 'Uni the narwhal', kind: 'friends', w: 11.1 },
   { id: 'seal', name: 'Foca the seal', kind: 'friends', w: 10.3 },
   { id: 'whale-shark', name: 'Squalo the whale shark', kind: 'friends', w: 10.7 },
+  // from the festive pack (Oct 2026): every-day treasures, and each festival's own things
+  { id: 'jack-o-lantern', name: 'Jack-o’-lantern', kind: 'festive', w: 4.5, price: 30, season: 'halloween' },
+  { id: 'bat', name: 'Little bat', kind: 'festive', w: 4, price: 15, season: 'halloween' },
+  { id: 'ghost', name: 'Friendly ghost', kind: 'festive', w: 6.5, price: 25, season: 'halloween' },
+  { id: 'witch-hat', name: 'Witch’s hat', kind: 'festive', w: 8.1, price: 35, season: 'halloween' },
+  { id: 'santa-hat', name: 'Santa hat', kind: 'festive', w: 6.6, price: 25, season: 'natale' },
+  { id: 'xmas-tree', name: 'Christmas tree', kind: 'festive', w: 6.4, price: 60, season: 'natale' },
+  { id: 'xmas-bow', name: 'Festive red bow', kind: 'festive', w: 4.7, price: 15, season: 'natale' },
+  { id: 'holly-bow', name: 'Holly bow', kind: 'festive', w: 8.4, price: 20, season: 'natale' },
+  { id: 'holly-wreath', name: 'Holly wreath', kind: 'festive', w: 6.2, price: 25, season: 'natale' },
+  { id: 'diya', name: 'Diya', kind: 'festive', w: 4, price: 15, season: 'diwali' },
+  { id: 'brass-lamp', name: 'Brass lamp', kind: 'festive', w: 4, price: 30, season: 'diwali' },
+  { id: 'diya-tray', name: 'Golden diya tray', kind: 'festive', w: 4.4, price: 35, season: 'diwali' },
+  { id: 'rangoli', name: 'Rangoli', kind: 'festive', w: 6.8, price: 40, season: 'diwali' },
+  { id: 'mithai', name: 'Mithai bowl', kind: 'festive', w: 4.6, price: 20, season: 'diwali' },
+  { id: 'lotus', name: 'Pink lotus', kind: 'festive', w: 4.5, price: 22, season: 'diwali' },
+  { id: 'gulal-bowl', name: 'Bowl of gulal', kind: 'festive', w: 4, price: 25, season: 'holi' },
+  { id: 'holi-colours', name: 'Holi colours', kind: 'festive', w: 6.7, price: 30, season: 'holi' },
+  { id: 'champagne-glass', name: 'Champagne glass', kind: 'festive', w: 4, price: 15, season: 'capodanno' },
+  { id: 'champagne', name: 'Bottle of bubbly', kind: 'festive', w: 4, price: 30, season: 'capodanno' },
+  { id: 'party-hat', name: 'New Year top hat', kind: 'festive', w: 6.2, price: 35, season: 'capodanno' },
+  { id: 'gold-star', name: 'Golden star', kind: 'festive', w: 4, price: 12, season: 'capodanno' },
+  { id: 'marigold-pot', name: 'Marigold pot', kind: 'festive', w: 4.7, price: 25, season: 'gudi' },
+  { id: 'dhol', name: 'Dhol & flowers', kind: 'festive', w: 8.2, price: 40, season: 'gudi' },
+  { id: 'gudi', name: 'Little gudi', kind: 'festive', w: 4, price: 20, season: 'gudi' },
+  { id: 'neem', name: 'Neem sprig', kind: 'festive', w: 4, price: 12, season: 'gudi' },
+  { id: 'easter-eggs', name: 'Easter eggs', kind: 'festive', w: 6, price: 30, season: 'pasqua' },
+  { id: 'flower-basket', name: 'Flower basket', kind: 'festive', w: 6.2, price: 25, season: 'pasqua' },
+  { id: 'bunny-ears', name: 'Bunny ears', kind: 'festive', w: 6.1, price: 20, season: 'pasqua' },
+  { id: 'heart-balloons', name: 'Heart balloons', kind: 'festive', w: 9.1, price: 30, season: 'valentino' },
+  { id: 'heart-balloon', name: 'Heart balloon', kind: 'festive', w: 4, price: 15, season: 'valentino' },
+  { id: 'rose-bouquet', name: 'Rose bouquet', kind: 'festive', w: 4, price: 25, season: 'valentino' },
+  { id: 'heart-gem', name: 'Heart gem', kind: 'festive', w: 4, price: 20, season: 'valentino' },
+  { id: 'pink-bow', name: 'Pink bow', kind: 'festive', w: 6.6, price: 12, season: 'valentino' },
+  { id: 'venice', name: 'Venice & gondola', kind: 'festive', w: 9.4, price: 60, season: 'carnevale' },
+  { id: 'italian-flag', name: 'Italian flag', kind: 'festive', w: 4, price: 20, season: 'carnevale' },
+  { id: 'rialto', name: 'Little Rialto', kind: 'festive', w: 4.2, price: 35, season: 'carnevale' },
+  { id: 'grad-cap', name: 'Graduation cap', kind: 'festive', w: 6.7, price: 30, season: 'graduation' },
+  { id: 'jelly-book', name: 'Jelly storybook', kind: 'festive', w: 6.2, price: 15, season: 'study' },
+  { id: 'study-set', name: 'Study set', kind: 'festive', w: 8.9, price: 25, season: 'study' },
+  { id: 'golden-moon', name: 'Golden moon', kind: 'festive', w: 4.6, price: 25, season: 'inverno' },
+  { id: 'star-plush', name: 'Star cushion', kind: 'festive', w: 4.5, price: 20, season: 'inverno' },
+  { id: 'jelly-candle', name: 'Jelly candle', kind: 'festive', w: 4.5, price: 18, season: 'inverno' },
+  { id: 'jelly-dome', name: 'Jelly in a dome', kind: 'treasures', w: 4.1, price: 40 },
+  { id: 'jelly-globe', name: 'Jelly snow globe', kind: 'treasures', w: 4.8, price: 35 },
+  { id: 'crystal-orb', name: 'Crystal orb', kind: 'treasures', w: 4.8, price: 35 },
+  { id: 'coral-dome', name: 'Coral dome', kind: 'treasures', w: 4.9, price: 40 },
+  { id: 'treasure-chest', name: 'Treasure chest', kind: 'treasures', w: 6.9, price: 60 },
+  { id: 'opal-heart', name: 'Opal heart', kind: 'treasures', w: 4, price: 25 },
+  { id: 'jewel-stand', name: 'Jewellery stand', kind: 'treasures', w: 4, price: 35 },
+  { id: 'vintage-camera', name: 'Vintage camera', kind: 'decor', w: 5.3, price: 40 },
+  { id: 'instax', name: 'Pink instant camera', kind: 'decor', w: 6.1, price: 35 },
+  { id: 'shopping-pisa', name: 'Shopping day', kind: 'decor', w: 14, price: 45 },
+  { id: 'shopping-bag', name: 'Shopping bag', kind: 'decor', w: 6.6, price: 20 },
+  { id: 'phone-case', name: 'Pretty phone', kind: 'decor', w: 4.1, price: 20 },
+  { id: 'heart-pillows', name: 'Heart pillows', kind: 'furniture', w: 8.6, price: 25 },
+  { id: 'bow-pillow', name: 'Bow pillow', kind: 'furniture', w: 5.5, price: 18 },
+  { id: 'bow-gift', name: 'Bow gift', kind: 'decor', w: 5.7, price: 18 },
+  { id: 'diffuser', name: 'Reed diffuser', kind: 'decor', w: 5.4, price: 20 },
+  { id: 'candles', name: 'Candles', kind: 'lights', w: 8.1, price: 22 },
+  { id: 'iron-lantern', name: 'Iron lantern', kind: 'lights', w: 4, price: 25 },
+  { id: 'moon-lantern', name: 'Moon lantern', kind: 'lights', w: 4, price: 28 },
+  { id: 'cappuccino', name: 'Cappuccino', kind: 'decor', w: 4.7, price: 10 },
+  { id: 'matcha', name: 'Iced matcha', kind: 'decor', w: 6.6, price: 12 },
+  { id: 'cornetti', name: 'Cornetti', kind: 'decor', w: 7, price: 12 },
+  { id: 'cake-cafe', name: 'Cake & coffee', kind: 'decor', w: 10.2, price: 18 },
+  { id: 'lemons', name: 'Amalfi lemons', kind: 'plants', w: 5, price: 15 },
+  { id: 'blossoms', name: 'Pink blossoms', kind: 'plants', w: 5.8, price: 20 },
+  { id: 'hibiscus', name: 'Hibiscus', kind: 'plants', w: 4.3, price: 12 },
+  { id: 'sweet-bowl', name: 'Bowl of sweets', kind: 'decor', w: 5.5, price: 15 },
+  { id: 'perfume', name: 'Perfume bottle', kind: 'treasures', w: 4, price: 20 },
+  { id: 'star-flask', name: 'Star flask', kind: 'treasures', w: 4, price: 15 },
 ];
 export const itemById = (id: string) => ITEMS.find((x) => x.id === id);
 

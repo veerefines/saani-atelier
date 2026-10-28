@@ -282,7 +282,7 @@ function noise(at: number, dur: number, { from = 400, to = 2000, gain = 0.2, q =
 const N = (semi: number) => 523.25 * Math.pow(2, semi / 12); // semitones from C5
 
 /* ---------- the sounds ---------- */
-export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full';
+export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full' | 'kaching' | 'coin' | 'coins' | 'flip' | 'oops';
 let lastPop = 0;
 let spinPitch = 0;
 /** One tick of the Surprise me wheel; `step` (0, 1, 2…) raises the pitch as it slows down. */
@@ -297,7 +297,7 @@ export function spinTick(step: number) {
   spinPitch = step;
   sfx('spin');
 }
-const BUZZ: Partial<Record<Sfx, Buzz>> = { spin: 'light', land: 'success', go: 'medium', rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success' };
+const BUZZ: Partial<Record<Sfx, Buzz>> = { spin: 'light', land: 'success', go: 'medium', rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success', kaching: 'success', coin: 'light', coins: 'success', flip: 'light', oops: 'medium' };
 export function sfx(name: Sfx) {
   if (BUZZ[name]) haptic(BUZZ[name]);
   if (!ready()) return;
@@ -378,6 +378,41 @@ export function sfx(name: Sfx) {
       break;
     case 'clink':
       [0, 0.12, 0.26].forEach((d, i) => bell(N(24 + i * 4), t + d, 0.6, 0.14));
+      break;
+    case 'kaching': {
+      // a cash register: two key clacks, the drawer sliding out, and a bright "ching!"
+      [0, 0.06].forEach((d) => (noise(t + d, 0.03, { from: 2600, to: 1800, gain: 0.12, q: 5 }), tone(320, t + d, 0.04, { type: 'square', gain: 0.04, to: 260 })));
+      noise(t + 0.13, 0.16, { from: 700, to: 1600, gain: 0.08, q: 1.5 });
+      tone(160, t + 0.13, 0.12, { type: 'triangle', gain: 0.1, to: 110 });
+      bell(N(36), t + 0.26, 1.1, 0.2);
+      bell(N(43), t + 0.29, 0.9, 0.12);
+      [0, 0.05, 0.1].forEach((d, i) => tone(N(40 + i * 3), t + 0.32 + d, 0.18, { gain: 0.04 }));
+      break;
+    }
+    case 'coin':
+      // one coin set down on the counter
+      tone(N(33), t, 0.25, { gain: 0.1, to: N(33) * 0.98 });
+      tone(N(33) * 1.51, t + 0.004, 0.18, { gain: 0.05 });
+      tone(N(33), t + 0.09, 0.12, { gain: 0.04 });
+      break;
+    case 'coins':
+      // a little shower of coins into a jar
+      for (let i = 0; i < 7; i++) {
+        const d = i * 0.055 + Math.random() * 0.02;
+        tone(N(30 + Math.round(Math.random() * 8)), t + d, 0.16, { gain: 0.06 });
+        noise(t + d, 0.02, { from: 6000, to: 4000, gain: 0.03, q: 6 });
+      }
+      bell(N(31), t + 0.42, 0.7, 0.08);
+      break;
+    case 'flip':
+      // a coin flipped into the air: a spinning shimmer up, and a ping
+      for (let i = 0; i < 5; i++) tone(N(26 + i * 2), t + i * 0.035, 0.05, { gain: 0.05 });
+      tone(N(38), t + 0.2, 0.3, { gain: 0.07 });
+      break;
+    case 'oops':
+      // over budget: a soft, kind "uh-oh" (never harsh)
+      tone(N(7), t, 0.18, { type: 'triangle', gain: 0.1 });
+      tone(N(3), t + 0.16, 0.3, { type: 'triangle', gain: 0.09, to: N(2) });
       break;
     case 'harp':
       [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone(N(s), t + i * 0.06, 0.9, { type: 'triangle', gain: 0.09 }));

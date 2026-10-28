@@ -9,7 +9,6 @@ import { moodSrc } from '@/lib/jelly-mood';
 import type { Brief } from '@/lib/brief';
 import { emit, jellyEvent, useJelly } from '@/components/jelly/bus';
 import SpeakButton from '@/components/jelly/SpeakButton';
-import SeasonLook from '@/components/jelly/SeasonLook';
 
 // remembered on this device only
 const store = {
@@ -83,8 +82,7 @@ export default function MorningBrief() {
     <section className={`mb${open ? ' open' : ''}`} aria-label="Jelly’s morning brief" style={b.season ? { ['--mb-tint' as string]: b.season.tint } : undefined}>
       <button type="button" className="mb-bar" onClick={() => (sfx(open ? 'paper' : 'page'), setOpen(!open))} aria-expanded={open}>
         <span className="mb-face" aria-hidden="true">
-          <img src={moodSrc(b.season ? 'love' : 'joyful')} alt="" width={44} height={44} />
-          {b.season && <SeasonLook look={b.season.look} />}
+          <img src={b.season ? b.season.jelly : moodSrc('joyful')} alt="" width={44} height={44} />
         </span>
         <span className="mb-bar-text">
           <b>{b.season ? `${b.season.emoji} ${b.season.name}` : b.hello}</b>

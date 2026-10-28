@@ -17,7 +17,6 @@ import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY
 import SpeakButton from './SpeakButton';
 import { setSound, sfx, useSound, voice } from '@/lib/sound';
 import { announce, applyChange, emit, jellyEvent, useJelly, useJellyChats } from './bus';
-import SeasonLook from './SeasonLook';
 import type { SeasonView } from '@/lib/jelly-seasons';
 import type { Reminder } from '@/lib/reminders';
 import Celebration from './Celebration';
@@ -131,6 +130,8 @@ export default function Jelly() {
   const timers = useRef<{ react?: number; line?: number }>({});
 
   const mood: JellyMood = busy ? 'studious' : (reaction ?? (q.trim() && open ? 'curious' : base));
+  // dressed for a festival: her outfit when she's resting, her faces when she reacts
+  const festive = data?.season && !busy && !reaction ? data.season.jelly : null;
 
   /* ---------- feelings ---------- */
   const say = useCallback((text: string, ms = 3400) => {
@@ -590,8 +591,7 @@ export default function Jelly() {
               <i />
             </span>
             <button type="button" data-quiet className={`jp-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Tap to pet me!">
-              <img key={mood} src={moodSrc(mood)} alt="" width={60} height={60} />
-              {data?.season && <SeasonLook look={data.season.look} />}
+              <img key={festive ? 'festive' : mood} src={festive ?? moodSrc(mood)} alt="" width={60} height={60} />
               <span className="jelly-hearts" aria-hidden="true">
                 {hearts.map((h) => (
                   <i key={h.id} style={{ left: `${h.x}%` }}>
@@ -835,8 +835,7 @@ export default function Jelly() {
           <i />
           <i />
         </span>
-        <img key={mood} src={moodSrc(mood)} alt="" width={96} height={96} draggable={false} />
-        {data?.season && <SeasonLook look={data.season.look} />}
+        <img key={festive ? 'festive' : mood} src={festive ?? moodSrc(mood)} alt="" width={96} height={96} draggable={false} className={festive ? 'festive' : undefined} />
       </button>
     </div>,
     document.body,

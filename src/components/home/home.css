@@ -5988,12 +5988,49 @@ a.pc-rating:hover {
   pointer-events: none;
   animation: radio-peek 3.8s ease-in-out both;
 }
-.radio-peek.hint {
-  animation: radio-hint 2.4s ease-in-out infinite;
+/* "tap anywhere for music": still (iPhone tears a pill that moves forever inside the fixed radio),
+   only the notes bob */
+.radio-hint {
+  position: absolute;
+  left: 66px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  margin-top: -17px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fffaf6;
+  box-shadow:
+    0 0 0 1px rgba(205, 180, 240, 0.5),
+    0 10px 20px -12px rgba(107, 30, 58, 0.5);
+  font: 500 12px / 1 var(--font-body);
+  color: #8a6a7b;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  animation: radio-hint-in 0.5s ease-out both;
 }
-@keyframes radio-hint {
-  0%, 100% { transform: translateX(0); opacity: 0.9; }
-  50% { transform: translateX(4px); opacity: 1; }
+.radio-hint b {
+  font: 400 14px / 1 var(--font-display);
+  color: var(--burgundy);
+}
+.radio-hint i {
+  display: inline-block;
+  font-style: normal;
+  animation: radio-hint-notes 1.6s ease-in-out infinite;
+}
+@keyframes radio-hint-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes radio-hint-notes {
+  50% {
+    transform: translateY(-3px) rotate(-8deg);
+  }
 }
 .radio-tabs[hidden] {
   display: none;
@@ -6431,7 +6468,26 @@ body:has(.cn-ask) .radio {
 /* ---------- Soldi: her spends, budget and the ₹ rate ---------- */
 .soldi {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* never wider than the screen, whatever's inside */
   gap: 16px;
+  min-width: 0;
+}
+.soldi > *,
+.soldi-sheet > * {
+  min-width: 0;
+}
+.soldi input,
+.soldi select,
+.soldi-sheet input {
+  max-width: 100%;
+  font-size: 16px; /* iPhone zooms the page into anything smaller */
+}
+.soldi input[type='date'],
+.soldi-sheet input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 40px;
+  min-width: 0;
 }
 .soldi > section,
 .soldi-add {
@@ -6685,8 +6741,8 @@ body:has(.cn-ask) .radio {
   color: #fff;
 }
 .soldi-amt {
-  flex: 1;
-  min-width: 110px;
+  flex: 1 1 110px;
+  min-width: 0;
   padding: 8px 12px;
   border: 0;
   border-radius: 14px;
@@ -6738,8 +6794,11 @@ body:has(.cn-ask) .radio {
   outline: 0;
 }
 .soldi-note {
-  flex: 1;
-  min-width: 160px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.soldi-date {
+  flex: 1 1 130px;
 }
 .soldi-go {
   justify-self: start;
@@ -6941,9 +7000,31 @@ body:has(.cn-ask) .radio {
   font: 600 13px var(--font-body);
   outline: 0;
 }
+@media (max-width: 520px) {
+  .soldi > section,
+  .soldi-add {
+    padding: 14px;
+    border-radius: 22px;
+  }
+  .soldi-caps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .soldi-sheet-bg {
+    padding: 0;
+  }
+  .soldi-sheet {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 26px 26px 0 0;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .soldi-conv output {
+    font-size: 19px;
+  }
+}
 @media (max-width: 420px) {
   .soldi-ring-wrap {
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 120px minmax(0, 1fr);
     gap: 12px;
   }
   .soldi-ring {
@@ -6993,9 +7074,6 @@ body:has(.cn-ask) .radio {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-.mb-face .jelly-look {
-  animation: none;
 }
 .mb-bar-text {
   flex: 1;
