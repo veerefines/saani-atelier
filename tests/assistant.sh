@@ -178,8 +178,8 @@ expect "a piece of audio" '"url":"/api/media/v_'
 expect "and how many pieces" '"parts":[1-9]'
 VURL=$(jget .url)
 cp "$D/tts-last.json" "$D/body"
-expect "in Jelly's voice" '"voice":"hannah"'
-expect "with her warm direction" "warm"
+expect "in Jelly's voice" '"voice":"autumn"'
+expect "with her lively direction" "\\[cheerful\\]"
 expect "without the markdown" '\*\*' absent
 TTS1=$(cat "$D/tts-count")
 check "hear it again" 200 -b "$SA" "$B/api/jelly/speak?chat=$JC&turn=$TURN&part=0"

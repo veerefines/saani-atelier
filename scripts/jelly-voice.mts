@@ -28,6 +28,7 @@ function key() {
   return m[1].trim();
 }
 const KEY = key();
+const LIFT = Math.pow(2, VOICE.semitones / 12); // Orpheus sends 24 kHz WAV
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let last = 0;
 
@@ -50,7 +51,7 @@ async function tts(input: string, voice: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Join the pieces, even out loudness, trim silence at the ends, and save a small .m4a. */
+/** Join the pieces, give them Jelly's lift (VOICE.semitones higher, VOICE.speed quicker), even out loudness, trim silence at the ends, and save a small .m4a. */
 function finish(wavs: Buffer[], file: string) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jelly-'));
   const list = wavs.map((w, i) => {
@@ -60,8 +61,8 @@ function finish(wavs: Buffer[], file: string) {
   });
   fs.writeFileSync(path.join(dir, 'list.txt'), list.join('\n'));
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', path.join(dir, 'list.txt'),
-    '-af', 'silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,loudnorm=I=-18:TP=-2:LRA=9',
-    '-ac', '1', '-ar', '44100', '-c:a', 'aac', '-b:a', '80k', file]);
+    '-af', `asetrate=24000*${LIFT},aresample=44100,atempo=${(VOICE.speed / LIFT).toFixed(4)},silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,loudnorm=I=-18:TP=-2:LRA=9`,
+    '-ac', '1', '-ar', '44100', '-c:a', 'aac', '-b:a', '96k', file]);
   fs.rmSync(dir, { recursive: true, force: true });
 }
 

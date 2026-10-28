@@ -6,43 +6,47 @@
 import type { JellyMood } from '@/lib/jelly-mood';
 
 /**
- * Jelly's voice brief, from the prompt: a soft, warm, airy, sweet voice with a smile you can hear;
- * bubbly and playful, rising gently when curious, tender when comforting; a real friend, not an
- * assistant. Crisp and clear, with natural pauses and breaths. Never childish, squeaky, robotic or
- * vocal-fried. Recognisable across every emotion: the same voice and base direction every time, with
- * only the mood direction on top changing.
+ * Jelly's voice: a bright, bouncy, expressive little fairy companion. Quick and full of energy,
+ * big reactions (a dramatic huff when she's ignored, squeals when she's excited), yet soft and warm
+ * when Saani needs comfort, and always clear enough to follow. She sometimes calls herself "Jelly".
+ * Chosen by ear (27 Oct 2026): Groq's Orpheus "autumn" voice, lifted 3 semitones and 5% quicker, the
+ * same lift on every line so she's recognisable in every mood; only the mood direction changes.
  */
 export const VOICE = {
   model: 'canopylabs/orpheus-v1-english',
-  /** chosen by ear from Groq's female voices (autumn, diana, hannah) */
-  voice: 'hannah',
-  base: '[warm] [breathy]',
+  voice: 'autumn',
+  base: '',
+  /** the lift that makes her Jelly: higher by this many semitones, this much quicker, same timing feel */
+  semitones: 3,
+  speed: 1.05,
   /** Orpheus takes at most 200 characters per request, directions included */
   maxChars: 200,
 } as const;
 
-/** The direction on top of the base, by how she feels. Gentle on purpose: no shouting, no singsong. */
+/** The direction for each mood, as in the sample that was chosen. */
 export const DIRECTION: Record<JellyMood, string> = {
-  content: '[gently smiling]',
-  joyful: '[cheerful]',
-  excited: '[cheerful]',
+  content: '[cheerful]',
+  joyful: '[excited]',
+  excited: '[excited] [fast paced]',
   wink: '[playful]',
-  calm: '[soft]',
-  sad: '[soft] [tender]',
-  grumpy: '[pouting playfully]',
+  calm: '[soft] [warm]',
+  sad: '[soft] [warm]',
+  grumpy: '[pouting]',
   confused: '[curious]',
-  idea: '[cheerful]',
-  sleepy: '[whisper]',
-  surprised: '[surprised]',
-  love: '[tender]',
+  idea: '[excited]',
+  sleepy: '[sleepy] [soft]',
+  surprised: '[surprised] [excited]',
+  love: '[warm]',
   studious: '[thoughtful]',
-  curious: '[curious]',
+  curious: '[excited] [curious]',
   shy: '[soft] [shy]',
 };
+/** How she reads her chat answers: lively, but steady enough to follow a long answer. */
+export const ANSWER_DIRECTION = '[cheerful]';
 
 /* ---------- her lines ---------- */
-export const PETTED = ['Hehe, that tickles! 💗', 'Blub blub… more please 🫧', 'Mmm, best pats in all of Milano', 'I’m melting… in a good way 🪼', 'You’re my favourite human, you know?', 'Purr… wait, jellyfish don’t purr. Blub!'];
-export const DIZZY = ['Okay okay, I’m getting dizzy! 😵‍💫', 'Too many pats! My tentacles are in a knot 😤', 'Hey! Gentle, I’m made of jelly!'];
+export const PETTED = ['Hehe, that tickles! 💗', 'Blub blub… more please 🫧', 'Mmm, best pats in all of Milano', 'I’m melting… in a good way 🪼', 'You’re my favourite human, you know?', 'Purr… wait, jellyfish don’t purr. Blub!', 'Jelly loves pats! Jelly could do this all day!'];
+export const DIZZY = ['Okay okay, I’m getting dizzy! 😵‍💫', 'Hmph! Too many pats! Jelly’s tentacles are in a knot 😤', 'Hey! Gentle, I’m made of jelly!'];
 export const STILL_LIKE = '…but I still like you 🍃';
 export const SHY = ['…are you still there? 👀', '*peeks out* Just checking on you 🍃', 'I’ll be right here when you need me'];
 export const WAKE = ['Huh?! Oh… I was dreaming of gelato 🍨', '*yawn* …oh, hi Saani! I wasn’t sleeping, promise', 'Mmh? Five more minutes… okay, I’m up!'];
@@ -72,18 +76,18 @@ export const MEET = 'I’m Jelly, your new studio friend. Tap me to chat about a
 /** Little things she says when a mood comes over her. */
 export const MOOD_LINES: Partial<Record<JellyMood, string[]>> = {
   joyful: ['La la la 🎶', 'Today feels like a good day!'],
-  excited: ['Wheee! ✨', 'I can’t sit still today!'],
+  excited: ['Wheee! ✨', 'Jelly can’t sit still today!'],
   wink: ['Psst… you’re doing great 😉', 'I saw that! 😉'],
   calm: ['Floating… so peaceful 🌸', 'Mmm, cosy vibes'],
   sad: ['I miss the big blue sea sometimes… 🥺', 'A pat would cheer me up 🥺'],
-  grumpy: ['Hmph! Nobody’s patted me in ages 😤', 'Grr… I lost my favourite pearl 😤'],
+  grumpy: ['Hmph! Nobody has patted Jelly in ages! 😤', 'Grr… Jelly lost her favourite pearl! 😤'],
   confused: ['Wait… what was I doing? ❓', 'Is it Tuesday? Jellyfish don’t do calendars ❓'],
   idea: ['Ooh! I just had an idea 💡', 'What if we planned a little adventure? 💡'],
   sleepy: ['*yawn* 💤', 'Just resting my tentacles…'],
   surprised: ['Whoa, was that a shooting star?!', 'Oh! You’re here!'],
   love: ['I really like it here with you 💗', 'You’re my favourite human 💗'],
   studious: ['Reading up on Milan Fashion Week 📖', 'Studying very important jellyfish things 📖'],
-  curious: ['What are you up to? 🫧', 'Ooh, what’s on this page?'],
+  curious: ['Ooh, ooh, what are you up to? 🫧', 'What’s on this page? Show Jelly!'],
   shy: ['*hides behind a leaf* 🍃', 'Don’t look, I’m being shy 🍃'],
 };
 
@@ -98,7 +102,7 @@ export const CHECKINS = {
 
 /** What she says when something is unlocked, by kind of achievement. */
 export const CHEERS: Record<string, string> = {
-  Jelly: 'Yay! Look what we unlocked together!',
+  Jelly: 'Yay! Look what we unlocked together! Jelly is so proud!',
   Milano: 'Brava! Another little Milano adventure!',
   'Settling in': 'One more thing sorted. I’m so proud of you!',
   Bingo: 'A bingo square! Ooh, that’s a good one.',

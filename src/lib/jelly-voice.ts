@@ -1,7 +1,8 @@
 import * as db from './db';
 import type { Media } from './data';
 import type { Chat } from './corner-model';
-import { VOICE, pieces, speechText } from '@/components/jelly/lines';
+import { ANSWER_DIRECTION, VOICE, pieces, speechText } from '@/components/jelly/lines';
+import { lift } from './voice-lift';
 
 /**
  * Jelly reading her chat answers aloud, with Groq's free Orpheus voice. Each answer is split into
@@ -61,7 +62,7 @@ export type SpeakResult = { url: string; parts: number } | { fallback: true; why
 export async function speakPart(chat: Chat, turnId: string, part: number, owner: string): Promise<SpeakResult> {
   const turn = chat.turns.find((t) => t.id === turnId);
   if (!turn) return { fallback: true, why: 'missing' };
-  const list = pieces(speechText(turn.a), '[warm] [gently smiling]');
+  const list = pieces(speechText(turn.a), ANSWER_DIRECTION);
   if (!list.length || part >= list.length) return { fallback: true, why: 'empty' };
   const id = `${chat.id}_${turnId}`;
   const saved = (await db.get<Spoken>(VOICED, id)) ?? { id, createdAt: new Date().toISOString(), parts: list.length, media: list.map(() => null) };
@@ -82,7 +83,13 @@ export async function speakPart(chat: Chat, turnId: string, part: number, owner:
   if (!res || !res.ok) return { fallback: true, why: res?.status === 429 ? 'allowance' : 'failed' };
   const raw = Buffer.from(await res.arrayBuffer());
   const { fmt, data } = wavData(raw);
-  const body = fmt ? wav(fmt, data) : raw;
+  // Jelly's lift (the same as her recorded lines), on 16-bit mono sound
+  let body = raw;
+  if (fmt && fmt.readUInt16LE(0) === 1 && fmt.readUInt16LE(2) === 1 && fmt.readUInt16LE(14) === 16) {
+    const pcm = new Int16Array(data.buffer.slice(data.byteOffset, data.byteOffset + (data.length & ~1)));
+    const up = lift(pcm, VOICE.semitones, VOICE.speed);
+    body = wav(fmt, Buffer.from(up.buffer, up.byteOffset, up.byteLength));
+  } else if (fmt) body = wav(fmt, data);
 
   const mediaId = db.newId('v_');
   await db.storeMedia(mediaId, body, 'audio/wav');
