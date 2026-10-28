@@ -67,7 +67,7 @@ export function Tile({
 }
 
 /** A string of fairy lights across the top of the memories board. */
-function FairyLights() {
+export function FairyLights() {
   const bulbs = [6, 15, 24, 33, 42, 51, 60, 69, 78, 87, 95];
   const colors = ['#ffd27a', '#ffb3c8', '#cdb4f0', '#bfe6f5', '#ffe8a3'];
   return (
@@ -84,7 +84,7 @@ function FairyLights() {
 }
 
 /** Milano's skyline in pastel: the Duomo's spires, the Galleria and a little tram. */
-function Skyline() {
+export function Skyline() {
   return (
     <svg className="t-skyline" viewBox="0 0 200 60" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
       <circle cx="168" cy="16" r="9" fill="#ffd9a8" opacity="0.8" />

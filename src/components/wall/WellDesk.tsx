@@ -6,7 +6,8 @@ import { site } from '@/content/site';
 import { mediaUrl } from '@/lib/upload-client';
 import { dayInfo, hourIn, useNow } from '@/components/home/Clock';
 import Link from 'next/link';
-import { Badge, JarArt, Tile } from '@/components/home/Dashboard';
+import { Badge, FairyLights, JarArt, Skyline, Tile } from '@/components/home/Dashboard';
+import { bingo as BINGO } from '@/content/home';
 import NotifyToggle from '@/components/home/NotifyToggle';
 import WorldClocks from '@/components/home/WorldClocks';
 import AtelierMark from '@/components/home/AtelierMark';
@@ -134,7 +135,7 @@ export default function WellDesk({
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Things to leave for Saanika">
         {/* wall of love */}
         <Tile href="/wall/love" i={0} className="t-love" tilt={-1.2} label="Pin something to Yaadon ka Samandar">
-          <img className="h-tape" src="/reveal/washi.webp" alt="" />
+          <FairyLights />
           {counts.reacted > 0 && <Badge>she loved {counts.reacted}</Badge>}
           <div className="t-love-board" aria-hidden="true">
             {preview.length === 0 && (
@@ -175,12 +176,16 @@ export default function WellDesk({
         {/* open when */}
         <Tile href="/wall/letters" i={1} className="t-letters" tilt={1.5} label="Write her a letter for Likhe Jo Khat Tujhe">
           {counts.opened > 0 && <Badge>{counts.opened} opened</Badge>}
+          <span className="t-airmail" aria-hidden="true" />
           <div className="t-envelopes" aria-hidden="true">
             <span className="env e2" />
             <span className="env e1" />
             <span className="env e0">
               <span className="wax" />
+              <span className="env-stamp" />
             </span>
+            <span className="t-heartfloat h1">♡</span>
+            <span className="t-heartfloat h2">♡</span>
           </div>
           <div className="h-tile-text">
             <h2 className="hand">Likhe Jo Khat Tujhe!</h2>
@@ -191,7 +196,14 @@ export default function WellDesk({
         {/* jar */}
         <Tile href="/wall/jar" i={2} className="t-jar" tilt={-2} label="Drop notes into her Khushiyon ka Pitara">
           {counts.read > 0 && <Badge>{counts.read} read</Badge>}
-          <JarArt />
+          <div className="t-jar-stage" aria-hidden="true">
+            <span className="t-jar-glow" />
+            <JarArt />
+            <span className="t-jar-float f1">♥</span>
+            <span className="t-jar-float f2">♥</span>
+            <span className="t-jar-float f3">✦</span>
+            <span className="t-jar-tag">{counts.jar ? `${counts.jar} from you` : 'add one'}</span>
+          </div>
           <div className="h-tile-text">
             <h2 className="hand">Khushiyon ka Pitara!</h2>
             <p className="whisper">{counts.jar ? `${plural(counts.jar, 'note')} from you` : 'a note for every feeling'}</p>
@@ -202,8 +214,8 @@ export default function WellDesk({
         <Tile href="/wall/bingo" i={3} className="t-bingo" tilt={1} label={`Cheer her bingo, ${counts.bingoDone} of ${counts.bingoTotal} done`}>
           <div className="t-bingo-grid" aria-hidden="true">
             {bingoDone.map((d, k) => (
-              <span key={k} className={d ? 'done' : ''}>
-                {d ? '🌷' : ''}
+              <span key={k} className={d ? 'done' : ''} style={{ ['--d' as string]: `${(k % 5) * 0.06 + Math.floor(k / 5) * 0.06}s` }}>
+                <i>{d ? '🌷' : (BINGO[k]?.icon ?? '')}</i>
               </span>
             ))}
           </div>
@@ -213,6 +225,9 @@ export default function WellDesk({
               she’s done {counts.bingoDone} of {counts.bingoTotal}
               {counts.dares ? ` · ${plural(counts.dares, 'dare')} from you` : ''}
             </p>
+            <span className="t-progress" aria-hidden="true">
+              <span style={{ width: `${(counts.bingoDone / Math.max(1, counts.bingoTotal)) * 100}%` }} />
+            </span>
           </div>
         </Tile>
 
@@ -224,11 +239,14 @@ export default function WellDesk({
               <img src="/reveal/carn-white-1.webp" alt="" />
             </span>
             <span className="t-postmark">MILANO</span>
+            <span className="t-waves" />
+            <span className="t-ciao">Saanika lands in</span>
             <span className="hand t-day" suppressHydrationWarning>
-              {day.before ? `${day.n}` : day.n ? `Day ${day.n}` : ''}
+              {day.before ? `${day.n} days` : day.n ? `Day ${day.n}` : ''}
             </span>
             <span className="t-lines" />
           </div>
+          <Skyline />
           <div className="h-tile-text">
             <h2 className="hand">Milano Mei Milo!</h2>
             <p className="whisper">{counts.tips ? `${plural(counts.tips, 'tip')} on her list` : 'tell her where to go'}</p>
