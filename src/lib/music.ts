@@ -414,7 +414,7 @@ function start() {
   const p = audioPrefs();
   const c = io?.ctx;
   if (!io || !c) return;
-  const allowed = p.on && p.music > 0 && !document.hidden ? want : null;
+  const allowed = p.on && p.music > 0 && !document.hidden && !external ? want : null;
   // Radio Italia plays across the whole desk; the corner tunes are the other choice
   if (p.style === 'radio' && allowed) radioOn(allowed === 'italia' ? 'italia' : allowed === 'desk' ? 'desk' : 'other');
   else radioOff();
@@ -433,6 +433,14 @@ function start() {
   current = { id, bus, step: 0, next: c.currentTime + 0.1 };
   timer = window.setInterval(tick, 60);
   tick();
+}
+
+/** Saani's radio (Spotify) is playing: everything else steps aside until it stops. */
+let external = false;
+export function setExternalMusic(on: boolean) {
+  if (external === on) return;
+  external = on;
+  whenUnlocked(start);
 }
 
 /** Play this corner's tune (or none), cross-fading from the last one. */

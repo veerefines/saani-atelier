@@ -217,6 +217,19 @@ check "corner tunes instead" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"styl
 expect "tunes" '"style":"tunes"'
 check "not a style" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"style":"disco"}}' $B/api/jelly/settings
 expect "keeps the last one" '"style":"tunes"'
+# Saani's radio: her Spotify
+check "connect a playlist" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=abc123"}' $B/api/jelly/settings
+expect "saved as a Spotify URI" '"spotify":"spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"'
+check "remembered" 200 -b "$SA" $B/api/jelly/settings
+expect "still connected" 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M'
+check "an album link works too" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":"https://open.spotify.com/intl-it/album/4aawyAB9vmqN3uQ7FjRGTy"}' $B/api/jelly/settings
+expect "as an album" '"spotify":"spotify:album:4aawyAB9vmqN3uQ7FjRGTy"'
+check "not a Spotify link 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":"https://example.com/playlist/37i9dQZF1DXcBWIGoYBM5M"}' $B/api/jelly/settings
+expect "says how to get one" "Copy link"
+check "friend can't change it 403" 403 -b "$D/ai-fr.jar" -X PATCH "${J[@]}" -d '{"spotify":null}' $B/api/jelly/settings
+check "friend can't see it 403" 403 -b "$D/ai-fr.jar" $B/api/jelly/settings
+check "disconnect" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":null}' $B/api/jelly/settings
+expect "gone" '"spotify":null'
 same "Radio Italia's songs are served" "$(curl -s -o /dev/null -w '%{http_code}' $B/radio/r01.m4a)" 200
 same "and can be streamed from the middle" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Range: bytes=1000-2000' $B/radio/r12.m4a)" 206
 check "her chats are saved" 200 -b "$SA" $B/api/corner/jelly

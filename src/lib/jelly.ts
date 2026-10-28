@@ -31,6 +31,8 @@ export type JellyState = db.Doc & {
   /** voices and sounds (on unless she turned them off); `audio` has the details */
   sound?: boolean;
   audio?: AudioPrefs;
+  /** Saani's radio: the Spotify playlist (or album, artist…) she connected */
+  spotify?: string | null;
 };
 
 // bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
@@ -72,7 +74,7 @@ const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), 
 export async function jellyState() {
   const s = await db.get<JellyState>(COL, ID);
   // a fresh start keeps when they last saw each other, so Jelly doesn't think they've just met
-  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen, sound: s.sound, audio: s.audio };
+  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen, sound: s.sound, audio: s.audio, spotify: s.spotify };
   return migrate(s ?? fresh());
 }
 const save = (s: JellyState) => db.put<JellyState>(COL, s);
@@ -165,6 +167,9 @@ export const setPrefs = (patch: Partial<AudioPrefs>) =>
     return { ...s, audio, sound: audio.on };
   });
 
+/** Connect (or disconnect) Saani's radio. */
+export const setSpotify = (uri: string | null) => change((s) => ({ ...s, spotify: uri }));
+
 /** Buy a thing (or a backdrop) for Jelly's home. Returns an error message, or the new state. */
 export async function buy(id: string): Promise<string | JellyState> {
   const item = itemById(id);
@@ -234,6 +239,7 @@ export function view(s: JellyState) {
     streak: streakOf(days),
     sound: prefsOf(s).on,
     audio: prefsOf(s),
+    spotify: s.spotify ?? null,
     ...friendship(s.pets, s.chats),
   };
 }

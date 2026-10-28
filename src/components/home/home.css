@@ -5877,120 +5877,282 @@ a.pc-rating:hover {
   }
 }
 
-/* ---------- Radio Italia, the little player in the corner ---------- */
+/* ---------- the radio in the corner: a little icon that opens into two stations ---------- */
 .radio {
   position: fixed;
   left: 14px;
   bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 44;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px 6px 6px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, rgba(0, 146, 70, 0.14), rgba(255, 255, 255, 0.92) 30%, rgba(255, 255, 255, 0.92) 70%, rgba(206, 43, 55, 0.14)),
-    rgba(255, 250, 246, 0.92);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  box-shadow:
-    0 0 0 1px rgba(178, 48, 95, 0.14),
-    0 14px 28px -16px rgba(70, 25, 45, 0.6);
-  animation: radio-in 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
-.radio.small {
-  padding: 6px;
-}
-.radio-dial {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 40px;
-  padding: 0 10px;
+.radio-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.12);
-  font-size: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #fdf0f5 70%);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.9) inset,
+    0 0 0 1px rgba(178, 48, 95, 0.16),
+    0 12px 24px -12px rgba(70, 25, 45, 0.6);
+  font-size: 24px;
   cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.radio-icon:hover,
+.radio.open .radio-icon {
+  transform: scale(1.06);
+}
+/* playing: a soft ring pulses around it, in Italian colours or Spotify green */
+.radio.playing .radio-icon::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  background: conic-gradient(#009246, #fff, #ce2b37, #009246) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: radio-spin 4s linear infinite;
+}
+.radio.playing.saani .radio-icon::before {
+  background: conic-gradient(#1ed760, #b8f5cf, #1db954, #1ed760) border-box;
 }
 .radio-eq {
+  position: absolute;
+  right: 6px;
+  bottom: 8px;
   display: inline-flex;
   align-items: flex-end;
-  gap: 2px;
-  height: 14px;
+  gap: 1.5px;
+  height: 11px;
 }
 .radio-eq i {
-  width: 3px;
+  width: 2.5px;
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(180deg, #ce2b37, #f4a6c0 50%, #009246);
+  background: var(--berry);
   transform-origin: bottom;
   animation: radio-eq 0.9s ease-in-out infinite;
 }
+.radio.saani .radio-eq i {
+  background: #1db954;
+}
 .radio-eq i:nth-child(2) { animation-delay: 0.2s; }
 .radio-eq i:nth-child(3) { animation-delay: 0.4s; }
-.radio-eq i:nth-child(4) { animation-delay: 0.1s; }
-.radio.paused .radio-eq i {
-  animation: none;
-  transform: scaleY(0.3);
+
+/* the card that opens above it */
+.radio-card {
+  position: absolute;
+  left: 0;
+  bottom: 64px;
+  display: grid;
+  gap: 10px;
+  width: min(340px, calc(100vw - 28px));
+  padding: 10px;
+  border-radius: 24px;
+  background: rgba(255, 250, 246, 0.96);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 0 1px rgba(178, 48, 95, 0.14),
+    0 24px 44px -22px rgba(70, 25, 45, 0.65);
+  transform-origin: bottom left;
+  transform: translateY(8px) scale(0.92);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
+    opacity 0.2s,
+    visibility 0s 0.28s;
+}
+.radio.open .radio-card {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
+    opacity 0.2s;
+}
+.radio-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(178, 48, 95, 0.07);
+}
+.radio-tabs button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--burgundy);
+  font: 800 12.5px var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.radio-tabs button[aria-selected='true'] {
+  background: #fff;
+  box-shadow: 0 4px 10px -6px rgba(107, 30, 58, 0.5);
+}
+.radio-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 8px;
 }
 .radio-text {
   display: grid;
-  line-height: 1.15;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.2;
 }
 .radio-text b {
-  font: 400 15px var(--font-display);
+  font: 400 17px var(--font-display);
   color: var(--burgundy);
 }
 .radio-text small {
-  font: 600 11px var(--font-body);
+  overflow: hidden;
+  font: 600 11.5px var(--font-body);
   color: #8a6a7b;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .radio-btn {
   display: grid;
+  flex: none;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #e0618f, var(--berry));
   color: #fff;
+  font: 800 15px var(--font-body);
   cursor: pointer;
 }
-.radio-btn + .radio-btn {
+.radio-now .radio-btn + .radio-btn {
   background: #fff;
   box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
   color: var(--burgundy);
+}
+.radio-btn:disabled {
+  opacity: 0.4;
 }
 .radio-btn svg {
   width: 16px;
   height: 16px;
   fill: currentColor;
 }
+.radio-saani {
+  display: grid;
+  gap: 8px;
+}
+.radio-saani[hidden],
+.radio-spotify[hidden] {
+  display: none;
+}
+.radio-connect {
+  display: grid;
+  gap: 6px;
+  padding: 4px 6px;
+}
+.radio-connect b {
+  font: 400 17px var(--font-display);
+  color: var(--burgundy);
+}
+.radio-connect small,
+.radio-row small {
+  font: 500 11.5px / 1.4 var(--font-body);
+  color: #8a6a7b;
+}
+.radio-row a {
+  color: #1a8f48;
+  font-weight: 700;
+}
+.radio-field {
+  display: flex;
+  gap: 6px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1.5px rgba(29, 185, 84, 0.45);
+}
+.radio-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: 500 16px var(--font-body);
+  color: var(--ink);
+}
+.radio-field .radio-btn {
+  width: 34px;
+  height: 34px;
+  background: #1db954;
+}
+.radio-err {
+  color: var(--berry) !important;
+  font-weight: 700 !important;
+}
+.radio-spotify iframe {
+  display: block;
+  border: 0;
+  border-radius: 14px;
+}
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 0 6px 2px;
+}
+.radio-row small {
+  flex-basis: 100%;
+}
+.radio-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  font: 700 12px var(--font-body);
+  text-decoration: underline;
+  cursor: pointer;
+}
 @keyframes radio-eq {
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
 }
-@keyframes radio-in {
-  from {
-    transform: translateY(20px) scale(0.9);
-    opacity: 0;
+@keyframes radio-spin {
+  to {
+    transform: rotate(360deg);
   }
+}
+/* above the sticky "Ask Jelly" bar in My Corner */
+body:has(.cn-ask) .radio {
+  bottom: calc(84px + env(safe-area-inset-bottom));
 }
 @media (max-width: 480px) {
   .radio {
     left: 10px;
     bottom: calc(12px + env(safe-area-inset-bottom));
   }
-  .radio-text small {
-    display: none;
+  .radio-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 21px;
   }
-}
-/* above the sticky "Ask Jelly" bar in My Corner */
-body:has(.cn-ask) .radio {
-  bottom: calc(84px + env(safe-area-inset-bottom));
+  .radio-card {
+    bottom: 58px;
+  }
 }
 @media print {
   .radio {
@@ -5998,11 +6160,11 @@ body:has(.cn-ask) .radio {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .radio-eq i {
+  .radio-eq i,
+  .radio.playing .radio-icon::before {
     animation: none;
   }
 }
-
 .ss-style {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
