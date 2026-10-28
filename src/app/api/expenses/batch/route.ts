@@ -14,6 +14,6 @@ export async function POST(req: Request) {
   const rate = (await eurInr()).inr;
   const at = new Date().toISOString();
   const saved = [];
-  for (const d of drafts) saved.push(await saveExpense({ id: newExpenseId(), createdAt: at, rate, ...d! }));
+  for (const d of drafts) saved.push(await saveExpense({ id: newExpenseId(), createdAt: at, rate, source: 'jelly', ...d! }));
   return json({ items: saved }, 201);
 }

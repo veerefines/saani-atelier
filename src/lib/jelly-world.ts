@@ -8,6 +8,8 @@ import * as db from './db';
 import { getBudget, listExpenses } from './money-store';
 import { memories, memoryText } from './jelly-memory';
 import { listReminders } from './reminders';
+import { listMeetups } from './meetups';
+import type { MoodDoc } from './extras';
 import { occasionSeasons, seasonOn, type Season } from './jelly-seasons';
 import { questById, TIER_PEARLS, valueOf, type QuestView } from './quests';
 import { friendship } from './jelly-mood';
@@ -49,8 +51,12 @@ async function gather() {
     listReminders(),
   ]);
   // Jelly's last take on this month's money, if Soldi has asked for one
-  const take = await db.get<{ id: string; createdAt: string; headline?: string }>('money', `insights-${monthOf(milanDay())}`).catch(() => null);
-  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders, moneyTake: take?.headline ?? '' };
+  const [take, meetups, mood] = await Promise.all([
+    db.get<{ id: string; createdAt: string; headline?: string }>('money', `insights-${monthOf(milanDay())}`).catch(() => null),
+    listMeetups().catch(() => []),
+    db.get<MoodDoc>('state', 'mood').catch(() => null),
+  ]);
+  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders, moneyTake: take?.headline ?? '', meetups, mood };
 }
 type World = Awaited<ReturnType<typeof gather>>;
 
@@ -94,6 +100,14 @@ function statsOf(w: World, s: JellyState): Stats {
     bingoTotal: bingo.length,
     expenses: w.expenses.filter((x) => kindOf(x) === 'out').length,
     underBudget: underBudget(w),
+    moneyIn: w.expenses.filter((x) => kindOf(x) === 'in').length,
+    plainWords: w.expenses.filter((x) => x.source === 'jelly' || x.source === 'whatsapp').length,
+    whatsappLogs: w.expenses.filter((x) => x.source === 'whatsapp').length,
+    soldiDays: new Set(w.expenses.map((x) => x.day)).size,
+    capsKept: capsKept(w),
+    meetups: w.meetups.filter((m) => !m.cancelled).length,
+    meetupsHad: w.meetups.filter((m) => !m.cancelled && Date.parse(m.start) + m.minutes * 60_000 < Date.now()).length,
+    moodDays: w.mood ? (w.mood.days ?? [w.mood.day]).length : 0,
     questsDone: s.questsDone ?? 0,
     questDays: s.questDays ?? 0,
     games: s.games?.played ?? 0,
@@ -114,6 +128,18 @@ function underBudget(w: World) {
   return months.filter((m) => {
     const s = summary(w.expenses, w.budget, m);
     return s.count >= 5 && s.spent <= w.budget.monthly;
+  }).length;
+}
+
+/** Finished months (with a few spends) where every category she gave a cap stayed within it. */
+function capsKept(w: World) {
+  const capped = Object.entries(w.budget.caps).filter(([, v]) => v && v > 0);
+  if (!capped.length) return 0;
+  const now = monthOf(milanDay());
+  const months = [...new Set(w.expenses.map((x) => monthOf(x.day)))].filter((m) => m < now);
+  return months.filter((m) => {
+    const s = summary(w.expenses, w.budget, m);
+    return s.count >= 5 && s.byCat.every((c) => !c.cap || c.eur <= c.cap);
   }).length;
 }
 

@@ -77,8 +77,8 @@ export type Expense = {
   rate: number;
   category: CategoryId | InCategoryId;
   note: string;
-  /** where it was logged from, when not the Soldi page */
-  source?: 'whatsapp';
+  /** how it was logged, when not with the add form: told to Jelly in plain words, or over WhatsApp */
+  source?: 'jelly' | 'whatsapp';
 };
 export type Budget = { id: 'budget'; createdAt: string; monthly: number; caps: Partial<Record<CategoryId, number>> };
 

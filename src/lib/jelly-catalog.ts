@@ -42,6 +42,14 @@ export type Stats = {
   bingoTotal: number;
   expenses: number; // spends logged in Soldi
   underBudget: number; // finished months she stayed under budget
+  moneyIn: number; // money in (from home, a stipend…) logged in Soldi
+  plainWords: number; // spends she told Jelly in plain words (in Soldi or on WhatsApp)
+  whatsappLogs: number; // spends logged over WhatsApp
+  soldiDays: number; // different days she logged something in Soldi
+  capsKept: number; // finished months she kept every category cap
+  meetups: number; // video calls she planned
+  meetupsHad: number; // ones that have happened
+  moodDays: number; // days she shared how she's feeling
   questsDone: number;
   questDays: number; // days she did all three quests
   games: number;
@@ -482,6 +490,21 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'spend-150', group: 'Soldi', icon: '📒', title: 'Bookkeeper', desc: 'Log 150 spends', metric: 'expenses', goal: 150, pearls: 100 },
   { id: 'budget-1', group: 'Soldi', icon: '🐷', title: 'On budget', desc: 'Finish a month under budget', metric: 'underBudget', goal: 1, pearls: 60 },
   { id: 'budget-3', group: 'Soldi', icon: '💰', title: 'Money smart', desc: 'Finish 3 months under budget', metric: 'underBudget', goal: 3, pearls: 150, reward: 'jewel-box' },
+  { id: 'money-in-1', group: 'Soldi', icon: '💚', title: 'Money in!', desc: 'Log money coming in (from home, a stipend, a job)', metric: 'moneyIn', goal: 1, pearls: 15 },
+  { id: 'words-1', group: 'Soldi', icon: '🗣️', title: 'Just tell Jelly', desc: 'Log a spend in plain words', metric: 'plainWords', goal: 1, pearls: 15 },
+  { id: 'words-25', group: 'Soldi', icon: '💬', title: 'Jelly does the sums', desc: 'Tell Jelly 25 spends in plain words', metric: 'plainWords', goal: 25, pearls: 50 },
+  { id: 'whatsapp-1', group: 'Soldi', icon: '📲', title: 'Texting Jelly', desc: 'Log a spend over WhatsApp', metric: 'whatsappLogs', goal: 1, pearls: 25 },
+  { id: 'soldi-days-7', group: 'Soldi', icon: '📆', title: 'Little and often', desc: 'Log spends on 7 different days', metric: 'soldiDays', goal: 7, pearls: 30 },
+  { id: 'soldi-days-30', group: 'Soldi', icon: '🗂️', title: 'A month of sums', desc: 'Log spends on 30 different days', metric: 'soldiDays', goal: 30, pearls: 80 },
+  { id: 'caps-1', group: 'Soldi', icon: '🎯', title: 'Within every cap', desc: 'Finish a month with every category cap kept', metric: 'capsKept', goal: 1, pearls: 80 },
+  // video calls with her people
+  { id: 'meet-1', group: 'Your people', icon: '💻', title: 'See you on screen', desc: 'Plan a video call with your people', metric: 'meetups', goal: 1, pearls: 20 },
+  { id: 'meet-5', group: 'Your people', icon: '📅', title: 'Social calendar', desc: 'Plan 5 video calls', metric: 'meetups', goal: 5, pearls: 60 },
+  { id: 'meet-had-3', group: 'Your people', icon: '🥂', title: 'Close, from far away', desc: 'Have 3 video calls with your people', metric: 'meetupsHad', goal: 3, pearls: 60 },
+  // how she's feeling
+  { id: 'mood-1', group: 'Every day', icon: '🌈', title: 'How are you today?', desc: 'Share how you’re feeling', metric: 'moodDays', goal: 1, pearls: 10 },
+  { id: 'mood-7', group: 'Every day', icon: '🌤️', title: 'A week of feelings', desc: 'Share your mood on 7 days', metric: 'moodDays', goal: 7, pearls: 35 },
+  { id: 'mood-30', group: 'Every day', icon: '💞', title: 'Open heart', desc: 'Share your mood on 30 days', metric: 'moodDays', goal: 30, pearls: 100 },
 ];
 
 export const goalOf = (a: Achievement, s: Stats) => (a.goal !== 'all' ? a.goal : a.metric === 'stamps' ? s.placesTotal : a.metric === 'bingo' ? s.bingoTotal : s.checklistTotal);

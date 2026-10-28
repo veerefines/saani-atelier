@@ -347,7 +347,7 @@ export async function answerNudge(id: string, a: { reaction?: string; reply?: st
 
 /* ---------- her mood today ---------- */
 
-export type MoodDoc = { id: 'mood'; createdAt: string; mood: MoodId; note?: string; at: string; day: string; alerted?: string };
+export type MoodDoc = { id: 'mood'; createdAt: string; mood: MoodId; note?: string; at: string; day: string; alerted?: string; /** every day she's shared a mood (for achievements) */ days?: string[] };
 /** Today's mood (Milano day), or null if she hasn't said yet today. */
 export async function getMood(): Promise<MoodDoc | null> {
   const m = await db.get<MoodDoc>('state', 'mood');
@@ -356,7 +356,8 @@ export async function getMood(): Promise<MoodDoc | null> {
 export async function setMood(mood: MoodId, note: string) {
   const cur = await db.get<MoodDoc>('state', 'mood');
   const day = milanDay();
-  return db.put<MoodDoc>('state', { id: 'mood', createdAt: cur?.createdAt ?? now(), mood, ...(note ? { note: note.slice(0, 100) } : {}), at: now(), day, ...(cur?.alerted === day ? { alerted: day } : {}) });
+  const days = [...new Set([...(cur?.days ?? (cur ? [cur.day] : [])), day])].slice(-400);
+  return db.put<MoodDoc>('state', { id: 'mood', createdAt: cur?.createdAt ?? now(), mood, ...(note ? { note: note.slice(0, 100) } : {}), at: now(), day, days, ...(cur?.alerted === day ? { alerted: day } : {}) });
 }
 export const markMoodAlerted = (day: string) => db.update<MoodDoc>('state', 'mood', (m) => ({ ...m, alerted: day }));
 
