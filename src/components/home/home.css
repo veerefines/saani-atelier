@@ -9220,7 +9220,7 @@ a.mb-q:hover {
   font: 700 13px var(--font-body);
   color: var(--burgundy);
 }
-.cal3-day.today .cal3-num {
+.cal3-day.is-today .cal3-num {
   background: linear-gradient(135deg, #f27ca2, var(--berry));
   color: #fff;
   box-shadow: 0 6px 12px -6px rgba(178, 48, 95, 0.8);
@@ -9264,8 +9264,10 @@ a.mb-q:hover {
   padding: 0 8px;
   border: 0;
   border-radius: 8px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--dot) 30%, #fff), color-mix(in srgb, var(--dot) 18%, #fff));
-  box-shadow: inset 3px 0 0 var(--dot);
+  background: color-mix(in srgb, var(--dot) 34%, #fff);
+  box-shadow:
+    inset 3px 0 0 var(--dot),
+    0 4px 8px -6px rgba(107, 30, 58, 0.45);
   font: 700 10.5px var(--font-body);
   color: #3e2a35;
   text-align: left;
@@ -9278,7 +9280,7 @@ a.mb-q:hover {
   margin-left: -3px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  box-shadow: none;
+  box-shadow: 0 4px 8px -6px rgba(107, 30, 58, 0.45);
 }
 .cal3-bar.cont-r {
   margin-right: -3px;
@@ -9327,11 +9329,11 @@ a.mb-q:hover {
   text-transform: uppercase;
   color: #a88a99;
 }
-.cal3-agenda-date.today {
+.cal3-agenda-date.is-today {
   background: linear-gradient(135deg, #f27ca2, var(--berry));
 }
-.cal3-agenda-date.today b,
-.cal3-agenda-date.today small {
+.cal3-agenda-date.is-today b,
+.cal3-agenda-date.is-today small {
   color: #fff;
 }
 .cal3-agenda-items {
@@ -9407,6 +9409,14 @@ a.mb-q:hover {
 .cal3-dayview header small {
   font: 600 12.5px var(--font-body);
   color: #a88a99;
+}
+/* the date tile stays white on its pink */
+.cal3-dayview header .cal3-bignum b,
+.cal3-dayview header .cal3-bignum small {
+  color: #fff;
+}
+.cal3-dayview header .cal3-bignum small {
+  font: 700 10.5px var(--font-body);
 }
 .cal3-empty {
   display: flex;

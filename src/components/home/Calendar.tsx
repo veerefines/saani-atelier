@@ -357,7 +357,7 @@ function MonthGrid({ weeks, month, today, day, visible, on, onPick }: { weeks: s
                 <button
                   key={d}
                   type="button"
-                  className={`cal3-day${d === today ? ' today' : ''}${d === day ? ' picked' : ''}${d < today ? ' past' : ''}${d.slice(0, 7) !== month ? ' out' : ''}${i >= 5 ? ' weekend' : ''}`}
+                  className={`cal3-day${d === today ? ' is-today' : ''}${d === day ? ' picked' : ''}${d < today ? ' past' : ''}${d.slice(0, 7) !== month ? ' out' : ''}${i >= 5 ? ' weekend' : ''}`}
                   style={{ gridColumn: i + 1, gridRow: 1 }}
                   onClick={() => onPick(d)}
                   aria-pressed={d === day}
@@ -425,7 +425,7 @@ function Agenda({ month, today, visible, onPick }: { month: string; today: strin
     <ol className="cal3-agenda">
       {groups.map(([d, list]) => (
         <li key={d}>
-          <button type="button" className={`cal3-agenda-date${d === today ? ' today' : ''}`} onClick={() => onPick(d)} data-quiet>
+          <button type="button" className={`cal3-agenda-date${d === today ? ' is-today' : ''}`} onClick={() => onPick(d)} data-quiet>
             <b>{+d.slice(8)}</b>
             <small>{weekday(d, 'short')}</small>
           </button>
