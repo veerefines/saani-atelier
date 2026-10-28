@@ -5,10 +5,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/upload-client';
 import { sfx } from '@/lib/sound';
 import { checkSoon } from '@/components/jelly/bus';
-import { CATEGORIES, categoryOf, jellyLine, type Budget, type CategoryId, type Currency, type Expense, type MonthSummary } from '@/lib/money';
+import { PICK_ORDER, categoryOf, fallbackFor, jellyLine, kindOf, listFor, type Budget, type Currency, type Expense, type Kind, type MonthSummary } from '@/lib/money';
+import type { Draft } from '@/lib/money-parse';
 import type { Rate } from '@/lib/fx';
+import JellyTake from './MoneyTake';
 
 type Month = { month: string; expenses: Expense[]; summary: MonthSummary; budget: Budget };
+type Cat = { id: string; icon: string; label: string; color: string };
+/** The categories she picks from, spends in her usual order. */
+const pickList = (kind: Kind): Cat[] => (kind === 'in' ? [...listFor('in')] : PICK_ORDER.map((id) => categoryOf(id)));
+
 
 const eur = (n: number, dp = 2) => `€${n.toLocaleString('en-IE', { minimumFractionDigits: n % 1 ? dp : 0, maximumFractionDigits: dp })}`;
 const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
@@ -20,6 +26,8 @@ const shift = (m: string, n: number) => {
   return d.toISOString().slice(0, 7);
 };
 const todayIn = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+const outOf = (l: Expense[]) => l.filter((x) => kindOf(x) === 'out').reduce((s, x) => s + x.eur, 0);
+const inOf = (l: Expense[]) => l.filter((x) => kindOf(x) === 'in').reduce((s, x) => s + x.eur, 0);
 
 /** Soldi: her spends in Milano, the budget, and euros in rupees at today's rate. */
 export default function Money({ initial }: { initial: Month }) {
@@ -27,7 +35,10 @@ export default function Money({ initial }: { initial: Month }) {
   const [rate, setRate] = useState<Rate | null>(null);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [byHand, setByHand] = useState(false);
   const thisMonth = initial.month;
+  // when anything in the month changes, Jelly takes another look
+  const sig = `${m.month}:${m.expenses.length}:${m.summary.spent}:${m.summary.inEur}:${m.budget.monthly}`;
 
   useEffect(() => {
     fetch('/api/fx')
@@ -85,7 +96,18 @@ export default function Money({ initial }: { initial: Month }) {
         </p>
       </section>
 
-      {m.month === thisMonth && <AddSpend rate={rate} onAdded={() => load()} />}
+      {m.month === thisMonth && <TellJelly onAdded={() => load()} />}
+
+      <JellyTake month={m.month} sig={sig} />
+
+      {m.month === thisMonth &&
+        (byHand ? (
+          <AddSpend rate={rate} onAdded={() => load()} onClose={() => setByHand(false)} />
+        ) : (
+          <button type="button" className="soldi-byhand" onClick={() => (sfx('page'), setByHand(true))}>
+            ✍️ Add by hand instead
+          </button>
+        ))}
 
       {m.summary.byCat.length > 0 && (
         <section className="soldi-cats" aria-label="By category">
@@ -117,15 +139,19 @@ export default function Money({ initial }: { initial: Month }) {
           <div key={day} className="soldi-day">
             <h3>
               {dayName(day)}
-              <span>{eur(list.reduce((s, x) => s + x.eur, 0))}</span>
+              <span>
+                {outOf(list) > 0 && eur(outOf(list))}
+                {inOf(list) > 0 && <em> +{eur(inOf(list))} in</em>}
+              </span>
             </h3>
             <ul>
               <AnimatePresence initial={false}>
                 {list.map((x) => {
-                  const c = categoryOf(x.category);
+                  const c = categoryOf(x.category, kindOf(x));
+                  const plus = kindOf(x) === 'in' ? '+' : '';
                   return (
                     <motion.li key={x.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -30 }}>
-                      <button type="button" className="soldi-item" onClick={() => (sfx('coin'), setEditing(x))} data-quiet aria-label={`Change ${c.label} ${eur(x.eur)}`}>
+                      <button type="button" className={`soldi-item${plus ? ' in' : ''}`} onClick={() => (sfx('coin'), setEditing(x))} data-quiet aria-label={`Change ${c.label} ${eur(x.eur)}`}>
                         <span className="soldi-item-icon" aria-hidden="true">
                           {c.icon}
                         </span>
@@ -134,7 +160,10 @@ export default function Money({ initial }: { initial: Month }) {
                           {x.note && <small>{c.label}</small>}
                         </span>
                         <span className="soldi-item-amt">
-                          <b>{x.currency === 'EUR' ? eur(x.eur) : inr(x.inr)}</b>
+                          <b>
+                            {plus}
+                            {x.currency === 'EUR' ? eur(x.eur) : inr(x.inr)}
+                          </b>
                           <small>{x.currency === 'EUR' ? inr(x.inr) : eur(x.eur)}</small>
                         </span>
                       </button>
@@ -266,6 +295,15 @@ function Ring({ s, rate, onBudget }: { s: MonthSummary; rate: Rate | null; onBud
           <b>{eur(s.spent)}</b> spent
           <small>{inr(s.spentInr)}</small>
         </p>
+        {s.inEur > 0 && (
+          <p className="soldi-in-line">
+            <b>+{eur(s.inEur)}</b> in
+            <small>
+              net {s.net >= 0 ? '+' : '−'}
+              {eur(Math.abs(s.net))}
+            </small>
+          </p>
+        )}
         {s.budget ? (
           <p>
             of <b>{eur(s.budget, 0)}</b>
@@ -281,10 +319,23 @@ function Ring({ s, rate, onBudget }: { s: MonthSummary; rate: Rate | null; onBud
 }
 
 /* ---------- adding a spend ---------- */
-function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void }) {
+function KindSeg({ kind, onKind }: { kind: Kind; onKind: (k: Kind) => void }) {
+  return (
+    <div className="cal3-seg soldi-kind" role="tablist" aria-label="Money out or in">
+      {(['out', 'in'] as Kind[]).map((k) => (
+        <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => (sfx('flip'), onKind(k))} data-quiet>
+          {k === 'out' ? 'Spent' : 'Money in'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function AddSpend({ rate, onAdded, onClose }: { rate: Rate | null; onAdded: () => void; onClose: () => void }) {
   const [amount, setAmount] = useState('');
   const [cur, setCur] = useState<Currency>('EUR');
-  const [cat, setCat] = useState<CategoryId>('groceries');
+  const [kind, setKind] = useState<Kind>('out');
+  const [cat, setCat] = useState<string>('groceries');
   const [note, setNote] = useState('');
   const [day, setDay] = useState(todayIn());
   const [busy, setBusy] = useState(false);
@@ -298,7 +349,7 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
     setBusy(true);
     setErr('');
     try {
-      await api('/api/expenses', 'POST', { amount: n, currency: cur, category: cat, note, day });
+      await api('/api/expenses', 'POST', { kind, amount: n, currency: cur, category: cat, note, day });
       sfx('kaching');
       checkSoon();
       setAmount('');
@@ -313,7 +364,19 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
 
   return (
     <form className="soldi-add" onSubmit={add}>
-      <h2 className="hand">add a spend</h2>
+      <div className="soldi-add-head">
+        <h2 className="hand">add by hand</h2>
+        <KindSeg
+          kind={kind}
+          onKind={(k) => {
+            setKind(k);
+            setCat(k === 'in' ? 'home' : 'groceries');
+          }}
+        />
+        <button type="button" className="soldi-close soldi-add-x" onClick={onClose} aria-label="Close" data-quiet>
+          ×
+        </button>
+      </div>
       <div className="soldi-add-row">
         <div className="soldi-cur" role="group" aria-label="Currency">
           {(['EUR', 'INR'] as Currency[]).map((c) => (
@@ -326,21 +389,133 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
         {other && <span className="soldi-other">≈ {other}</span>}
       </div>
       <div className="soldi-chips" role="radiogroup" aria-label="Category">
-        {CATEGORIES.map((c) => (
+        {pickList(kind).map((c) => (
           <button key={c.id} type="button" role="radio" aria-checked={cat === c.id} className={cat === c.id ? 'on' : ''} onClick={() => (sfx('coin'), setCat(c.id))} data-quiet>
             <span aria-hidden="true">{c.icon}</span> {c.label}
           </button>
         ))}
       </div>
       <div className="soldi-add-row">
-        <input className="soldi-note" placeholder="What was it? (optional)" maxLength={120} value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note" />
+        <input className="soldi-note" placeholder={kind === 'in' ? 'Who from? (optional)' : 'What was it? (optional)'} maxLength={120} value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note" />
         <input className="soldi-date" type="date" value={day} max={todayIn()} onChange={(e) => setDay(e.target.value)} aria-label="Day" />
       </div>
       {err && <p className="soldi-err">{err}</p>}
       <button className="soldi-go" disabled={busy}>
-        {busy ? 'Saving…' : 'Add it 🫧'}
+        {busy ? 'Saving…' : kind === 'in' ? 'Add money in 💚' : 'Add it 🫧'}
       </button>
     </form>
+  );
+}
+
+/* ---------- telling Jelly in plain words ---------- */
+const whenName = (d: string) => {
+  const t = todayIn();
+  const y = new Date(`${t}T12:00:00Z`);
+  y.setUTCDate(y.getUTCDate() - 1);
+  return d === t ? '' : d === y.toISOString().slice(0, 10) ? 'yesterday' : dayName(d);
+};
+
+function TellJelly({ onAdded }: { onAdded: () => void }) {
+  const [text, setText] = useState('');
+  const [drafts, setDrafts] = useState<Draft[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function read(e: React.FormEvent) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setBusy(true);
+    setErr('');
+    try {
+      const r = await api<{ drafts: Draft[] }>('/api/expenses/parse', 'POST', { text });
+      if (!r.drafts.length) setErr('Jelly couldn’t find an amount in that. Try “pizza 12” or “mamma sent ₹10000”.');
+      else (sfx('pop'), setDrafts(r.drafts));
+    } catch (x) {
+      setErr((x as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addAll() {
+    if (!drafts?.length) return;
+    setBusy(true);
+    try {
+      await api('/api/expenses/batch', 'POST', { items: drafts });
+      sfx('kaching');
+      checkSoon();
+      setDrafts(null);
+      setText('');
+      onAdded();
+    } catch (x) {
+      setErr((x as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const change = (i: number, d: Partial<Draft>) => setDrafts((l) => l && l.map((x, j) => (j === i ? { ...x, ...d } : x)));
+  const cycle = (i: number) => {
+    const x = drafts![i];
+    const l = pickList(x.kind);
+    const at = l.findIndex((c) => c.id === x.category);
+    sfx('coin');
+    change(i, { category: l[(at + 1) % l.length].id as Draft['category'] });
+  };
+
+  return (
+    <section className="soldi-tell" aria-label="Tell Jelly what you spent">
+      <div className="soldi-tell-head">
+        <img src="/corner/jelly/curious.webp" alt="" />
+        <p className="cal3-tip">What did you spend, cara? Say it how you’d text it, Jelly sorts it out.</p>
+      </div>
+      <form onSubmit={read} className="soldi-tell-form">
+        <input value={text} onChange={(e) => (setText(e.target.value), setDrafts(null))} placeholder="esselunga 23,40 and metro 2,20 · mamma sent ₹10000" maxLength={500} aria-label="What you spent, in your own words" enterKeyHint="send" />
+        <button className="soldi-go" disabled={busy || !text.trim()}>
+          {busy && !drafts ? 'Reading…' : 'Tell Jelly'}
+        </button>
+      </form>
+      {err && <p className="soldi-err">{err}</p>}
+      <AnimatePresence>
+        {drafts && (
+          <motion.div className="soldi-drafts" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}>
+            <ul>
+              {drafts.map((d, i) => {
+                const c = categoryOf(d.category, d.kind);
+                return (
+                  <motion.li key={i} layout className={d.kind === 'in' ? 'in' : ''} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
+                    <button type="button" className="soldi-draft-cat" onClick={() => cycle(i)} aria-label={`${c.label}, tap to change`} title="Tap to change the category" data-quiet>
+                      <span aria-hidden="true">{c.icon}</span>
+                      <small>{c.label}</small>
+                    </button>
+                    <span className="soldi-draft-text">
+                      <b>{d.note || c.label}</b>
+                      <small>
+                        {d.kind === 'in' ? 'money in' : 'spent'}
+                        {whenName(d.day) && ` · ${whenName(d.day)}`}
+                      </small>
+                    </span>
+                    <button type="button" className="soldi-draft-amt" onClick={() => (sfx('flip'), change(i, { currency: d.currency === 'EUR' ? 'INR' : 'EUR' }))} aria-label="Swap € and ₹" data-quiet>
+                      {d.kind === 'in' ? '+' : ''}
+                      {d.currency === 'EUR' ? eur(d.amount) : inr(d.amount)}
+                    </button>
+                    <button type="button" className="soldi-draft-x" onClick={() => setDrafts((l) => (l && l.length > 1 ? l.filter((_, j) => j !== i) : null))} aria-label="Leave this one out" data-quiet>
+                      ×
+                    </button>
+                  </motion.li>
+                );
+              })}
+            </ul>
+            <div className="soldi-sheet-actions">
+              <small className="soldi-rate-note">Tap an icon to change the category, or an amount to switch € and ₹.</small>
+              <button type="button" className="soldi-go" onClick={addAll} disabled={busy}>
+                {busy ? 'Saving…' : drafts.length > 1 ? `Add all ${drafts.length} 🫧` : 'Add it 🫧'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
   );
 }
 
@@ -360,14 +535,15 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
 
 function EditSpend({ x, onClose, onSaved, onDelete }: { x: Expense; onClose: () => void; onSaved: () => void; onDelete: () => void }) {
   const [amount, setAmount] = useState(String(x.amount));
-  const [cat, setCat] = useState<CategoryId>(x.category);
+  const [kind, setKind] = useState<Kind>(kindOf(x));
+  const [cat, setCat] = useState<string>(x.category);
   const [note, setNote] = useState(x.note);
   const [day, setDay] = useState(x.day);
   const [err, setErr] = useState('');
   async function save(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await api(`/api/expenses/${x.id}`, 'PATCH', { amount: Number(amount.replace(',', '.')), category: cat, note, day });
+      await api(`/api/expenses/${x.id}`, 'PATCH', { kind, amount: Number(amount.replace(',', '.')), category: cat, note, day });
       sfx('coin');
       onSaved();
     } catch (z) {
@@ -375,14 +551,21 @@ function EditSpend({ x, onClose, onSaved, onDelete }: { x: Expense; onClose: () 
     }
   }
   return (
-    <Sheet title="Change this spend" onClose={onClose}>
+    <Sheet title={kind === 'in' ? 'Change this money in' : 'Change this spend'} onClose={onClose}>
       <form onSubmit={save} className="soldi-edit">
+        <KindSeg
+          kind={kind}
+          onKind={(k) => {
+            setKind(k);
+            setCat(fallbackFor(k));
+          }}
+        />
         <div className="soldi-add-row">
           <span className="soldi-sym">{x.currency === 'EUR' ? '€' : '₹'}</span>
           <input className="soldi-amt" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} aria-label="Amount" />
         </div>
         <div className="soldi-chips" role="radiogroup" aria-label="Category">
-          {CATEGORIES.map((c) => (
+          {pickList(kind).map((c) => (
             <button key={c.id} type="button" role="radio" aria-checked={cat === c.id} className={cat === c.id ? 'on' : ''} onClick={() => setCat(c.id)}>
               <span aria-hidden="true">{c.icon}</span> {c.label}
             </button>
@@ -429,7 +612,7 @@ function BudgetEditor({ b, onClose, onSaved }: { b: Budget; onClose: () => void;
         </div>
         <p className="soldi-sub">Caps per category (optional)</p>
         <div className="soldi-caps">
-          {CATEGORIES.map((c) => (
+          {pickList('out').map((c) => (
             <label key={c.id}>
               <span aria-hidden="true">{c.icon}</span>
               <span>{c.label}</span>

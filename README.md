@@ -137,6 +137,28 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
 - **It waits when Groq asks.** If Groq's rate-limit headers or a 429 say to slow down, the assistant pauses for as long as Groq says.
 - **She sees how long to wait.** Instead of an error, she gets "try again in about N seconds".
 
+## Soldi: plain words, Jelly's take and WhatsApp (`/home/money`)
+
+- **Tell Jelly.** Saanika types spends the way she'd text them ("esselunga 23,40 and metro 2,20", "pizza 12 yesterday", "mamma sent ₹10000"). Soldi shows them as cards she can check and fix, then adds them.
+  - With `GROQ_API_KEY` set, Jelly reads the message. Without it, a keyword reader does (`src/lib/money-parse.ts`).
+  - Either way, the result is checked before anything is saved: an amount that isn't in the message, an unknown category, or a future day is dropped or corrected.
+- **Money in.** Entries can be money in (from home, stipend, work, refund, gift). It's kept out of the budget and shown as a net for the month.
+- **Jelly's take** (`src/lib/money-insights.ts`, `/api/expenses/insights`):
+  - three charts: a pie of where the money went, bars comparing each category with last month by the same day, and money in against money out
+  - 3–4 tips from Jelly, worked out from the month's numbers. They're cached until something changes, so Groq is asked rarely. Without Groq, rule-based tips stand in.
+- **WhatsApp.** Saanika can text spends to a WhatsApp number. Jelly logs them and replies; she can also send *summary*, *today*, *undo* and *help*. To switch it on:
+  1. At developers.facebook.com, create an app (type Business) and add the **WhatsApp** product. Meta gives you a test number. For a permanent token, create a System User in Business Settings with the `whatsapp_business_messaging` permission.
+  2. Under WhatsApp → Configuration, set the callback URL to `https://saani-atelier.vercel.app/api/whatsapp`, choose any verify token, and subscribe to the **messages** field.
+  3. Add these in Vercel, then redeploy:
+     - `WHATSAPP_TOKEN`: the access token
+     - `WHATSAPP_PHONE_ID`: the phone number ID
+     - `WHATSAPP_VERIFY_TOKEN`: the verify token you chose
+     - `WHATSAPP_APP_SECRET`: App settings → Basic
+     - `WHATSAPP_OWNER`: Saanika's number with country code. Only this number is listened to.
+  4. While the app is in development mode, add her number as a test recipient.
+- **Safety:** every delivery is checked against the app secret, and messages Meta sends twice are logged once.
+- **No month-end push on WhatsApp.** Meta only allows messages she didn't ask for if they use an approved template; push notifications already cover that.
+
 ## Adding her real photos, videos, voice notes and words
 
 Use **Admin → Journey media**. Each slot takes an upload, and each chapter has:
@@ -218,6 +240,7 @@ A daily Vercel cron (`vercel.json`, 06:00 UTC) calls `/api/daily`. It needs `CRO
   - `CRON_SECRET`
   - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`
   - optionally `GOOGLE_MAPS_API_KEY`, for live ratings in the guide
-  - optionally `GROQ_API_KEY` (and `GROQ_MODEL`), for My Corner's assistant (free tier)
+  - optionally `GROQ_API_KEY` (and `GROQ_MODEL`), for My Corner's assistant and Soldi's Jelly (free tier)
+  - optionally the `WHATSAPP_*` settings, for Soldi over WhatsApp (see the Soldi section)
 - After changing a setting, redeploy.
 - Friends can also be added and removed from `/admin` without touching `INVITES`.

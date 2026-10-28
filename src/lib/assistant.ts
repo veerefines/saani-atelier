@@ -192,6 +192,50 @@ async function callGroq(system: string, text: string, parts: Part[], estimate: n
   return { ...splitSuggestions(taken.text), tags: taken.tags };
 }
 
+/**
+ * A small JSON answer from Groq (Soldi's parser and insights), inside the same free-tier budget.
+ * Whatever she typed goes in the user message only, so it can't rewrite the instructions.
+ */
+export async function groqJson<T>(system: string, user: string, maxTokens = 400): Promise<T | null> {
+  const budget: Budget = await reserve(tokensOf(system + user) + maxTokens, maxTokens);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE()}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: MODEL(),
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+        max_completion_tokens: maxTokens,
+        temperature: 0.2,
+        reasoning_effort: 'none',
+        response_format: { type: 'json_object' },
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch (e) {
+    await settle(budget, 0, 0, null);
+    throw e;
+  }
+  const data = (await res.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[]; usage?: { total_tokens?: number; completion_tokens?: number }; error?: { message?: string } };
+  await settle(budget, data.usage?.total_tokens ?? 0, data.usage?.completion_tokens ?? 0, res.headers);
+  if (res.status === 429) throw busy(Math.ceil(seconds(res.headers.get('retry-after')) || 60));
+  if (res.status === 401) throw new AssistantKeyRejected();
+  if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
+  const raw = (data.choices?.[0]?.message?.content ?? '')
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/^```(?:json)?\s*|\s*```$/g, '')
+    .trim();
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
 /** Ask about a project. Gathers what fits in one free-tier request, asks, and says what was used. */
 export async function askAssistant(p: Project, items: Item[], mode: Mode, question: string, history: { q: string; a: string }[]): Promise<AssistantReply> {
   const read: string[] = ['the project details'];

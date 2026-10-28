@@ -1,5 +1,5 @@
 import { eurInr } from '@/lib/fx';
-import { isCategory, monthOf, summary } from '@/lib/money';
+import { fallbackFor, isCategory, isKind, monthOf, summary } from '@/lib/money';
 import { getBudget, listExpenses, newExpenseId, saveExpense } from '@/lib/money-store';
 import { milanDay } from '@/lib/extras';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   return json({ month, expenses: all.filter((x) => monthOf(x.day) === month), summary: summary(all, budget, month), budget });
 }
 
-/** Add a spend, in € or ₹. */
+/** Add a spend (or money in), in € or ₹. */
 export async function POST(req: Request) {
   const s = await requireSession('saanika');
   if (isResponse(s)) return s;
@@ -24,10 +24,11 @@ export async function POST(req: Request) {
   const amount = Number(b.amount);
   if (!Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) return fail('How much was it?');
   const currency = b.currency === 'INR' ? 'INR' : 'EUR';
-  const category = isCategory(b.category) ? b.category : 'other';
+  const kind = isKind(b.kind) ? b.kind : 'out';
+  const category = isCategory(b.category, kind) ? b.category : fallbackFor(kind);
   const day = typeof b.day === 'string' && DAY.test(b.day) && b.day <= milanDay() ? b.day : milanDay();
   const note = typeof b.note === 'string' ? b.note.trim().slice(0, 120) : '';
   const rate = (await eurInr()).inr;
-  const x = await saveExpense({ id: newExpenseId(), createdAt: new Date().toISOString(), day, amount, currency, rate, category, note });
+  const x = await saveExpense({ id: newExpenseId(), createdAt: new Date().toISOString(), kind, day, amount, currency, rate, category, note });
   return json(x, 201);
 }

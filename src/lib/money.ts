@@ -1,6 +1,7 @@
 /**
- * Soldi: what Saani spends in Milano, in euros or rupees, against a monthly budget. Every spend
- * keeps the rate from the moment she added it, so last month's numbers never move. Only she sees it.
+ * Soldi: what Saani spends in Milano, in euros or rupees, against a monthly budget, and the money
+ * that comes in (from home, a stipend, work). Every entry keeps the rate from the moment she added
+ * it, so last month's numbers never move. Only she sees it.
  * This part is shared with her screen (no database code here); money-store.ts saves things.
  */
 
@@ -12,28 +13,60 @@ function addDays(day: string, n: number) {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Each spend category has a fixed chart colour (it follows the category, never its rank). The eight
+ * hues were checked as a set for colour-blind separation in this order, which is also the order the
+ * pie draws its slices in; the smaller ones share a soft grey as "little bits".
+ */
+const BITS = '#b9aeb4';
 export const CATEGORIES = [
-  { id: 'rent', icon: '🏠', label: 'Rent & bills' },
-  { id: 'groceries', icon: '🛒', label: 'Groceries' },
-  { id: 'transport', icon: '🚇', label: 'Transport' },
-  { id: 'cafe', icon: '☕', label: 'Café & aperitivo' },
-  { id: 'eating', icon: '🍝', label: 'Eating out' },
-  { id: 'shopping', icon: '👗', label: 'Shopping' },
-  { id: 'uni', icon: '📚', label: 'Uni & supplies' },
-  { id: 'health', icon: '💊', label: 'Health' },
-  { id: 'fun', icon: '🎟️', label: 'Fun' },
-  { id: 'travel', icon: '✈️', label: 'Travel' },
-  { id: 'phone', icon: '📱', label: 'Phone & subs' },
-  { id: 'other', icon: '✨', label: 'Other' },
+  { id: 'rent', icon: '🏠', label: 'Rent & bills', color: '#3a7fd0' },
+  { id: 'eating', icon: '🍝', label: 'Eating out', color: '#e0693a' },
+  { id: 'groceries', icon: '🛒', label: 'Groceries', color: '#2fa97c' },
+  { id: 'cafe', icon: '☕', label: 'Café & aperitivo', color: '#e6a21a' },
+  { id: 'shopping', icon: '👗', label: 'Shopping', color: '#e27aa6' },
+  { id: 'travel', icon: '✈️', label: 'Travel', color: '#2f8a3a' },
+  { id: 'fun', icon: '🎟️', label: 'Fun', color: '#7458d6' },
+  { id: 'transport', icon: '🚇', label: 'Transport', color: '#c8364f' },
+  { id: 'uni', icon: '📚', label: 'Uni & supplies', color: BITS },
+  { id: 'health', icon: '💊', label: 'Health', color: BITS },
+  { id: 'phone', icon: '📱', label: 'Phone & subs', color: BITS },
+  { id: 'other', icon: '✨', label: 'Other', color: BITS },
 ] as const;
+export const BITS_COLOR = BITS;
+/** The order she picks from (the pie's order is above). */
+export const PICK_ORDER = ['groceries', 'cafe', 'eating', 'transport', 'rent', 'shopping', 'uni', 'fun', 'travel', 'health', 'phone', 'other'] as const;
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
-export const isCategory = (x: unknown): x is CategoryId => CATEGORIES.some((c) => c.id === x);
-export const categoryOf = (id: string) => CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
+
+/** Money coming in. */
+export const IN_CATEGORIES = [
+  { id: 'home', icon: '🏡', label: 'From home', color: '#3e9d6c' },
+  { id: 'stipend', icon: '🎓', label: 'Stipend', color: '#3e9d6c' },
+  { id: 'work', icon: '💼', label: 'Work', color: '#3e9d6c' },
+  { id: 'refund', icon: '↩️', label: 'Refund', color: '#3e9d6c' },
+  { id: 'gift', icon: '🎁', label: 'Gift', color: '#3e9d6c' },
+  { id: 'other-in', icon: '✨', label: 'Other money in', color: '#3e9d6c' },
+] as const;
+export type InCategoryId = (typeof IN_CATEGORIES)[number]['id'];
+
+export type Kind = 'out' | 'in';
+export const isKind = (x: unknown): x is Kind => x === 'out' || x === 'in';
+/** Entries from before money in existed have no kind: they're spends. */
+export const kindOf = (x: { kind?: Kind }): Kind => (x.kind === 'in' ? 'in' : 'out');
+export const listFor = (kind: Kind) => (kind === 'in' ? IN_CATEGORIES : CATEGORIES);
+export const isCategory = (x: unknown, kind: Kind = 'out'): x is CategoryId | InCategoryId => listFor(kind).some((c) => c.id === x);
+export const fallbackFor = (kind: Kind) => (kind === 'in' ? 'other-in' : 'other');
+export const categoryOf = (id: string, kind: Kind = 'out') => {
+  const l = listFor(kind) as readonly { id: string; icon: string; label: string; color: string }[];
+  return l.find((c) => c.id === id) ?? l[l.length - 1];
+};
 
 export type Currency = 'EUR' | 'INR';
 export type Expense = {
   id: string;
   createdAt: string;
+  /** money out (a spend) or in; missing on older entries, which are spends */
+  kind?: Kind;
   /** the Milano day it was spent */
   day: string;
   amount: number;
@@ -42,8 +75,10 @@ export type Expense = {
   inr: number;
   /** ₹ for €1 when she added it */
   rate: number;
-  category: CategoryId;
+  category: CategoryId | InCategoryId;
   note: string;
+  /** where it was logged from, when not the Soldi page */
+  source?: 'whatsapp';
 };
 export type Budget = { id: 'budget'; createdAt: string; monthly: number; caps: Partial<Record<CategoryId, number>> };
 
@@ -56,14 +91,29 @@ export function priced(amount: number, currency: Currency, rate: number) {
 
 /* ---------- a month at a glance ---------- */
 export const monthOf = (day: string) => day.slice(0, 7);
-const daysIn = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
+export const daysIn = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
+
+const sum = (l: Expense[], k: 'eur' | 'inr' = 'eur') => round2(l.reduce((s, x) => s + x[k], 0));
+export const shiftMonth = (m: string, n: number) => {
+  const d = new Date(`${m}-15T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().slice(0, 7);
+};
+const byCatOf = (list: Expense[], budget: Budget) =>
+  CATEGORIES.map((c) => ({ ...c, eur: sum(list.filter((x) => x.category === c.id)), cap: budget.caps[c.id] ?? null }))
+    .filter((c) => c.eur > 0 || c.cap)
+    .sort((a, b) => b.eur - a.eur);
 
 export function summary(all: Expense[], budget: Budget, month: string, today = milanDay()) {
-  const list = all.filter((x) => monthOf(x.day) === month);
-  const spent = round2(list.reduce((s, x) => s + x.eur, 0));
-  const spentInr = round2(list.reduce((s, x) => s + x.inr, 0));
-  const byCat = CATEGORIES.map((c) => ({ ...c, eur: round2(list.filter((x) => x.category === c.id).reduce((s, x) => s + x.eur, 0)), cap: budget.caps[c.id] ?? null }))
-    .filter((c) => c.eur > 0 || c.cap)
+  const inMonth = all.filter((x) => monthOf(x.day) === month);
+  const list = inMonth.filter((x) => kindOf(x) === 'out');
+  const ins = inMonth.filter((x) => kindOf(x) === 'in');
+  const spent = sum(list);
+  const spentInr = sum(list, 'inr');
+  const byCat = byCatOf(list, budget);
+  const inEur = sum(ins);
+  const byIn = IN_CATEGORIES.map((c) => ({ ...c, eur: sum(ins.filter((x) => x.category === c.id)) }))
+    .filter((c) => c.eur > 0)
     .sort((a, b) => b.eur - a.eur);
   const weekFrom = addDays(today, -6);
   const week = list.filter((x) => x.day >= weekFrom && x.day <= today);
@@ -84,6 +134,11 @@ export function summary(all: Expense[], budget: Budget, month: string, today = m
     week: { eur: weekEur, top: topOf(week) },
     byCat,
     daysLeft: total - through,
+    inEur,
+    inInr: sum(ins, 'inr'),
+    inCount: ins.length,
+    net: round2(inEur - spent),
+    byIn,
   };
 }
 export type MonthSummary = ReturnType<typeof summary>;
@@ -95,11 +150,15 @@ function topOf(list: Expense[]) {
   return top ? categoryOf(top[0]).label.toLowerCase() : null;
 }
 
-const eur = (n: number) => `€${n % 1 ? n.toFixed(2) : n}`;
+export const eur = (n: number) => `€${n % 1 ? n.toFixed(2) : n}`;
 
 /** Jelly's weekly word on her money, kind and honest (no AI needed). */
 export function jellyLine(s: MonthSummary) {
-  if (!s.count) return s.budget ? `A fresh month, ${eur(s.budget)} to play with. Log your first spend and Jelly will keep count! 🫧` : 'Set a monthly budget and Jelly will keep an eye on it with you. 🫧';
+  const net = s.inEur ? ` ${eur(Math.round(s.inEur))} came in${s.net >= 0 ? `, so you’re ${eur(Math.round(s.net))} ahead for the month.` : ` and ${eur(Math.round(s.spent))} went out.`}` : '';
+  return (base(s) + net).trim();
+}
+function base(s: MonthSummary) {
+  if (!s.count) return s.inEur ? '' : s.budget ? `A fresh month, ${eur(s.budget)} to play with. Log your first spend and Jelly will keep count! 🫧` : 'Set a monthly budget and Jelly will keep an eye on it with you. 🫧';
   const week = s.week.eur ? `${eur(s.week.eur)} this week${s.week.top ? `, mostly ${s.week.top}` : ''}.` : 'Nothing spent this week, look at you!';
   if (s.pace === null || s.left === null) return `${week} Add a budget and Jelly can tell you how you’re pacing. ✨`;
   if (s.left < 0) return `${week} You’re ${eur(Math.abs(s.left))} over this month, cara. Tiny steps: one cosy night in? 🫶`;

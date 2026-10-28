@@ -30,6 +30,7 @@ cleanup() {
   [ -n "${FAKE:-}" ] && kill "$FAKE" 2>/dev/null
   [ -n "${FAKEFX:-}" ] && kill "$FAKEFX" 2>/dev/null
   [ -n "${FAKEG:-}" ] && kill "$FAKEG" 2>/dev/null
+  [ -n "${FAKEWA:-}" ] && kill "$FAKEWA" 2>/dev/null
   rm -rf .data
   [ -d "$TEST_TMP/data-backup" ] && cp -R "$TEST_TMP/data-backup" .data
   rm -rf "$TEST_TMP"
@@ -47,6 +48,10 @@ export FX_BASE_URL=http://localhost:4611
 node tests/fake-google.js 4612 "$TEST_TMP" &
 FAKEG=$!
 export GOOGLE_CLIENT_ID=test-client GOOGLE_CLIENT_SECRET=test-secret GOOGLE_API_BASE=http://localhost:4612 GOOGLE_AUTH_URL=http://localhost:4612/auth
+# a fake WhatsApp Cloud API for Soldi over WhatsApp
+node tests/fake-whatsapp.js 4613 "$TEST_TMP" &
+FAKEWA=$!
+export WHATSAPP_TOKEN=test-wa-token WHATSAPP_PHONE_ID=12345 WHATSAPP_VERIFY_TOKEN=TEST-VERIFY WHATSAPP_APP_SECRET=test-app-secret WHATSAPP_OWNER='+39 333 1234567' WHATSAPP_GRAPH_URL=http://localhost:4613
 
 # the push library must trust that certificate; nothing else here talks to anything private
 NODE_TLS_REJECT_UNAUTHORIZED=0 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
@@ -72,6 +77,7 @@ run "endpoints, part 3" bash tests/endpoints-3.sh
 run "endpoints, part 4" bash tests/endpoints-4.sh
 run "endpoints, part 5" bash tests/endpoints-5.sh
 run "endpoints, part 6" bash tests/endpoints-6.sh
+run "endpoints, part 7" bash tests/endpoints-7.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Groq server
@@ -84,6 +90,7 @@ GROQ_API_KEY=test-key-not-real GROQ_BASE_URL=http://localhost:4610/openai/v1 nod
 SERVER=$!
 for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
 run "assistant (fake Groq)" bash tests/assistant.sh
+run "Soldi with Jelly (fake Groq)" bash tests/soldi-ai.sh
 kill "$FAKE" 2>/dev/null
 echo
 [ $status -eq 0 ] && echo "ALL PASSED" || echo "SOME TESTS FAILED"

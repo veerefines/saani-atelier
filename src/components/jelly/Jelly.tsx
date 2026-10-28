@@ -44,6 +44,7 @@ function startersFor(path: string, project?: string): string[] {
     [/^\/home\/lookbook/, ['Style me an outfit for tomorrow', 'What’s my style, from my lookbook?']],
     [/^\/home\/(letters|love|jar|songs|scrapbook)/, ['Who’s been sending me love lately?', 'Help me write a thank-you note']],
     [/^\/home\/jelly/, ['How do I earn more pearls?', 'What should I buy for your home?']],
+    [/^\/home\/money/, ['How am I doing with money this month?', 'Where could I save a little?']],
   ];
   const own = page.find(([re]) => re.test(path))?.[1] ?? ['What should I do today?', 'What am I close to unlocking?'];
   return [...own, 'Tell me a fun fact about Milano 🇮🇹', 'How are you feeling, Jelly?'];

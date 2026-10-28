@@ -3,7 +3,8 @@ import { addDays, getChecklist, getMood, listDiary, listLook, listMoments, listN
 import { listAllChats, listAllItems, listProjects, JELLY_CHATS } from './corner';
 import { getInvites } from './invites';
 import { milanoWeather, sky } from './today';
-import { monthOf, summary } from './money';
+import { kindOf, monthOf, summary } from './money';
+import * as db from './db';
 import { getBudget, listExpenses } from './money-store';
 import { memories, memoryText } from './jelly-memory';
 import { listReminders } from './reminders';
@@ -47,7 +48,9 @@ async function gather() {
     memories(),
     listReminders(),
   ]);
-  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders };
+  // Jelly's last take on this month's money, if Soldi has asked for one
+  const take = await db.get<{ id: string; createdAt: string; headline?: string }>('money', `insights-${monthOf(milanDay())}`).catch(() => null);
+  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders, moneyTake: take?.headline ?? '' };
 }
 type World = Awaited<ReturnType<typeof gather>>;
 
@@ -89,7 +92,7 @@ function statsOf(w: World, s: JellyState): Stats {
     backdrops: (s.backdrops ?? []).length,
     placesTotal: places.length,
     bingoTotal: bingo.length,
-    expenses: w.expenses.length,
+    expenses: w.expenses.filter((x) => kindOf(x) === 'out').length,
     underBudget: underBudget(w),
     questsDone: s.questsDone ?? 0,
     questDays: s.questDays ?? 0,
@@ -219,7 +222,7 @@ export async function platformContext(s: JellyState, path: string | null, max = 
     const m = summary(w.expenses, w.budget, monthOf(today), today);
     const cats = m.byCat.slice(0, 5).map((c) => `${c.label} €${c.eur}${c.cap ? ` of €${c.cap}` : ''}`).join('; ');
     L.push(
-      `Soldi (her spending, private to her): this month €${m.spent} (₹${Math.round(m.spentInr)}) over ${m.count} spends${m.budget ? `, budget €${m.budget}, €${m.left} left with ${m.daysLeft} days to go (${m.onTrack ? 'on track' : 'ahead of pace'})` : ', no budget set'}; this week €${m.week.eur}${cats ? `. By category: ${cats}` : ''}.`,
+      `Soldi (her spending, private to her): this month €${m.spent} (₹${Math.round(m.spentInr)}) over ${m.count} spends${m.budget ? `, budget €${m.budget}, €${m.left} left with ${m.daysLeft} days to go (${m.onTrack ? 'on track' : 'ahead of pace'})` : ', no budget set'}; this week €${m.week.eur}${cats ? `. By category: ${cats}` : ''}${m.inEur ? `. Money in this month €${m.inEur} (${m.byIn.map((c) => `${c.label} €${c.eur}`).join(', ')}), net ${m.net >= 0 ? '+' : '-'}€${Math.abs(m.net)}` : ''}.${w.moneyTake ? ` Your own take on her month (from Soldi): “${short(w.moneyTake, 160)}”` : ''} She can log spends by telling you in Soldi or by WhatsApp.`,
     );
   }
 

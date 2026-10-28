@@ -7036,6 +7036,534 @@ body:has(.cn-ask) .radio {
   }
 }
 
+/* Soldi: telling Jelly, Jelly's take (pie, last month, in & out, tips) and money in */
+.soldi .soldi-tell,
+.soldi .soldi-take {
+  position: relative;
+  border-radius: 30px;
+  isolation: isolate;
+}
+.soldi .soldi-tell::before,
+.soldi .soldi-take::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  z-index: -1;
+  border: 1.5px dashed rgba(62, 157, 108, 0.22);
+  border-radius: 24px;
+  pointer-events: none;
+}
+.soldi .soldi-tell {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(205, 180, 240, 0.35), transparent 60%),
+    radial-gradient(90% 80% at 100% 100%, rgba(244, 166, 192, 0.3), transparent 60%),
+    linear-gradient(160deg, rgba(255, 252, 246, 0.95), rgba(236, 247, 239, 0.9));
+}
+.soldi-tell-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.soldi-tell-head img {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  animation: soldi-bob 3.2s ease-in-out infinite;
+}
+.soldi-tell-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.soldi-tell-form input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(178, 48, 95, 0.16),
+    0 8px 18px -14px rgba(107, 30, 58, 0.5);
+  font: 500 16px var(--font-body);
+  color: var(--ink);
+  outline: 0;
+}
+.soldi-tell-form input:focus {
+  box-shadow: 0 0 0 2px var(--berry);
+}
+.soldi-tell .soldi-err {
+  margin-top: 8px;
+}
+.soldi-drafts {
+  margin-top: 12px;
+}
+.soldi-drafts ul {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.soldi-drafts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 8px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(107, 30, 58, 0.08);
+}
+.soldi-drafts li.in {
+  background: linear-gradient(135deg, #eef9f1, #fff);
+}
+.soldi-draft-cat {
+  flex: none;
+  display: grid;
+  justify-items: center;
+  width: 66px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f2faf4, #fdeef4);
+  cursor: pointer;
+}
+.soldi-draft-cat span {
+  font-size: 22px;
+}
+.soldi-draft-cat small {
+  font: 600 10px / 1.15 var(--font-body);
+  color: #5b6b62;
+  text-align: center;
+}
+.soldi-draft-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.soldi-draft-text b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 14px var(--font-body);
+  color: var(--ink);
+}
+.soldi-draft-text small {
+  font: 500 11.5px var(--font-body);
+  color: #7d6b74;
+}
+.soldi-draft-amt {
+  flex: none;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  font: 400 18px var(--font-display);
+  color: var(--burgundy);
+  cursor: pointer;
+}
+.soldi-drafts li.in .soldi-draft-amt {
+  color: #2f7d55;
+}
+.soldi-draft-x {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: #f6eef1;
+  font-size: 16px;
+  color: #7d6b74;
+  cursor: pointer;
+}
+.soldi-drafts .soldi-sheet-actions {
+  align-items: center;
+}
+.soldi-drafts .soldi-rate-note {
+  margin: 0;
+}
+.soldi-byhand {
+  justify-self: center;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1.5px rgba(62, 157, 108, 0.25);
+  font: 700 13px var(--font-body);
+  color: #2f7d55;
+  cursor: pointer;
+}
+.soldi-add-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.soldi-add-head .hand {
+  margin: 0;
+}
+.soldi-add-x {
+  position: static;
+  margin-left: auto;
+}
+.soldi-kind {
+  align-self: start;
+  width: max-content;
+}
+.soldi-kind button {
+  height: 30px;
+}
+.soldi-in-line b {
+  color: #2f7d55;
+}
+.soldi-day h3 em {
+  font-style: normal;
+  color: #2f7d55;
+}
+.soldi-item.in {
+  background: linear-gradient(135deg, #eef9f1, #fff 70%);
+}
+.soldi-item.in .soldi-item-amt b {
+  color: #2f7d55;
+}
+
+/* Jelly's take */
+.soldi .soldi-take {
+  background:
+    radial-gradient(100% 70% at 100% 0%, rgba(255, 224, 138, 0.28), transparent 60%),
+    linear-gradient(160deg, rgba(255, 252, 246, 0.96), rgba(244, 238, 252, 0.9));
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    0 24px 44px -32px rgba(107, 30, 58, 0.65);
+}
+.soldi .soldi-take::before {
+  border-color: rgba(178, 48, 95, 0.16);
+}
+.soldi-take-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.soldi-take-head .hand {
+  margin: 0;
+}
+.soldi-take-head .cal3-seg {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.soldi-take-head .cal3-seg button {
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.soldi-take-wait {
+  margin: 6px 0;
+  font: italic 400 18px var(--font-whisper);
+  color: #6b4a5c;
+}
+.soldi-pie {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+.soldi-pie-chart {
+  position: relative;
+  width: 190px;
+  aspect-ratio: 1;
+}
+.soldi-pie-chart svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+.soldi-pie-track {
+  fill: none;
+  stroke: rgba(107, 30, 58, 0.06);
+  stroke-width: 18;
+}
+.soldi-pie-mid {
+  position: absolute;
+  inset: 28%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  line-height: 1.15;
+  pointer-events: none;
+}
+.soldi-pie-mid span {
+  font-size: 18px;
+}
+.soldi-pie-mid b {
+  font: 400 24px var(--font-display);
+  color: var(--burgundy);
+}
+.soldi-pie-mid small {
+  font: 600 10.5px var(--font-body);
+  color: #7d6b74;
+}
+.soldi-legend {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.soldi-legend button {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 38px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+  font: 600 13px var(--font-body);
+  color: var(--ink);
+  cursor: pointer;
+}
+.soldi-legend button.on,
+.soldi-legend button:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+.soldi-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+.soldi-legend small {
+  display: block;
+  font: 500 11px / 1.35 var(--font-body);
+  color: #7d6b74;
+}
+.soldi-legend b {
+  font: 700 13px var(--font-body);
+  color: var(--burgundy);
+}
+.soldi-legend em {
+  font: 600 12px var(--font-body);
+  font-style: normal;
+  color: #7d6b74;
+  text-align: right;
+}
+.soldi-vs-total {
+  margin: 0 0 6px;
+  font: 500 13.5px / 1.4 var(--font-body);
+  color: var(--ink);
+}
+.soldi-vs-total b {
+  color: var(--burgundy);
+}
+.soldi-vs-total span,
+.soldi-flow-net {
+  margin-left: 6px;
+  font-weight: 700;
+}
+.soldi-vs-total .up,
+.soldi-flow-net.down b {
+  color: var(--berry);
+}
+.soldi-vs-total .down,
+.soldi-flow-net.up b {
+  color: #2f7d55;
+}
+.soldi-vs-key {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 8px;
+  font: 600 11.5px var(--font-body);
+  color: #7d6b74;
+}
+.soldi-vs-key i,
+.soldi-vs-bars i {
+  display: inline-block;
+  border-radius: 0 4px 4px 0;
+}
+.soldi-vs-key i {
+  width: 14px;
+  height: 8px;
+  margin-right: 4px;
+  vertical-align: 1px;
+}
+.soldi-vs-key .now {
+  background: linear-gradient(90deg, #3a7fd0, #e0693a, #2fa97c);
+}
+.soldi-vs-key .before,
+.soldi-vs-bars .before {
+  background: rgba(107, 30, 58, 0.2);
+}
+.soldi-vs ul,
+.soldi-flow ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.soldi-vs li {
+  display: grid;
+  grid-template-columns: minmax(0, 130px) minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 10px;
+}
+.soldi-vs-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 12.5px var(--font-body);
+  color: var(--ink);
+}
+.soldi-vs-bars {
+  display: grid;
+  gap: 2px;
+}
+.soldi-vs-bars i {
+  height: 8px;
+  min-width: 2px;
+}
+.soldi-vs-bars .before {
+  height: 5px;
+}
+.soldi-vs-nums {
+  display: grid;
+  justify-items: end;
+  line-height: 1.15;
+}
+.soldi-vs-nums b {
+  font: 700 13px var(--font-body);
+  color: var(--burgundy);
+}
+.soldi-vs-nums small {
+  font: 500 11px var(--font-body);
+  color: #7d6b74;
+}
+.soldi-vs-change,
+.soldi-flow-from {
+  margin: 10px 0 0;
+  font: 500 13px / 1.4 var(--font-body);
+  color: #5b4b54;
+}
+.soldi-flow-net {
+  display: grid;
+  margin: 0 0 10px;
+}
+.soldi-flow-net small {
+  font: 600 11.5px var(--font-body);
+  color: #7d6b74;
+}
+.soldi-flow-net b {
+  font: 400 34px / 1.05 var(--font-display);
+}
+.soldi-flow li {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font: 600 13px var(--font-body);
+  color: var(--ink);
+}
+.soldi-flow li b {
+  color: var(--burgundy);
+}
+.soldi-flow-bar i {
+  display: block;
+  height: 14px;
+  min-width: 2px;
+  border-radius: 0 6px 6px 0;
+}
+.soldi-tips {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1.5px dashed rgba(178, 48, 95, 0.14);
+  transition: opacity 0.3s;
+}
+.soldi-tips.thinking {
+  opacity: 0.55;
+}
+.soldi-tips-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.soldi-tips-head img {
+  flex: none;
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  animation: soldi-bob 3.6s ease-in-out infinite;
+}
+.soldi-tips-head .cal3-tip {
+  background: #fff;
+  font-weight: 600;
+}
+.soldi-tips ol {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tip;
+}
+.soldi-tips li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(107, 30, 58, 0.06);
+}
+.soldi-tips li span {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff1c9, #fde4ee);
+  font-size: 17px;
+}
+.soldi-tips li p {
+  margin: 0;
+  font: 500 13.5px / 1.45 var(--font-body);
+  color: var(--ink);
+}
+@media (max-width: 560px) {
+  .soldi-pie {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .soldi-pie-chart {
+    width: min(210px, 70vw);
+  }
+  .soldi-legend {
+    width: 100%;
+  }
+  .soldi-vs li {
+    grid-template-columns: minmax(0, 96px) minmax(0, 1fr) 56px;
+    gap: 8px;
+  }
+  .soldi-tips-head img {
+    width: 62px;
+    height: 62px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .soldi-tell-head img,
+  .soldi-tips-head img {
+    animation: none;
+  }
+}
+
 /* ---------- Jelly's morning brief ---------- */
 .mb {
   --mb-tint: rgba(205, 180, 240, 0.14);

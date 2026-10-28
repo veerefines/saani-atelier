@@ -7,6 +7,7 @@ import { occasionSeasons, seasonOn } from './jelly-seasons';
 import { happenings } from '@/content/happenings';
 import { places } from '@/content/milano';
 import * as db from './db';
+import { forgetOldMessages } from './whatsapp';
 
 const first = (name: string) => name.split(' ')[0];
 const between = (iso: string | null | undefined, from: Date, to: Date) => {
@@ -125,6 +126,8 @@ export async function runDaily(at = new Date()) {
     }
   }
 
+  // WhatsApp message ids are only kept long enough to spot Meta's retries
+  if (newDay) await forgetOldMessages().catch(() => {});
   await setDaily(at.toISOString());
   return out;
 }
