@@ -47,7 +47,7 @@ function useCount(n: number, key: string) {
  */
 export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; onDone: () => void; atHome: boolean }) {
   const g = queue[0];
-  const key = g ? (g.kind === 'daily' ? `daily-${g.pearls}` : g.id) : '';
+  const key = g ? (g.kind === 'daily' ? `daily-${g.pearls}` : `${g.kind}-${g.id}`) : '';
   const [leaving, setLeaving] = useState(false);
   const [paused, setPaused] = useState(false);
   const left = useRef(SHOW);
@@ -57,10 +57,13 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
     if (!g) return;
     setLeaving(false);
     left.current = SHOW;
-    burst(g.kind === 'achievement');
+    const big = g.kind === 'achievement' || g.kind === 'season' || (g.kind === 'quest' && Boolean(g.all));
+    burst(big);
     // its own little tune, then Jelly cheers
-    const group = g.kind === 'achievement' ? (ACHIEVEMENTS.find((x) => x.id === g.id)?.group ?? 'Jelly') : 'daily';
+    const group = g.kind === 'achievement' ? (ACHIEVEMENTS.find((x) => x.id === g.id)?.group ?? 'Jelly') : g.kind === 'quest' ? 'quest' : g.kind === 'season' ? 'season' : 'daily';
     if (g.kind === 'achievement') achievement(group, g.pearls >= 100);
+    else if (g.kind === 'quest') achievement('Every day', Boolean(g.all));
+    else if (g.kind === 'season') achievement('Your people', true);
     else sfx('clink');
     const cheer = setTimeout(() => voice(CHEERS[group] ?? CHEERS.Jelly), g.kind === 'achievement' ? 900 : 500);
     return () => clearTimeout(cheer);
@@ -83,7 +86,21 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
   if (!g) return null;
   const a = g.kind === 'achievement' ? ACHIEVEMENTS.find((x) => x.id === g.id) : null;
   const thing = g.kind === 'achievement' && g.reward ? itemById(g.reward) : null;
-  const bd = g.kind === 'achievement' && g.backdrop ? backdropById(g.backdrop) : null;
+  const bd = (g.kind === 'achievement' || g.kind === 'season') && g.backdrop ? backdropById(g.backdrop) : null;
+  const eyebrow = g.kind === 'daily' ? 'Daily pearls' : g.kind === 'quest' ? (g.all ? 'Daily quests' : 'Quest complete') : g.kind === 'season' ? 'It’s a special time' : 'Achievement unlocked';
+  const title = g.kind === 'daily' ? 'Welcome back!' : g.kind === 'season' ? `${g.title} ${g.icon}` : g.title;
+  const desc =
+    g.kind === 'daily'
+      ? g.streak > 1
+        ? `${g.streak}-day streak 🔥 Come back tomorrow for even more.`
+        : 'Come back tomorrow to start a streak 🔥'
+      : g.kind === 'quest'
+        ? g.all
+          ? 'All three done today. Brava! New quests tomorrow ✨'
+          : 'One of today’s quests, done ✨'
+        : g.kind === 'season'
+          ? g.hello
+          : a?.desc;
 
   return (
     <div className={`jc${leaving ? ' out' : ''}${g.kind === 'daily' ? ' daily' : ''}`} role="status" aria-live="polite" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}>
@@ -97,9 +114,9 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
           <i className="jc-spark s3">✦</i>
         </div>
         <div className="jc-body">
-          <small className="jc-eyebrow">{g.kind === 'daily' ? 'Daily pearls' : 'Achievement unlocked'}</small>
-          <b className="jc-title">{g.kind === 'daily' ? `Welcome back!` : g.title}</b>
-          <p className="jc-desc">{g.kind === 'daily' ? (g.streak > 1 ? `${g.streak}-day streak 🔥 Come back tomorrow for even more.` : 'Come back tomorrow to start a streak 🔥') : a?.desc}</p>
+          <small className="jc-eyebrow">{eyebrow}</small>
+          <b className="jc-title">{title}</b>
+          <p className="jc-desc">{desc}</p>
           <div className="jc-prizes">
             <span className="jc-prize pearls">
               <img src="/corner/pearl.webp" alt="" width={20} height={20} />+{pearls}
@@ -113,7 +130,7 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
             {bd && <span className="jc-prize">🖼️ {bd.name}</span>}
           </div>
         </div>
-        <img className="jc-jelly" src={moodSrc(g.kind === 'daily' ? 'excited' : 'joyful')} alt="" width={74} height={74} />
+        <img className="jc-jelly" src={moodSrc(g.kind === 'achievement' ? 'joyful' : g.kind === 'season' ? 'love' : 'excited')} alt="" width={74} height={74} />
         <button type="button" className="jc-x" onClick={close} aria-label="Close">
           ×
         </button>
@@ -126,8 +143,8 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
             </span>
           )}
           {!atHome && (
-            <Link href={g.kind === 'daily' ? '/home/jelly' : '/home/jelly?tab=awards'} className="jc-go" onClick={close}>
-              {g.kind === 'daily' ? 'Spend them →' : 'See it →'}
+            <Link href={g.kind === 'achievement' ? '/home/jelly?tab=awards' : g.kind === 'quest' ? '/home' : '/home/jelly'} className="jc-go" onClick={close}>
+              {g.kind === 'achievement' ? 'See it →' : g.kind === 'quest' ? 'Quests →' : g.kind === 'season' ? 'See her home →' : 'Spend them →'}
             </Link>
           )}
           {queue.length > 1 && (

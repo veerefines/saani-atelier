@@ -106,7 +106,9 @@ export const STUDIO = [
 export type StudioId = (typeof STUDIO)[number]['id'];
 export type Mode = StudioId | 'question';
 
-export type ChatTurn = { id: string; at: string; mode: Mode; q: string; a: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood };
+/** What Jelly did from an answer: set a reminder, or kept something to remember. */
+export type TurnNote = { kind: 'remind'; id: string; text: string; at: string; tz: string; repeat: string } | { kind: 'remember'; id: string; text: string };
+export type ChatTurn = { id: string; at: string; mode: Mode; q: string; a: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; notes?: TurnNote[] };
 export type Chat = { id: string; createdAt: string; updatedAt: string; projectId: string; title: string; turns: ChatTurn[]; pinned?: boolean };
 /** Chats with Jelly (from anywhere in My Corner) are saved with the project chats under this id. */
 export const JELLY_CHATS = 'jelly';

@@ -1,6 +1,7 @@
 import PageHead from '@/components/home/Back';
 import JellyHome from '@/components/jelly/JellyHome';
-import { checkIn } from '@/lib/jelly-world';
+import { checkIn, today } from '@/lib/jelly-world';
+import { seasonView } from '@/lib/jelly-seasons';
 import { assistantReady } from '@/lib/assistant';
 import { JELLY_CHATS, listChats } from '@/lib/corner';
 
@@ -12,7 +13,7 @@ export default async function JellysCorner({ searchParams }: { searchParams: Pro
   return (
     <main className="h-page h-page-wide">
       <PageHead kicker="her little home" title="Jelly’s Corner" sub="Pearls, presents and one very pampered jellyfish." />
-      <JellyHome initial={await checkIn()} initialTab={tab} chats={await listChats(JELLY_CHATS)} ready={assistantReady()} />
+      <JellyHome initial={await checkIn()} initialTab={tab} chats={await listChats(JELLY_CHATS)} ready={assistantReady()} season={seasonView((await today()).season)} />
     </main>
   );
 }

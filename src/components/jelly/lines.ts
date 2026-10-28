@@ -110,6 +110,10 @@ export const CHEERS: Record<string, string> = {
   'Your people': 'Your people really love you, you know?',
   'My Corner': 'Look at you, designer! The studio is buzzing.',
   daily: 'Welcome back! I saved some pearls for you.',
+  'Every day': 'Look at you, doing a little something every day!',
+  Soldi: 'Every cent counted. Jelly is impressed!',
+  quest: 'Quest complete! Brava, Saani!',
+  season: 'It’s a special day! Jelly dressed up for it.',
 };
 
 /* ---------- how a line becomes speech ---------- */

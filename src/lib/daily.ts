@@ -1,6 +1,9 @@
 import { listDares, listJar, listLetters, listPosts, listWishes } from './data';
 import { addDays, getDaily, listOccasions, listSongs, milanDay, setDaily } from './extras';
 import { notifyFriends, notifySaanika } from './push';
+import { listReminders } from './reminders';
+import { milanoWeather, sky } from './today';
+import { birthdaySeasons, seasonOn } from './jelly-seasons';
 
 const first = (name: string) => name.split(' ')[0];
 const between = (iso: string | null | undefined, from: Date, to: Date) => {
@@ -19,7 +22,7 @@ export async function runDaily(at = new Date()) {
   const since = state ? new Date(state.lastRun) : new Date(at.getTime() - 86_400_000);
   const today = milanDay(at);
   const newDay = milanDay(since) !== today || !state;
-  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0 };
+  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0, morning: false };
 
   const [letters, posts, occasions] = await Promise.all([listLetters(), listPosts(), listOccasions()]);
 
@@ -62,6 +65,14 @@ export async function runDaily(at = new Date()) {
         await notifyFriends({ title: `${x.emoji} ${x.title} in ${x.remindDays} days`, body: 'Seal her a letter for the day, or plan a surprise.', url: '/wall/letters' });
       }
     }
+
+    // Jelly's good morning: the sky, today's reminders, and new quests to do
+    const [w, rem] = await Promise.all([milanoWeather().catch(() => null), listReminders().catch(() => [])]);
+    const todays = rem.filter((r) => !r.done && milanDay(new Date(r.at)) === today).length;
+    const season = seasonOn(today, birthdaySeasons(occasions));
+    const bits = [w ? `${w.now}° and ${sky(w.code, w.isDay).words}` : '', todays ? `${todays} ${todays === 1 ? 'reminder' : 'reminders'}` : '', '3 new quests'].filter(Boolean);
+    await notifySaanika({ title: season ? `${season.emoji} ${season.name}! Buongiorno, Saani` : '☀️ Buongiorno, Saani!', body: `${bits.join(' · ')}. Jelly has your morning brief ready 🪼`, url: '/home' });
+    out.morning = true;
 
     // Sunday digest of the week's arrivals
     const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'short' }).format(at);

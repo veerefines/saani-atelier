@@ -19,6 +19,10 @@ type Events = {
   'jelly:open': null;
   /** she was petted somewhere else on the page */
   'jelly:pet': null;
+  /** she did something that might finish a quest or an achievement: check soon */
+  'jelly:check': null;
+  /** her reminders changed (set in the brief), so Jelly re-reads them */
+  'jelly:reminders': null;
 };
 
 export function emit<K extends keyof Events>(name: K, detail: Events[K]) {
@@ -30,6 +34,20 @@ export function useJelly<K extends keyof Events>(name: K, on: (d: Events[K]) => 
     window.addEventListener(name, h);
     return () => window.removeEventListener(name, h);
   }, [name, on]);
+}
+
+/** Ask Jelly to check for quests and achievements just reached (after a spend, a game…). */
+export const checkSoon = () => emit('jelly:check', null);
+
+/** Something only her screen saw (heard the phrase, picked a mood…), counted for the quests. */
+export async function jellyEvent(name: 'phrase' | 'brief' | 'mood' | 'fact') {
+  try {
+    const r = await fetch('/api/jelly/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    if (!r.ok) return;
+    const d = (await r.json()) as { home: JellyView; gains: Gain[] };
+    if (d.gains?.length) emit('jelly:gains', d.gains);
+    emit('jelly:home', d.home);
+  } catch {}
 }
 
 export const announce = (c: Change) => emit('jelly:chat', c);

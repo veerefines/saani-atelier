@@ -5,9 +5,13 @@ import { getInvites } from './invites';
 import { milanoWeather, sky } from './today';
 import { monthOf, summary } from './money';
 import { getBudget, listExpenses } from './money-store';
+import { memories, memoryText } from './jelly-memory';
+import { listReminders } from './reminders';
+import { birthdaySeasons, seasonOn, type Season } from './jelly-seasons';
+import { questById, TIER_PEARLS, valueOf, type QuestView } from './quests';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, goalOf, itemById, progressOf, type Stats } from './jelly-catalog';
-import { streakOf, sync, view, type JellyState } from './jelly';
+import { jellyState, streakOf, sync, view, type JellyState } from './jelly';
 import { bingo } from '@/content/home';
 import { milano } from '@/content/home';
 import { checklist } from '@/content/checklist';
@@ -21,7 +25,7 @@ import { MOODS as HER_MOODS } from '@/content/mood';
  * Surprises stay surprises: sealed letters, unread jar notes and scheduled posts are counted, never read.
  */
 async function gather() {
-  const [board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget] = await Promise.all([
+  const [board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders] = await Promise.all([
     getBingo(),
     getChecklist(),
     listStamps(),
@@ -40,8 +44,10 @@ async function gather() {
     listAllChats(),
     listExpenses(),
     getBudget(),
+    memories(),
+    listReminders(),
   ]);
-  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget };
+  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget, facts, reminders };
 }
 type World = Awaited<ReturnType<typeof gather>>;
 
@@ -83,7 +89,51 @@ function statsOf(w: World, s: JellyState): Stats {
     backdrops: (s.backdrops ?? []).length,
     placesTotal: places.length,
     bingoTotal: bingo.length,
+    expenses: w.expenses.length,
+    underBudget: underBudget(w),
+    questsDone: s.questsDone ?? 0,
+    questDays: s.questDays ?? 0,
+    games: s.games?.played ?? 0,
+    catchBest: s.games?.best.catch ?? 0,
+    popBest: s.games?.best.pop ?? 0,
+    saysBest: s.games?.best.says ?? 0,
+    memories: w.facts.length,
+    reminders: w.reminders.length,
+    seasons: (s.seasons ?? []).length,
   };
+}
+
+/** Finished months (with a few spends logged) that she kept under her budget. */
+function underBudget(w: World) {
+  if (!w.budget.monthly) return 0;
+  const now = monthOf(milanDay());
+  const months = [...new Set(w.expenses.map((x) => monthOf(x.day)))].filter((m) => m < now);
+  return months.filter((m) => {
+    const s = summary(w.expenses, w.budget, m);
+    return s.count >= 5 && s.spent <= w.budget.monthly;
+  }).length;
+}
+
+/** What's on today (a festival, a season, her birthday), and whether she's in Milano yet. */
+export async function today(): Promise<{ inMilano: boolean; season: Season | null }> {
+  const day = milanDay();
+  const occasions = await listOccasions().catch(() => []);
+  return { inMilano: day >= milano.arrival, season: seasonOn(day, birthdaySeasons(occasions)) };
+}
+
+/** Today's quests and how far along each one is, without awarding anything. */
+export async function questsNow(): Promise<QuestView[]> {
+  const [w, s] = await Promise.all([gather(), jellyState()]);
+  const q = s.quests;
+  if (!q || q.day !== milanDay()) return [];
+  const st = statsOf(w, s);
+  return q.ids.flatMap((id) => {
+    const quest = questById(id);
+    if (!quest) return [];
+    const done = q.done.includes(id);
+    const have = done ? quest.n : Math.max(0, Math.min(quest.n, valueOf(quest, st, s.events ?? {}) - (q.base[id] ?? 0)));
+    return [{ id, icon: quest.icon, title: quest.title, href: quest.href, tier: quest.tier, pearls: TIER_PEARLS[quest.tier], have, n: quest.n, done }];
+  });
 }
 
 const PAGES: [RegExp, string][] = [
@@ -130,6 +180,9 @@ export async function platformContext(s: JellyState, path: string | null, max = 
     `About her: Saanika (“Saani”), a fashion management student from ${milano.homeCity}, moving to Milano. ${before ? `She flies on ${fmt(milano.arrival)}: ${-dayN} days to go.` : `Today is day ${dayN + 1} in Milano.`} Varun, who made this site for her, is in ${milano.laCity}.`,
   );
   if (where) L.push(`Right now she’s looking at ${where}.`);
+  // what she's told Jelly before comes early, so it's never cut off
+  const mem = memoryText(w.facts);
+  if (mem) L.push(mem);
   if (her) L.push(`Her mood today: ${her.emoji} ${her.label}${mood?.note ? ` (“${short(mood.note, 80)}”)` : ''}.`);
   if (weather) L.push(`Milano weather: ${weather.now}°, ${sky(weather.code, weather.isDay).words}, ${weather.min}°–${weather.max}°, sunset ${weather.sunset}.`);
   const friends = invites.filter((i) => i.role === 'wellwisher').map((i) => i.name);
@@ -176,6 +229,13 @@ export async function platformContext(s: JellyState, path: string | null, max = 
     .slice(0, 3);
   if (events.length) L.push(`Fashion happenings in Milano: ${events.map(({ h, e }) => `${h.title} (${fmt(e.start)})`).join('; ')}.`);
 
+  const upcoming = w.reminders.filter((r) => !r.done).slice(0, 5);
+  if (upcoming.length) L.push(`Her reminders (you set these for her): ${upcoming.map((r) => `“${short(r.text, 60)}” ${new Intl.DateTimeFormat('en-GB', { timeZone: r.tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(r.at))}${r.repeat !== 'none' ? ` (${r.repeat})` : ''}`).join('; ')}.`);
+  const q = s.quests?.day === today ? s.quests : null;
+  if (q) L.push(`Today’s daily quests: ${q.ids.map((id) => `${questById(id)?.title ?? id}${q.done.includes(id) ? ' (done)' : ''}`).join('; ')}.`);
+  const on = seasonOn(today, birthdaySeasons(occasions));
+  if (on) L.push(`It’s ${on.name} ${on.emoji} right now: you’re dressed up for it; be festive about it.`);
+
   // Jelly's own corner: her home, and what Saani is close to unlocking
   const near = ACHIEVEMENTS.filter((a) => !(s.unlocked ?? {})[a.id])
     .map((a) => ({ a, p: progressOf(a, st) }))
@@ -194,6 +254,6 @@ export async function platformContext(s: JellyState, path: string | null, max = 
 /** Award the daily visit and any achievements now reached; returns her home as the browser sees it. */
 export async function checkIn() {
   const w = await gather();
-  const { state, gains } = await sync(async (s) => statsOf(w, s));
+  const { state, gains } = await sync(async (s) => statsOf(w, s), await today());
   return { home: view(state), stats: statsOf(w, state), gains };
 }

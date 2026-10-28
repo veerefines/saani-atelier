@@ -7,6 +7,7 @@ import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
+import MorningBrief from './MorningBrief';
 import WorldClocks from './WorldClocks';
 import { LoveBack, NudgeInbox } from './Nudges';
 import { MoodPicker } from './Mood';
@@ -161,6 +162,7 @@ export default function Dashboard({
         </div>
         <NudgeInbox />
       </div>
+      <MorningBrief />
       <TodayCard />
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">

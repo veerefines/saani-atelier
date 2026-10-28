@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { speakAnswer, stopVoice, useSound, type Speaking } from '@/lib/sound';
+import { speakAnswer, speakBrief, stopVoice, useSound, type Speaking } from '@/lib/sound';
 
-/** ▶ to hear Jelly read an answer aloud (and ⏸ to stop her). Hidden while sound is off. */
-export default function SpeakButton({ chatId, turnId, text }: { chatId: string; turnId: string; text: string }) {
+/** ▶ to hear Jelly read an answer (or the morning brief) aloud, and ⏸ to stop her. Hidden while sound is off. */
+export default function SpeakButton({ chatId, turnId, brief, text, onPlay }: { chatId?: string; turnId?: string; brief?: string; text: string; onPlay?: () => void }) {
   const [on] = useSound();
   const [state, setState] = useState<Speaking>('idle');
   useEffect(() => () => void (state !== 'idle' && stopVoice()), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -18,7 +18,11 @@ export default function SpeakButton({ chatId, turnId, text }: { chatId: string; 
         if (busy) {
           stopVoice();
           setState('idle');
-        } else speakAnswer(chatId, turnId, text, setState);
+        } else {
+          onPlay?.();
+          if (brief) speakBrief(brief, text, setState);
+          else speakAnswer(chatId!, turnId!, text, setState);
+        }
       }}
       aria-label={busy ? 'Stop Jelly reading' : 'Hear Jelly read this'}
     >

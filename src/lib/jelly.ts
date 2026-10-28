@@ -3,6 +3,8 @@ import { cleanPrefs, DEFAULT_PREFS, type AudioPrefs } from './audio-prefs';
 import { milanDay, addDays } from './extras';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, BACKDROPS, goalOf, itemById, MAX_PLACED, type Placed, type Stats } from './jelly-catalog';
+import { FEATURED_OFF, type Season } from './jelly-seasons';
+import { ALL_BONUS, EVENTS, pickQuests, questById, TIER_PEARLS, valueOf, type EventName, type Quest, type QuestState } from './quests';
 
 /**
  * What Jelly remembers about her friend: pats, chats, when they last saw each other, and her home
@@ -33,7 +35,20 @@ export type JellyState = db.Doc & {
   audio?: AudioPrefs;
   /** Saani's radio: the Spotify playlist (or album, artist…) she connected */
   spotify?: string | null;
+  /** things only her screen sees (heard the phrase, the brief…), ever, and today (for the caps) */
+  events?: Partial<Record<EventName, number>>;
+  eventsToday?: { day: string; n: Partial<Record<EventName, number>> };
+  /** today's three quests, and how many she's done ever (and days she did all three) */
+  quests?: QuestState;
+  questsDone?: number;
+  questDays?: number;
+  /** Jelly's games: best scores, games played, and today's game pearls */
+  games?: { best: Partial<Record<GameId, number>>; played: number; day: string; pearls: number };
+  /** the seasons and events she came by for */
+  seasons?: string[];
 };
+
+export type GameId = 'catch' | 'pop' | 'says';
 
 // bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
 const RESET = 1;
@@ -124,13 +139,20 @@ export function streakOf(days: string[], today = milanDay()) {
   return n;
 }
 
-export type Gain = { kind: 'daily'; pearls: number; streak: number } | { kind: 'achievement'; id: string; title: string; icon: string; pearls: number; reward?: string; backdrop?: string };
+export type Gain =
+  | { kind: 'daily'; pearls: number; streak: number }
+  | { kind: 'achievement'; id: string; title: string; icon: string; pearls: number; reward?: string; backdrop?: string }
+  | { kind: 'quest'; id: string; title: string; icon: string; pearls: number; all?: boolean }
+  | { kind: 'season'; id: string; title: string; icon: string; pearls: number; hello: string; backdrop?: string };
+
+/** What sync needs to know about today: is she in Milano yet (for the quests), and what's on. */
+export type Today = { inMilano: boolean; season?: Season | null };
 
 /**
  * The daily visit bonus, and any achievements newly reached. Each is awarded once: pearls go in her
  * purse, and reward items and backdrops into Jelly's home.
  */
-export async function sync(stats: (s: JellyState) => Promise<Stats>) {
+export async function sync(stats: (s: JellyState) => Promise<Stats>, today: Today = { inMilano: true }) {
   const gains: Gain[] = [];
   const st = await change(async (s0) => {
     let s = { ...s0, owned: { ...(s0.owned ?? {}) }, unlocked: { ...(s0.unlocked ?? {}) }, backdrops: [...(s0.backdrops ?? [])] };
@@ -143,7 +165,40 @@ export async function sync(stats: (s: JellyState) => Promise<Stats>) {
       s = { ...s, days: next, pearls: (s.pearls ?? 0) + pearls, earned: (s.earned ?? 0) + pearls };
       gains.push({ kind: 'daily', pearls, streak });
     }
-    const now = await stats(s);
+    // her first visit in a season or festival: its backdrop and pearls
+    const se = today.season;
+    if (se && !(s.seasons ?? []).includes(se.id)) {
+      const bd = se.backdrop && !s.backdrops.includes(se.backdrop) ? se.backdrop : undefined;
+      s = { ...s, seasons: [...(s.seasons ?? []), se.id], backdrops: bd ? [...s.backdrops, bd] : s.backdrops, pearls: (s.pearls ?? 0) + se.pearls, earned: (s.earned ?? 0) + se.pearls };
+      gains.push({ kind: 'season', id: se.id, title: se.name, icon: se.emoji, pearls: se.pearls, hello: se.hello, backdrop: bd });
+    }
+    const seasonQuest: Quest | undefined = se?.quest;
+
+    // today's quests: picked (with where everything stands) on her first visit, then checked each time
+    let now = await stats(s);
+    let q = s.quests?.day === day ? s.quests : null;
+    if (!q) {
+      const ids = pickQuests(day, now, s.quests?.ids ?? [], today.inMilano, seasonQuest);
+      const find = (id: string) => (id === seasonQuest?.id ? seasonQuest : questById(id));
+      q = { day, ids, base: Object.fromEntries(ids.map((id) => [id, valueOf(find(id)!, now, s.events ?? {})])), done: [], bonus: false };
+    }
+    q = { ...q, done: [...q.done] };
+    for (const id of q.ids) {
+      const quest = id === seasonQuest?.id ? seasonQuest : questById(id);
+      if (!quest || q.done.includes(id) || valueOf(quest, now, s.events ?? {}) - (q.base[id] ?? 0) < quest.n) continue;
+      q.done.push(id);
+      const pearls = TIER_PEARLS[quest.tier];
+      s = { ...s, pearls: (s.pearls ?? 0) + pearls, earned: (s.earned ?? 0) + pearls, questsDone: (s.questsDone ?? 0) + 1 };
+      gains.push({ kind: 'quest', id, title: quest.title, icon: quest.icon, pearls });
+    }
+    if (!q.bonus && q.ids.length && q.ids.every((id) => q!.done.includes(id))) {
+      q.bonus = true;
+      s = { ...s, pearls: (s.pearls ?? 0) + ALL_BONUS, earned: (s.earned ?? 0) + ALL_BONUS, questDays: (s.questDays ?? 0) + 1 };
+      gains.push({ kind: 'quest', id: 'all', title: 'All three quests done!', icon: '🌟', pearls: ALL_BONUS, all: true });
+    }
+    s = { ...s, quests: q };
+
+    now = await stats(s);
     for (const a of ACHIEVEMENTS) {
       if (s.unlocked![a.id] || now[a.metric] < goalOf(a, now) || goalOf(a, now) <= 0) continue;
       s.unlocked![a.id] = new Date().toISOString();
@@ -156,6 +211,51 @@ export async function sync(stats: (s: JellyState) => Promise<Stats>) {
     return s;
   });
   return { state: st, gains };
+}
+
+/** Something only her screen saw (she heard the phrase, the brief…), up to each one's daily cap. */
+export async function addEvent(name: EventName) {
+  let counted = false;
+  const st = await change((s) => {
+    const day = milanDay();
+    const t = s.eventsToday?.day === day ? s.eventsToday : { day, n: {} };
+    if ((t.n[name] ?? 0) >= EVENTS[name]) return s;
+    counted = true;
+    return { ...s, events: { ...(s.events ?? {}), [name]: ((s.events ?? {})[name] ?? 0) + 1 }, eventsToday: { day, n: { ...t.n, [name]: (t.n[name] ?? 0) + 1 } } };
+  });
+  return { counted, state: st };
+}
+
+/* ---------- Jelly's games ---------- */
+// the most a real player could score each second, and points per pearl
+const GAME_RULES: Record<GameId, { perSec: number; per: number; maxMs: number }> = {
+  catch: { perSec: 3, per: 4, maxMs: 120_000 },
+  pop: { perSec: 6, per: 6, maxMs: 120_000 },
+  says: { perSec: 0.5, per: 1, maxMs: 30 * 60_000 },
+};
+export const GAME_PEARLS_A_DAY = 15;
+export const isGame = (x: unknown): x is GameId => typeof x === 'string' && x in GAME_RULES;
+
+/** A finished game: its score (capped to what's possible in the time), a best, and a few pearls. */
+export async function addGame(game: GameId, rawScore: number, ms: number) {
+  const r = GAME_RULES[game];
+  const time = Math.max(0, Math.min(r.maxMs, ms));
+  const score = Math.max(0, Math.min(Math.floor(rawScore), Math.ceil((time / 1000) * r.perSec)));
+  let result = { score, pearls: 0, best: false };
+  const st = await change((s) => {
+    const day = milanDay();
+    const g = s.games && s.games.day === day ? s.games : { best: s.games?.best ?? {}, played: s.games?.played ?? 0, day, pearls: 0 };
+    const pearls = Math.max(0, Math.min(GAME_PEARLS_A_DAY - g.pearls, Math.floor(score / r.per)));
+    const best = score > (g.best[game] ?? 0);
+    result = { score, pearls, best: best && (g.best[game] ?? 0) > 0 };
+    return {
+      ...s,
+      pearls: (s.pearls ?? 0) + pearls,
+      earned: (s.earned ?? 0) + pearls,
+      games: { ...g, best: { ...g.best, [game]: Math.max(score, g.best[game] ?? 0) }, played: g.played + 1, pearls: g.pearls + pearls },
+    };
+  });
+  return { ...result, state: st };
 }
 
 /** Her sound settings (with the old on/off switch folded in). */
@@ -171,10 +271,11 @@ export const setPrefs = (patch: Partial<AudioPrefs>) =>
 export const setSpotify = (uri: string | null) => change((s) => ({ ...s, spotify: uri }));
 
 /** Buy a thing (or a backdrop) for Jelly's home. Returns an error message, or the new state. */
-export async function buy(id: string): Promise<string | JellyState> {
+export async function buy(id: string, featured: string[] = []): Promise<string | JellyState> {
   const item = itemById(id);
   const bd = BACKDROPS.find((b) => b.id === id);
-  const price = item?.price ?? bd?.price;
+  // the season's themed things are 30% off
+  const price = item?.price !== undefined && featured.includes(id) ? Math.round(item.price * (1 - FEATURED_OFF)) : (item?.price ?? bd?.price);
   if (!item && !bd) return 'That isn’t in the shop.';
   if (price === undefined) return 'That one can’t be bought: it’s unlocked by an achievement.';
   let err = '';
@@ -240,6 +341,7 @@ export function view(s: JellyState) {
     sound: prefsOf(s).on,
     audio: prefsOf(s),
     spotify: s.spotify ?? null,
+    games: { best: s.games?.best ?? {}, played: s.games?.played ?? 0, pearlsToday: s.games?.day === milanDay() ? s.games.pearls : 0 },
     ...friendship(s.pets, s.chats),
   };
 }

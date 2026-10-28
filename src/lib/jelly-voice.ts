@@ -62,9 +62,12 @@ export type SpeakResult = { url: string; parts: number } | { fallback: true; why
 export async function speakPart(chat: Chat, turnId: string, part: number, owner: string): Promise<SpeakResult> {
   const turn = chat.turns.find((t) => t.id === turnId);
   if (!turn) return { fallback: true, why: 'missing' };
-  const list = pieces(speechText(turn.a), ANSWER_DIRECTION);
+  return speakPiece(`${chat.id}_${turnId}`, pieces(speechText(turn.a), ANSWER_DIRECTION), part, owner);
+}
+
+/** One piece of any text she reads (an answer, the morning brief), recorded once under `id`. */
+export async function speakPiece(id: string, list: string[], part: number, owner: string): Promise<SpeakResult> {
   if (!list.length || part >= list.length) return { fallback: true, why: 'empty' };
-  const id = `${chat.id}_${turnId}`;
   const saved = (await db.get<Spoken>(VOICED, id)) ?? { id, createdAt: new Date().toISOString(), parts: list.length, media: list.map(() => null) };
   const have = saved.media[part];
   if (have) return { url: `/api/media/${have}`, parts: list.length };

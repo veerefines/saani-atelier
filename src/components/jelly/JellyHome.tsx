@@ -27,20 +27,28 @@ import { useMoodCycle } from './moods';
 import { HOME_PATS, LOVES, NEW_WATERS, TAPS } from './lines';
 import { sfx, useSound, voice } from '@/lib/sound';
 import JellyChats from './JellyChats';
+import Games from './Games';
+import JellyMemory from './JellyMemory';
+import SeasonLook from './SeasonLook';
+import { FEATURED_OFF, type SeasonView } from '@/lib/jelly-seasons';
 import type { Chat } from '@/lib/corner-model';
 import './jelly.css';
 
 type Data = { home: JellyView; stats: Stats; gains: Gain[] };
-type Tab = 'room' | 'shop' | 'awards' | 'chats';
+type Tab = 'room' | 'shop' | 'games' | 'awards' | 'memory' | 'chats';
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'room', label: 'Her home', icon: '🏠' },
   { id: 'shop', label: 'Shop', icon: '🛍️' },
+  { id: 'games', label: 'Games', icon: '🎮' },
   { id: 'awards', label: 'Achievements', icon: '🏆' },
-  { id: 'chats', label: 'Jelly’s Chats', icon: '💬' },
+  { id: 'memory', label: 'Remembers', icon: '🫧' },
+  { id: 'chats', label: 'Chats', icon: '💬' },
 ];
+/** What a thing costs today: the season's themed things are 30% off. */
+const priceOf = (price: number, id: string, season: SeasonView | null) => (season?.featured.includes(id) ? Math.round(price * (1 - FEATURED_OFF)) : price);
 
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
-const GROUPS: AchGroup[] = ['Jelly', 'Milano', 'Settling in', 'Bingo', 'Your story', 'Your people', 'My Corner'];
+const GROUPS: AchGroup[] = ['Jelly', 'Every day', 'Milano', 'Settling in', 'Soldi', 'Bingo', 'Your story', 'Your people', 'My Corner'];
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
 /** A number that rolls to its new value. */
@@ -82,7 +90,7 @@ function Ring({ p, size = 56, stroke = 6, children, gold }: { p: number; size?: 
 const Pearl = ({ s = 18 }: { s?: number }) => <img className="jh-pearl" src="/corner/pearl.webp" alt="" width={s} height={s} />;
 
 /** Jelly's Corner: her house to decorate, a shop paid in pearls, and every achievement across the Atelier. */
-export default function JellyHome({ initial, initialTab, chats, ready }: { initial: Data; initialTab?: string; chats: Chat[]; ready: boolean }) {
+export default function JellyHome({ initial, initialTab, chats, ready, season = null }: { initial: Data; initialTab?: string; chats: Chat[]; ready: boolean; season?: SeasonView | null }) {
   const [home, setHome] = useState(initial.home);
   const [stats, setStats] = useState(initial.stats);
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.id === initialTab) ? (initialTab as Tab) : 'room');
@@ -252,6 +260,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
       <header className="jh-hero">
         <button type="button" data-quiet className={`jh-me mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
           <img key={mood} src={moodHd(mood)} alt="" width={96} height={96} />
+          {season && <SeasonLook look={season.look} />}
         </button>
         <div className="jh-hello">
           <b>Jelly</b>
@@ -313,8 +322,11 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
       <nav className="jh-seg" role="tablist" aria-label="Jelly’s Corner" style={{ ['--i' as string]: tabIndex }}>
         <span className="jh-seg-pill" aria-hidden="true" />
         {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => go(t.id)}>
-            <span aria-hidden="true">{t.icon}</span> {t.label}
+          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => go(t.id)} aria-label={t.label}>
+            <span className="jh-seg-ic" aria-hidden="true">
+              {t.icon}
+            </span>
+            <span className="jh-seg-lb">{t.label}</span>
           </button>
         ))}
       </nav>
@@ -337,6 +349,19 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
               ))}
             </span>
             <span className="jh-sand" aria-hidden="true" />
+            {season && (
+              <>
+                <span className="jh-tint" style={{ background: season.tint }} aria-hidden="true" />
+                <span className={`jh-fall fall-${season.fall}`} aria-hidden="true">
+                  {Array.from({ length: 14 }, (_, i) => (
+                    <i key={i} />
+                  ))}
+                </span>
+                <span className="jh-season-tag">
+                  {season.emoji} {season.name}
+                </span>
+              </>
+            )}
             <img className="jh-house" src="/corner/home/house.webp" alt="Jelly’s house" draggable={false} />
 
             {placed.map((p) => {
@@ -489,6 +514,31 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
               </b>
             </span>
           </div>
+          {season && (
+            <div className="jh-featured">
+              <h3>
+                {season.emoji} {season.name} shelf <small>30% off until {new Date(`${season.end}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
+              </h3>
+              <div className="jh-featured-row">
+                {season.featured.flatMap((id) => {
+                  const it = itemById(id);
+                  if (!it || it.price === undefined) return [];
+                  const now = priceOf(it.price, id, season);
+                  return [
+                    <article key={id} className={`jh-card mini${home.owned[id] ? ' owned' : ''}${bought === id ? ' bought' : ''}`}>
+                      <span className="jh-card-art">
+                        <img src={itemSrc(id)} alt="" loading="lazy" />
+                      </span>
+                      <b>{it.name}</b>
+                      <button type="button" className="jh-buy" disabled={home.pearls < now || buying === id} onClick={() => buy(id, it.name)}>
+                        <Pearl /> {now} <s>{it.price}</s>
+                      </button>
+                    </article>,
+                  ];
+                })}
+              </div>
+            </div>
+          )}
           <div className="jh-kinds" role="tablist" aria-label="Show">
             {([['all', 'Everything'], ...KINDS.map((k) => [k.id, k.label]), ['backdrops', 'Backdrops']] as [typeof kind, string][]).map(([id, label]) => (
               <button key={id} role="tab" aria-selected={kind === id} onClick={() => setKind(id)}>
@@ -537,8 +587,9 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
                       </span>
                       <b>{it.name}</b>
                       {!exclusive ? (
-                        <button type="button" className="jh-buy" disabled={home.pearls < it.price! || buying === it.id} onClick={() => buy(it.id, it.name)}>
-                          <Pearl /> {it.price}
+                        <button type="button" className="jh-buy" disabled={home.pearls < priceOf(it.price!, it.id, season) || buying === it.id} onClick={() => buy(it.id, it.name)}>
+                          <Pearl /> {priceOf(it.price!, it.id, season)}
+                          {priceOf(it.price!, it.id, season) !== it.price && <s>{it.price}</s>}
                         </button>
                       ) : n ? (
                         <span className="jh-owned">✓ Won</span>
@@ -554,6 +605,10 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
       )}
 
       {tab === 'chats' && <JellyChats initial={chats} ready={ready} />}
+
+      {tab === 'games' && <Games home={home} onResult={(r) => took(r as unknown as Data)} />}
+
+      {tab === 'memory' && <JellyMemory />}
 
       {tab === 'awards' && (
         <section aria-label="Achievements">

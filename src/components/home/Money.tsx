@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/upload-client';
 import { sfx } from '@/lib/sound';
+import { checkSoon } from '@/components/jelly/bus';
 import { CATEGORIES, categoryOf, jellyLine, type Budget, type CategoryId, type Currency, type Expense, type MonthSummary } from '@/lib/money';
 import type { Rate } from '@/lib/fx';
 
@@ -289,6 +290,7 @@ function AddSpend({ rate, onAdded }: { rate: Rate | null; onAdded: () => void })
     try {
       await api('/api/expenses', 'POST', { amount: n, currency: cur, category: cat, note, day });
       sfx('clink');
+      checkSoon();
       setAmount('');
       setNote('');
       onAdded();

@@ -16,14 +16,20 @@ import { FACTS } from './facts';
 import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY, SNORE, STILL_LIKE, WAKE, hello } from './lines';
 import SpeakButton from './SpeakButton';
 import { setSound, sfx, useSound, voice } from '@/lib/sound';
-import { announce, applyChange, emit, useJelly, useJellyChats } from './bus';
+import { announce, applyChange, emit, jellyEvent, useJelly, useJellyChats } from './bus';
+import SeasonLook from './SeasonLook';
+import type { SeasonView } from '@/lib/jelly-seasons';
+import type { Reminder } from '@/lib/reminders';
 import Celebration from './Celebration';
 import './jelly.css';
 
 type Brief = { id: string; title: string; updatedAt: string; archived: boolean };
 type Friend = JellyView;
-type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null; gains?: Gain[] };
-type Bubble = { kind: 'fact' | 'checkin' | 'hello'; label: string; text: string; ask?: string; mood: JellyMood; topic?: 'Italy' | 'Fashion' };
+type State = { ready: boolean; mood: JellyMood; chats: Chat[]; projects: Brief[]; friend: Friend; away: number | null; gains?: Gain[]; season?: SeasonView | null };
+type Bubble = { kind: 'fact' | 'checkin' | 'hello' | 'reminder'; label: string; text: string; ask?: string; mood: JellyMood; topic?: 'Italy' | 'Fashion' };
+
+/** "Wed 28 Oct, 7 PM" on her clock. */
+const whenText = (iso: string) => new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(iso)).replace(':00', '').toUpperCase().replace(/^(\w)(\w+)/, (_m, a, b) => a + b.toLowerCase());
 
 /** Ready-made questions that fit the page she's on. */
 function startersFor(path: string, project?: string): string[] {
@@ -184,6 +190,23 @@ export default function Jelly() {
     }, []),
   );
 
+  // she did something that might finish a quest: check in a moment
+  const checkAt = useRef(0);
+  useJelly(
+    'jelly:check',
+    useCallback(() => {
+      clearTimeout(checkAt.current);
+      checkAt.current = window.setTimeout(() => {
+        api<{ home: JellyView; gains: Gain[] }>('/api/jelly/check', 'POST')
+          .then((r) => {
+            celebrate(r.gains);
+            emit('jelly:home', r.home);
+          })
+          .catch(() => {});
+      }, 900);
+    }, [celebrate]),
+  );
+
   // after she moves around the site, check for anything she just unlocked
   const firstPath = useRef(true);
   useEffect(() => {
@@ -226,6 +249,7 @@ export default function Jelly() {
       const b = fact ? nextFact() : checkIn(projects.current, baseRef.current);
       lastKind.current = b.kind;
       setBubble(b);
+      if (b.kind === 'fact') jellyEvent('fact');
       if (!voice(b.kind === 'fact' ? `Did you know? ${b.text}` : b.text)) sfx('blip');
       feel(b.mood, 5000);
     },
@@ -295,6 +319,43 @@ export default function Jelly() {
       evs.forEach((e) => window.removeEventListener(e, reset));
     };
   }, [feel, say]);
+
+  /* ---------- reminders: Jelly says them herself if the site is open at the time ---------- */
+  const [remindersAt, setRemindersAt] = useState(0);
+  useJelly(
+    'jelly:reminders',
+    useCallback(() => setRemindersAt(Date.now()), []),
+  );
+  useEffect(() => {
+    if (!loaded) return;
+    const later: number[] = [];
+    let stop = false;
+    fetch('/api/reminders')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { open: Reminder[] } | null) => {
+        if (!d || stop) return;
+        for (const r of d.open) {
+          const wait = Date.parse(r.at) - Date.now();
+          if (wait > 6 * 3600_000) continue;
+          later.push(
+            window.setTimeout(() => {
+              setBubble({ kind: 'reminder', label: 'Don’t forget!', text: r.text, mood: 'excited' });
+              sfx('chime');
+              feel('excited', 5000);
+              api(`/api/reminders/${r.id}`, 'PATCH', { fired: true }).catch(() => {});
+            }, Math.max(1500, wait)),
+          );
+        }
+      })
+      .catch(() => {});
+    // reminders set later today are picked up on the next read (every hour)
+    const again = window.setTimeout(() => setRemindersAt(Date.now()), 3600_000);
+    return () => {
+      stop = true;
+      later.forEach(clearTimeout);
+      clearTimeout(again);
+    };
+  }, [loaded, remindersAt, feel]);
 
   /* ---------- pats ---------- */
   const pending = useRef(0);
@@ -449,7 +510,10 @@ export default function Jelly() {
     setErr('');
     sfx('send');
     try {
-      const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId, page: path });
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId, page: path, tz });
+      if (r.turn.notes?.some((n) => n.kind === 'remind')) (emit('jelly:reminders', null), setTimeout(() => sfx('chime'), 600));
+      if (r.turn.notes?.length) emit('jelly:check', null);
       sfx('message');
       setData((d) => (d ? { ...d, chats: applyChange(d.chats, { chat: r.chat }) } : d));
       emit('jelly:home', r.friend);
@@ -492,7 +556,7 @@ export default function Jelly() {
           <span className="jb-top">
             <img src={moodSrc(shown.mood)} alt="" width={40} height={40} />
             <span className={`jb-chip ${shown.kind}`}>
-              {shown.kind === 'fact' ? (shown.topic === 'Italy' ? '🇮🇹 Italy' : '👗 Fashion') : shown.kind === 'hello' ? '🪼 Hello' : '💌 Check-in'}
+              {shown.kind === 'fact' ? (shown.topic === 'Italy' ? '🇮🇹 Italy' : '👗 Fashion') : shown.kind === 'hello' ? '🪼 Hello' : shown.kind === 'reminder' ? '⏰ Reminder' : '💌 Check-in'}
             </span>
             <b>{shown.label}</b>
           </span>
@@ -527,6 +591,7 @@ export default function Jelly() {
             </span>
             <button type="button" data-quiet className={`jp-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Tap to pet me!">
               <img key={mood} src={moodSrc(mood)} alt="" width={60} height={60} />
+              {data?.season && <SeasonLook look={data.season.look} />}
               <span className="jelly-hearts" aria-hidden="true">
                 {hearts.map((h) => (
                   <i key={h.id} style={{ left: `${h.x}%` }}>
@@ -683,6 +748,7 @@ export default function Jelly() {
                         <img className="jp-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={36} height={36} loading="lazy" />
                         <div className="jp-bubble">
                           <Answer text={t.a} />
+                          {t.notes && <TurnNotes notes={t.notes} />}
                           {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                         </div>
                       </div>
@@ -770,8 +836,48 @@ export default function Jelly() {
           <i />
         </span>
         <img key={mood} src={moodSrc(mood)} alt="" width={96} height={96} draggable={false} />
+        {data?.season && <SeasonLook look={data.season.look} />}
       </button>
     </div>,
     document.body,
+  );
+}
+
+/** What Jelly did from an answer: a reminder she set, or something she'll remember (each can be undone). */
+function TurnNotes({ notes }: { notes: NonNullable<Chat['turns'][number]['notes']> }) {
+  const [gone, setGone] = useState<string[]>([]);
+  async function undo(n: (typeof notes)[number]) {
+    setGone((g) => [...g, n.id]);
+    sfx('paper');
+    if (n.kind === 'remind') {
+      await api(`/api/reminders/${n.id}`, 'DELETE').catch(() => {});
+      emit('jelly:reminders', null);
+    } else await api('/api/jelly/memory', 'DELETE', { id: n.id }).catch(() => {});
+  }
+  return (
+    <div className="jp-notes">
+      {notes.map((n) => {
+        const off = gone.includes(n.id);
+        return (
+          <span key={n.id} className={`jp-note ${n.kind}${off ? ' off' : ''}`}>
+            {n.kind === 'remind' ? (
+              <>
+                ⏰ <b>{off ? 'Reminder cancelled' : `Reminder set · ${whenText(n.at)}`}</b>
+                {n.repeat !== 'none' && !off && <small>{n.repeat}</small>}
+              </>
+            ) : (
+              <>
+                🫧 <b>{off ? 'Forgotten' : 'Jelly will remember that'}</b>
+              </>
+            )}
+            {!off && (
+              <button type="button" onClick={() => undo(n)}>
+                {n.kind === 'remind' ? 'cancel' : 'forget'}
+              </button>
+            )}
+          </span>
+        );
+      })}
+    </div>
   );
 }

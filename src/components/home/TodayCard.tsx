@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { randomPhrase, type Phrase } from '@/content/italian';
 import CallPlanner from './CallPlanner';
+import { jellyEvent } from '@/components/jelly/bus';
 
 type Today = {
   weather: null | { now: number; feels: number; min: number; max: number; rainChance: number; rainFrom: string | null; sunset: string; sky: { icon: string; words: string } };
@@ -66,7 +67,7 @@ export default function TodayCard() {
           <span className="hand">impara l’italiano</span>
           <p lang="it">
             <b>{phrase.it}</b>
-            <button type="button" className="today-say" onClick={() => speak(phrase.it)} aria-label={`Hear “${phrase.it}” in Italian`}>
+            <button type="button" className="today-say" onClick={() => (speak(phrase.it), jellyEvent('phrase'))} aria-label={`Hear “${phrase.it}” in Italian`}>
               🔊
             </button>
           </p>

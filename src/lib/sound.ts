@@ -286,6 +286,13 @@ export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' |
 let lastPop = 0;
 let spinPitch = 0;
 /** One tick of the Surprise me wheel; `step` (0, 1, 2…) raises the pitch as it slows down. */
+/** A note for Jelly's games (Jelly Says' shells, combo pings): `step` semitones from C5. */
+export function note(step: number, dur = 0.35) {
+  if (!ready()) return;
+  const t = ctx!.currentTime + 0.01;
+  tone(N(step), t, dur, { type: 'triangle', gain: 0.16 });
+  tone(N(step + 12), t, dur * 0.6, { gain: 0.05 });
+}
 export function spinTick(step: number) {
   spinPitch = step;
   sfx('spin');
@@ -404,6 +411,12 @@ const TUNES: Record<string, (t: number) => void> = {
   'Settling in': (t) => [21, 26, 24, 28].forEach((s, i) => tone(N(s), t + i * 0.07, 0.25, { type: 'triangle', gain: 0.1 })), // keys jingling
   Bingo: (t) => [0, 4, 7, 12, 7, 12].forEach((s, i) => tone(N(s), t + i * 0.1, 0.32, { type: 'triangle', gain: 0.16 })), // party fanfare
   'Your story': (t) => [16, 19, 23, 28].forEach((s, i) => tone(N(s), t + i * 0.16, 0.8, { gain: 0.12 })), // music box
+  'Every day': (t) => [12, 16, 19, 24].forEach((s, i) => tone(N(s), t + i * 0.08, 0.3, { type: 'triangle', gain: 0.13 })), // a bright little "done!"
+  Soldi: (t) => {
+    [0, 0.09, 0.2].forEach((d, i) => tone(N(28 + i * 3), t + d, 0.25, { type: 'triangle', gain: 0.1 })); // coins
+    noise(t + 0.3, 0.06, { from: 6000, to: 4000, gain: 0.06, q: 8 }); // ka-ching
+    tone(N(31), t + 0.32, 0.6, { gain: 0.1 });
+  },
   'Your people': (t) => [5, 9, 12, 17].forEach((s, i) => tone(N(s - 12), t + i * 0.12, 1, { gain: 0.16, attack: 0.03 })), // warm heart chime
   'My Corner': (t) => {
     [0, 0.06, 0.12, 0.18].forEach((d) => noise(t + d, 0.04, { from: 3000, to: 1800, gain: 0.07, q: 5 })); // sewing ticks
@@ -501,7 +514,12 @@ export type Speaking = 'loading' | 'playing' | 'backup' | 'idle';
  * Jelly reads a chat answer, a piece at a time (the next piece loads while one plays).
  * `onState` follows along so the ▶ button can show what's happening.
  */
-export async function speakAnswer(chatId: string, turnId: string, text: string, onState: (s: Speaking) => void) {
+export const speakAnswer = (chatId: string, turnId: string, text: string, onState: (s: Speaking) => void) =>
+  speakVia((part) => `/api/jelly/speak?chat=${encodeURIComponent(chatId)}&turn=${encodeURIComponent(turnId)}&part=${part}`, text, onState);
+/** Jelly reads the day's morning brief. */
+export const speakBrief = (day: string, text: string, onState: (s: Speaking) => void) => speakVia((part) => `/api/jelly/speak?brief=${day}&part=${part}`, text, onState);
+
+async function speakVia(urlFor: (part: number) => string, text: string, onState: (s: Speaking) => void) {
   setup();
   if (!prefs.on || prefs.voice === 0) return;
   stopVoice();
@@ -510,7 +528,7 @@ export async function speakAnswer(chatId: string, turnId: string, text: string, 
   onState('loading');
   type Part = { url?: string; parts?: number; fallback?: boolean };
   const get = (part: number) =>
-    fetch(`/api/jelly/speak?chat=${encodeURIComponent(chatId)}&turn=${encodeURIComponent(turnId)}&part=${part}`)
+    fetch(urlFor(part))
       .then((r) => r.json() as Promise<Part>)
       .catch(() => ({ fallback: true }) as Part);
   let next = get(0);

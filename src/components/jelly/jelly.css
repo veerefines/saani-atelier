@@ -1009,9 +1009,9 @@ a.jelly-more {
 .jh-seg {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   justify-self: center;
-  width: min(100%, 680px);
+  width: min(100%, 900px);
   padding: 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
@@ -1024,7 +1024,7 @@ a.jelly-more {
   top: 5px;
   bottom: 5px;
   left: 5px;
-  width: calc((100% - 10px) / 4);
+  width: calc((100% - 10px) / 6);
   border-radius: 999px;
   background: linear-gradient(180deg, #c8487a, var(--berry));
   box-shadow: 0 10px 18px -10px rgba(178, 48, 95, 0.9);
@@ -1900,9 +1900,6 @@ small.jh-status {
   }
   .jh-seg button {
     font-size: 13px;
-  }
-  .jh-seg button span {
-    display: none;
   }
   .jh-scene {
     border-radius: 24px;
@@ -2896,4 +2893,621 @@ small.jh-status {
   .jv-dots i {
     animation: none;
   }
+}
+
+/* ---------- what she wears for a season (SeasonLook.tsx), bobbing with her ---------- */
+.jelly-look {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  transform-origin: 50% 40%;
+  animation: jelly-pulse 2.6s 0.35s ease-in-out infinite;
+  filter: drop-shadow(0 2px 3px rgba(107, 30, 58, 0.25));
+}
+.jelly-pet.mood-sleepy .jelly-look {
+  animation-duration: 5s;
+}
+.jelly-pet.mood-love .jelly-look {
+  animation: jelly-beat 0.9s 0.35s ease-in-out infinite;
+}
+.jp-avatar {
+  position: relative;
+}
+.jp-avatar .jelly-look {
+  animation: none;
+}
+.look-colours,
+.look-diya {
+  animation: none;
+}
+
+/* ---------- what Jelly did from an answer: a reminder, something to remember ---------- */
+.jp-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.jp-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff4d6, #fde4ee);
+  box-shadow: 0 0 0 1px rgba(224, 168, 75, 0.35);
+  font: 500 12px var(--font-body);
+  color: var(--burgundy);
+}
+.jp-note.remember {
+  background: linear-gradient(135deg, #efe6fc, #e3f4fb);
+  box-shadow: 0 0 0 1px rgba(205, 180, 240, 0.6);
+}
+.jp-note.off {
+  opacity: 0.55;
+}
+.jp-note small {
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: #fff;
+  font-size: 10.5px;
+}
+.jp-note button {
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  font: 700 11px var(--font-body);
+  color: var(--berry);
+  cursor: pointer;
+}
+.jelly-bubble.kind-reminder {
+  box-shadow:
+    0 0 0 2px #f7c84b,
+    0 18px 34px -16px rgba(107, 30, 58, 0.45);
+}
+.jb-chip.reminder {
+  background: #fff1c4;
+  color: #8a5a12;
+}
+
+/* ---------- six tabs: icons and words on wide screens, just icons on phones ---------- */
+.jh-seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 0 4px;
+}
+.jh-seg-lb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 720px) {
+  .jh-seg-lb {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .jh-seg-ic {
+    font-size: 19px;
+  }
+}
+
+/* ---------- the season in her home ---------- */
+.jh-me {
+  position: relative;
+}
+.jh-me .jelly-look {
+  animation: none;
+}
+.jh-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+.jh-season-tag {
+  position: absolute;
+  top: 3cqw;
+  left: 3cqw;
+  z-index: 3;
+  padding: 0.8cqw 2cqw;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  font: 700 max(11px, 1.8cqw) var(--font-body);
+  color: var(--burgundy);
+  pointer-events: none;
+}
+.jh-fall {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.jh-fall i {
+  position: absolute;
+  top: -6%;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.9;
+  animation: jh-fall 9s linear infinite;
+}
+.jh-fall i:nth-child(1) { left: 4%; animation-delay: 0s; }
+.jh-fall i:nth-child(2) { left: 11%; animation-delay: 4.2s; animation-duration: 11s; }
+.jh-fall i:nth-child(3) { left: 18%; animation-delay: 1.6s; }
+.jh-fall i:nth-child(4) { left: 26%; animation-delay: 6.1s; animation-duration: 12s; }
+.jh-fall i:nth-child(5) { left: 33%; animation-delay: 2.8s; }
+.jh-fall i:nth-child(6) { left: 41%; animation-delay: 7.4s; animation-duration: 10s; }
+.jh-fall i:nth-child(7) { left: 49%; animation-delay: 0.9s; }
+.jh-fall i:nth-child(8) { left: 57%; animation-delay: 5.3s; animation-duration: 13s; }
+.jh-fall i:nth-child(9) { left: 64%; animation-delay: 3.5s; }
+.jh-fall i:nth-child(10) { left: 72%; animation-delay: 8.2s; animation-duration: 11s; }
+.jh-fall i:nth-child(11) { left: 79%; animation-delay: 2.1s; }
+.jh-fall i:nth-child(12) { left: 86%; animation-delay: 6.8s; animation-duration: 12s; }
+.jh-fall i:nth-child(13) { left: 92%; animation-delay: 4.7s; }
+.jh-fall i:nth-child(14) { left: 97%; animation-delay: 1.2s; animation-duration: 10s; }
+@keyframes jh-fall {
+  to {
+    transform: translate(3cqw, 82cqw) rotate(320deg);
+  }
+}
+.fall-leaves i {
+  border-radius: 0 70% 0 70%;
+  background: linear-gradient(135deg, #f59a3c, #d9622b);
+}
+.fall-leaves i:nth-child(3n) {
+  background: linear-gradient(135deg, #f7c84b, #e0a84b);
+}
+.fall-sparks i {
+  width: 0.9cqw;
+  height: 0.9cqw;
+  background: radial-gradient(circle, #fff6c4, #ffc53d 60%, transparent 70%);
+  box-shadow: 0 0 1.5cqw #ffcc4d;
+  animation-duration: 7s;
+}
+.fall-confetti i {
+  width: 1cqw;
+  height: 1.6cqw;
+  border-radius: 2px;
+  background: #f4a6c0;
+}
+.fall-confetti i:nth-child(3n) {
+  background: #cdb4f0;
+}
+.fall-confetti i:nth-child(3n + 1) {
+  background: #f7e3a1;
+}
+.fall-confetti i:nth-child(4n) {
+  background: #9fd8ef;
+}
+.fall-snow i {
+  box-shadow: 0 0 0.6cqw rgba(255, 255, 255, 0.9);
+  animation-duration: 12s;
+}
+.fall-hearts i,
+.fall-petals i {
+  border-radius: 50% 50% 50% 0;
+  background: #f58fb3;
+  transform: rotate(-45deg);
+}
+.fall-petals i {
+  background: #ffd0e0;
+}
+.fall-colours i {
+  width: 2.4cqw;
+  height: 2.4cqw;
+  opacity: 0.55;
+  filter: blur(2px);
+  background: #ff7fb5;
+}
+.fall-colours i:nth-child(3n) {
+  background: #5fc4ff;
+}
+.fall-colours i:nth-child(3n + 1) {
+  background: #ffd54a;
+}
+.fall-colours i:nth-child(4n) {
+  background: #8ce07a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jh-fall {
+    display: none;
+  }
+}
+
+/* ---------- the season's shelf in the shop ---------- */
+.jh-featured {
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #fff4d6, #fde4ee 60%, #efe6fc);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+.jh-featured h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0 0 10px;
+  font: 400 19px var(--font-display);
+  color: var(--burgundy);
+}
+.jh-featured h3 small {
+  font: 700 12px var(--font-body);
+  color: var(--berry);
+}
+.jh-featured-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scroll-snap-type: x mandatory;
+}
+.jh-featured-row .jh-card {
+  flex: 0 0 140px;
+  scroll-snap-align: start;
+}
+.jh-buy s {
+  margin-left: 2px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+/* ---------- games ---------- */
+.jg {
+  display: grid;
+  gap: 12px;
+}
+.jg-intro,
+.jg-played {
+  justify-self: center;
+  margin: 0;
+  text-align: center;
+  font: 500 14px var(--font-body);
+  color: var(--ink);
+}
+.jg-played {
+  font-size: 12.5px;
+  color: #8a6a7b;
+}
+.jg-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.jg-card {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 16px;
+  border: 0;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #fff, #f6eefc);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 16px 30px -22px rgba(107, 30, 58, 0.6);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.jg-card:hover {
+  transform: translateY(-3px);
+}
+.jg-card.g-catch {
+  background: linear-gradient(160deg, #fff, #e3f4fb);
+}
+.jg-card.g-pop {
+  background: linear-gradient(160deg, #fff, #fde4ee);
+}
+.jg-icon {
+  font-size: 34px;
+}
+.jg-card b {
+  font: 400 21px var(--font-display);
+  color: var(--burgundy);
+}
+.jg-card small {
+  font: 500 13px / 1.4 var(--font-body);
+  color: #5d4b55;
+}
+.jg-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.jg-meta span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  font: 700 11.5px var(--font-body);
+  color: var(--berry);
+}
+.jg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font: 400 18px var(--font-display);
+  color: var(--burgundy);
+}
+.jg-back,
+.jg-best {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
+  font: 700 12.5px var(--font-body);
+  color: var(--berry);
+  cursor: pointer;
+}
+.jg-best {
+  cursor: default;
+}
+.jg-stage {
+  position: relative;
+  width: min(100%, 640px);
+  justify-self: center;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #bfe6f5 0%, #d9ecfb 50%, #f3e6fb 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.8),
+    0 24px 40px -26px rgba(107, 30, 58, 0.6);
+}
+.jg-stage.pop {
+  background: linear-gradient(180deg, #f3e6fb 0%, #fde4ee 55%, #fff4e0 100%);
+}
+.jg-stage.says {
+  background: radial-gradient(circle at 50% 45%, #fff 0%, #efe6fc 60%, #e3d6fb 100%);
+}
+.jg-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  touch-action: none;
+  cursor: pointer;
+}
+@media (max-width: 520px) {
+  .jg-canvas {
+    aspect-ratio: 3 / 4;
+    max-height: 70dvh;
+  }
+}
+.jg-hud {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+.jg-hud span {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  font: 800 14px var(--font-body);
+  color: var(--burgundy);
+}
+.jg-combo {
+  animation: jelly-in 0.2s ease-out;
+  color: var(--berry) !important;
+}
+.jg-over {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: rgba(255, 248, 243, 0.82);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  text-align: center;
+}
+.jg-over b {
+  font: 400 28px var(--font-display);
+  color: var(--burgundy);
+}
+.jg-over small {
+  max-width: 300px;
+  font: 500 14px / 1.4 var(--font-body);
+  color: #5d4b55;
+}
+.jg-score {
+  margin: 0;
+  font: 400 58px / 1 var(--font-display);
+  color: var(--berry);
+}
+.jg-go {
+  margin-top: 6px;
+  padding: 11px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c8487a, var(--berry));
+  box-shadow: 0 12px 20px -12px rgba(178, 48, 95, 0.9);
+  font: 800 15px var(--font-body);
+  color: #fff;
+  cursor: pointer;
+}
+.jg-says {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  aspect-ratio: 1;
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 58px 22px 22px;
+}
+.jg-says-jelly {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  z-index: 1;
+  width: 26%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(205, 180, 240, 0.7));
+}
+.jg-shell {
+  border: 0;
+  border-radius: 46% 46% 40% 40%;
+  background: radial-gradient(circle at 50% 30%, #fff, var(--c) 70%);
+  box-shadow:
+    inset 0 -8px 0 rgba(0, 0, 0, 0.06),
+    0 10px 18px -12px rgba(107, 30, 58, 0.6);
+  opacity: 0.72;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    opacity 0.12s,
+    box-shadow 0.12s;
+  touch-action: manipulation;
+}
+.jg-shell:disabled {
+  cursor: default;
+}
+.jg-shell.lit {
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 32px 6px var(--c);
+}
+
+/* ---------- Jelly remembers ---------- */
+.jm {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 760px);
+  justify-self: center;
+}
+.jm-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #efe6fc, #e3f4fb);
+}
+.jm-head img {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+.jm-head p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.jm-head b {
+  font: 400 19px var(--font-display);
+  color: var(--burgundy);
+}
+.jm-head small {
+  font: 500 13px / 1.45 var(--font-body);
+  color: #5d4b55;
+}
+.jm-add,
+.jm-edit {
+  display: flex;
+  gap: 8px;
+}
+.jm-add input,
+.jm-edit input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(107, 30, 58, 0.15);
+  font: 500 14px var(--font-body);
+}
+.jm-add button,
+.jm-edit button {
+  flex: none;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c8487a, var(--berry));
+  font: 700 13px var(--font-body);
+  color: #fff;
+  cursor: pointer;
+}
+.jm-add button:disabled {
+  opacity: 0.5;
+}
+.jm-edit button[type='button'] {
+  background: #fff;
+  color: var(--berry);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.2);
+}
+.jm-empty {
+  margin: 0;
+  text-align: center;
+  font: 500 14px var(--font-body);
+  color: #8a6a7b;
+}
+.jm-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jm-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 14px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(107, 30, 58, 0.08);
+}
+.jm-list li > p {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  margin: 0;
+  font: 500 14.5px / 1.4 var(--font-body);
+  color: var(--ink);
+}
+.jm-list small {
+  font: 500 11.5px var(--font-body);
+  color: #8a6a7b;
+}
+.jm-list .jm-edit {
+  flex: 1;
+}
+.jm-tools {
+  display: flex;
+}
+.jm-tools button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 16px;
+  color: #8a6a7b;
+  cursor: pointer;
 }

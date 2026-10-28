@@ -3,6 +3,7 @@
  * Shared by the server (which checks and awards) and the browser (which shows progress).
  * No database code here.
  */
+import { SEASON_BACKDROPS } from './jelly-seasons';
 
 /* ---------- what Saani has done across the whole Atelier ---------- */
 export type Stats = {
@@ -39,6 +40,17 @@ export type Stats = {
   backdrops: number; // backdrops besides the first
   placesTotal: number;
   bingoTotal: number;
+  expenses: number; // spends logged in Soldi
+  underBudget: number; // finished months she stayed under budget
+  questsDone: number;
+  questDays: number; // days she did all three quests
+  games: number;
+  catchBest: number;
+  popBest: number;
+  saysBest: number;
+  memories: number; // things Jelly remembers about her
+  reminders: number; // reminders she's set
+  seasons: number; // seasons and events she came by for
 };
 export type Metric = keyof Stats;
 
@@ -247,11 +259,13 @@ export const BACKDROPS: Backdrop[] = [
   { id: 'milano', name: 'Milano by night', sky: 'linear-gradient(180deg, #1e2a4a 0%, #4b3d6e 50%, #e2a0a8 100%)', floor: '#c9a98a' },
   { id: 'flat', name: 'Cosy Milan flat', sky: 'repeating-linear-gradient(90deg, #fbe9df 0 26px, #f7dfd3 26px 52px)', floor: '#d9b08c' },
   { id: 'rainbow', name: 'Rainbow reef', sky: 'linear-gradient(180deg, #ffd6e0 0%, #ffe8c7 25%, #fff6c4 45%, #d4f5dc 65%, #cfe8fb 85%, #e3d6fb 100%)', floor: '#f6e2c4' },
+  // brought by a season's first visit (jelly-seasons.ts)
+  ...SEASON_BACKDROPS,
 ];
 export const backdropById = (id: string) => BACKDROPS.find((b) => b.id === id) ?? BACKDROPS[0];
 
 /* ---------- achievements, across the whole Atelier ---------- */
-export type AchGroup = 'Jelly' | 'Milano' | 'Settling in' | 'Bingo' | 'Your story' | 'Your people' | 'My Corner';
+export type AchGroup = 'Jelly' | 'Every day' | 'Milano' | 'Settling in' | 'Soldi' | 'Bingo' | 'Your story' | 'Your people' | 'My Corner';
 export type Achievement = { id: string; group: AchGroup; icon: string; title: string; desc: string; metric: Metric; goal: number | 'all'; pearls: number; reward?: string; backdrop?: string };
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -360,6 +374,31 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'palette-5', group: 'My Corner', icon: '🌈', title: 'Colour queen', desc: 'Save 5 colour palettes', metric: 'palettes', goal: 5, pearls: 50 },
   { id: 'studio-10', group: 'My Corner', icon: '🎓', title: 'Studio regular', desc: 'Ask 10 studio questions', metric: 'studioChats', goal: 10, pearls: 60 },
   { id: 'studio-30', group: 'My Corner', icon: '🥇', title: 'Jelly’s star pupil', desc: 'Ask 30 studio questions', metric: 'studioChats', goal: 30, pearls: 120, reward: 'magnifier' },
+  // every day: quests, reminders, games, seasons and Jelly's memory
+  { id: 'quest-1', group: 'Every day', icon: '🗺️', title: 'Quest accepted', desc: 'Finish a daily quest', metric: 'questsDone', goal: 1, pearls: 10 },
+  { id: 'quests-25', group: 'Every day', icon: '🧭', title: 'Adventurer', desc: 'Finish 25 daily quests', metric: 'questsDone', goal: 25, pearls: 50 },
+  { id: 'quests-100', group: 'Every day', icon: '🏆', title: 'Quest legend', desc: 'Finish 100 daily quests', metric: 'questsDone', goal: 100, pearls: 150, reward: 'treasure' },
+  { id: 'questday-1', group: 'Every day', icon: '🌟', title: 'Hat trick', desc: 'Finish all three quests in a day', metric: 'questDays', goal: 1, pearls: 15 },
+  { id: 'questday-7', group: 'Every day', icon: '✨', title: 'A perfect week', desc: 'Finish all three quests on 7 days', metric: 'questDays', goal: 7, pearls: 60, reward: 'star-bottle' },
+  { id: 'questday-30', group: 'Every day', icon: '🌠', title: 'Unstoppable', desc: 'Finish all three quests on 30 days', metric: 'questDays', goal: 30, pearls: 200 },
+  { id: 'remind-1', group: 'Every day', icon: '⏰', title: 'Jelly’s got it', desc: 'Set a reminder with Jelly', metric: 'reminders', goal: 1, pearls: 10 },
+  { id: 'remind-10', group: 'Every day', icon: '🗓️', title: 'Organised queen', desc: 'Set 10 reminders', metric: 'reminders', goal: 10, pearls: 40 },
+  { id: 'game-1', group: 'Every day', icon: '🎮', title: 'Game on', desc: 'Play a game with Jelly', metric: 'games', goal: 1, pearls: 10 },
+  { id: 'games-50', group: 'Every day', icon: '🕹️', title: 'Arcade regular', desc: 'Play 50 games with Jelly', metric: 'games', goal: 50, pearls: 80 },
+  { id: 'catch-40', group: 'Every day', icon: '🫧', title: 'Pearl diver', desc: 'Catch 40 pearls in one game of Pearl Catch', metric: 'catchBest', goal: 40, pearls: 50 },
+  { id: 'pop-80', group: 'Every day', icon: '🎈', title: 'Bubble buster', desc: 'Score 80 in Bubble Pop', metric: 'popBest', goal: 80, pearls: 50 },
+  { id: 'says-10', group: 'Every day', icon: '🎵', title: 'Perfect memory', desc: 'Reach round 10 in Jelly Says', metric: 'saysBest', goal: 10, pearls: 60 },
+  { id: 'memory-5', group: 'Every day', icon: '🧠', title: 'Jelly knows you', desc: 'Let Jelly remember 5 things about you', metric: 'memories', goal: 5, pearls: 25 },
+  { id: 'memory-20', group: 'Every day', icon: '💭', title: 'Best friends know everything', desc: 'Let Jelly remember 20 things', metric: 'memories', goal: 20, pearls: 60 },
+  { id: 'season-1', group: 'Every day', icon: '🎃', title: 'In the spirit', desc: 'Visit Jelly during a festival or season', metric: 'seasons', goal: 1, pearls: 20 },
+  { id: 'season-5', group: 'Every day', icon: '🎆', title: 'Festive friend', desc: 'Visit during 5 festivals and seasons', metric: 'seasons', goal: 5, pearls: 80 },
+  { id: 'season-10', group: 'Every day', icon: '🗓️', title: 'A whole year together', desc: 'Visit during 10 festivals and seasons', metric: 'seasons', goal: 10, pearls: 200 },
+  // soldi
+  { id: 'spend-1', group: 'Soldi', icon: '💶', title: 'Every cent counts', desc: 'Log your first spend', metric: 'expenses', goal: 1, pearls: 10 },
+  { id: 'spend-30', group: 'Soldi', icon: '🧾', title: 'Keeping count', desc: 'Log 30 spends', metric: 'expenses', goal: 30, pearls: 40 },
+  { id: 'spend-150', group: 'Soldi', icon: '📒', title: 'Bookkeeper', desc: 'Log 150 spends', metric: 'expenses', goal: 150, pearls: 100 },
+  { id: 'budget-1', group: 'Soldi', icon: '🐷', title: 'On budget', desc: 'Finish a month under budget', metric: 'underBudget', goal: 1, pearls: 60 },
+  { id: 'budget-3', group: 'Soldi', icon: '💰', title: 'Money smart', desc: 'Finish 3 months under budget', metric: 'underBudget', goal: 3, pearls: 150, reward: 'jewel-box' },
 ];
 
 export const goalOf = (a: Achievement, s: Stats) => (a.goal !== 'all' ? a.goal : a.metric === 'stamps' ? s.placesTotal : a.metric === 'bingo' ? s.bingoTotal : s.checklistTotal);

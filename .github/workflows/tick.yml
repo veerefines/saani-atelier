@@ -1,0 +1,23 @@
+# Jelly's reminders: every 10 minutes, ask the live site to send any reminders that are due.
+# Vercel's free plan only runs its own timer once a day, so GitHub's free one does this job.
+# Needs one repository secret: CRON_SECRET (the same value as in Vercel's settings).
+# GitHub may run a scheduled job a few minutes late, so reminders can arrive up to ~15 minutes late.
+name: Reminders
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send due reminders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE: ${{ vars.SITE_URL || 'https://saani-atelier.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "Add CRON_SECRET in the repo's Settings → Secrets → Actions"; exit 0; fi
+          curl -fsS --max-time 60 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/tick"

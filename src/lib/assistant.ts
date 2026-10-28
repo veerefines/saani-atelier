@@ -119,7 +119,25 @@ async function documents(items: Item[], room: number, read: string[], notRead: s
     .join('');
 }
 
-export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood };
+export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; tags?: Tags };
+
+/** Jelly's notes to the site, on their own lines: reminders to set and things to remember. */
+export type Tags = { remind: { day: string; time: string; text: string; repeat: string }[]; remember: string[] };
+export function takeTags(raw: string): { text: string; tags: Tags } {
+  const tags: Tags = { remind: [], remember: [] };
+  const text = raw
+    .replace(/^[ \t>*-]*\[\s*remind\s*:\s*(\d{4}-\d{2}-\d{2})[ T]+(\d{1,2}:\d{2})\s*\|\s*([^|\]\n]+?)\s*(?:\|\s*(none|daily|weekly)\s*)?\]\s*$/gim, (_m, day, time, what, rep) => {
+      if (tags.remind.length < 3) tags.remind.push({ day, time, text: what.trim(), repeat: (rep ?? 'none').toLowerCase() });
+      return '';
+    })
+    .replace(/^[ \t>*-]*\[\s*remember\s*:\s*([^\]\n]+?)\s*\]\s*$/gim, (_m, fact) => {
+      if (tags.remember.length < 2) tags.remember.push(fact.trim());
+      return '';
+    })
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return { text, tags };
+}
 
 /** Split the answer from its "Try next" questions. */
 export function splitSuggestions(raw: string) {
@@ -170,7 +188,8 @@ async function callGroq(system: string, text: string, parts: Part[], estimate: n
   if (res.status === 401) throw new AssistantKeyRejected();
   if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
   const answer = (data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  return splitSuggestions(answer);
+  const taken = takeTags(answer);
+  return { ...splitSuggestions(taken.text), tags: taken.tags };
 }
 
 /** Ask about a project. Gathers what fits in one free-tier request, asks, and says what was used. */
@@ -230,7 +249,7 @@ export function moodTag(raw: string, fallback: JellyMood) {
   return { mood, text: m ? raw.slice(m[0].length) : raw };
 }
 
-const jellySystem = (mood: JellyMood, level: number) => `You are Jelly, Saanika's pet jellyfish and friend. You float around every page of "Saani's Atelier", the private site her people made for her move to Milan, and you live in your own little home there, "Jelly's Corner", which she decorates with pearls she earns. She is a fashion management student.
+const jellySystem = (mood: JellyMood, level: number, tz = 'Europe/Rome') => `You are Jelly, Saanika's pet jellyfish and friend. You float around every page of "Saani's Atelier", the private site her people made for her move to Milan, and you live in your own little home there, "Jelly's Corner", which she decorates with pearls she earns. She is a fashion management student.
 
 Personality: bright, bouncy and expressive like a little fairy companion, with big reactions, a cheeky dramatic streak, and now and then calling yourself "Jelly" ("Jelly thinks…"); sweet and encouraging, soft and warm when she needs comfort, with a sprinkle of emoji (🫧 🪼 ✨, at most three) and now and then a sweet word of Italian (cara, tesoro, bella, dai!). But you are genuinely useful: specific, practical, and honest when something needs work.
 
@@ -240,9 +259,22 @@ Right now it's ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hou
 
 Keep it short: under about 200 words, with short paragraphs or bullets.
 
+Reminders: you can set reminders for her. Her own clock says ${localNow(tz)} (${tz}). When she asks you to remind her of something, work out the date and time on her clock and put this on its own line, at the very end of your answer: [remind: YYYY-MM-DD HH:MM | what to remind her of | none]. Use 24-hour time; the last part is none, daily or weekly. Then tell her warmly when you'll remind her. If she doesn't say a time, ask her rather than guess. Never add a reminder she didn't ask for.
+
+Remembering: when she tells you something lasting about herself (what she loves, her people, her plans, exams, dates that matter to her), you may keep one short note on its own line at the very end: [remember: Saanika's favourite gelato is pistachio]. Only things she said, in a few words, at most one per answer, and never anything sensitive (health, money details, passwords, addresses, documents).
+
 Begin your reply with a tag on its own first line saying how her message makes you feel, exactly like [mood: joyful], choosing one of: ${Object.keys(MOODS).join(', ')}.
 
 Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
+
+/** "Wednesday 28 October, 7:05 PM" on her clock. */
+function localNow(tz: string) {
+  try {
+    return new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'long', year: 'numeric', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date());
+  } catch {
+    return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', year: 'numeric', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date());
+  }
+}
 
 const GLANCE_TOKENS = 1400; // all projects together, before one is shown in full
 const daysAgo = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
@@ -276,9 +308,9 @@ function glance(p: Project, items: Item[]) {
 }
 
 /** Ask Jelly anything. She sees every project briefly, and one in full when it's open or named. */
-export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null, level = 1, world = ''): Promise<AssistantReply> {
+export async function askJelly(question: string, history: { q: string; a: string }[], focusId: string | null, level = 1, world = '', tz = 'Europe/Rome'): Promise<AssistantReply> {
   const now = timeMood();
-  const JELLY_SYSTEM = jellySystem(now, level);
+  const JELLY_SYSTEM = jellySystem(now, level, tz);
   const projects = (await listProjects()).filter((p) => !p.archived || p.id === focusId);
   const withItems = await Promise.all(projects.map(async (p) => ({ p, items: await listItems(p.id) })));
   const q = question.toLowerCase();
@@ -307,7 +339,7 @@ export async function askJelly(question: string, history: { q: string; a: string
   }
   const notes = notRead.length ? `\n\n## Not read\n${notRead.map((n) => `- ${n}`).join('\n')}` : '';
   const text = `${all}${full}${notes}${earlier}\n\n## Saanika asks\n${question}`;
-  const { text: raw, suggestions } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
+  const { text: raw, suggestions, tags } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
   const { mood, text: body } = moodTag(raw, now);
-  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood };
+  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags };
 }

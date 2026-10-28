@@ -1,6 +1,7 @@
 'use client';
 
 import { sfx } from '@/lib/sound';
+import { jellyEvent } from '@/components/jelly/bus';
 import { useEffect, useState } from 'react';
 import { MOODS, type MoodId, type MoodState } from '@/content/mood';
 import { api } from '@/lib/upload-client';
@@ -32,6 +33,7 @@ export function MoodPicker() {
     setMood({ mood: id, note: withNote, at: new Date().toISOString(), day: '' });
     try {
       setMood(await api<MoodState>('/api/mood', 'POST', { mood: id, note: withNote }));
+      jellyEvent('mood');
     } catch (e) {
       setMood(prev);
       setErr((e as Error).message);

@@ -169,6 +169,29 @@ expect "with its brief" "AI-AUDIENCE"
 expect "and its documents" "PDF-TREND-WORDS"
 expect "the earlier question comes along" "JELLY-Q what next?"
 check "unknown chat 404" 404 -b "$SA" -X POST "${J[@]}" -d '{"question":"x","chatId":"ch_nope"}' $B/api/corner/jelly
+# Jelly sets reminders and remembers things, from notes at the end of her answer
+fresh_minute
+check "ask jelly to remind and remember" 200 -b "$SA" -X POST "${J[@]}" -d '{"question":"REMIND-AND-REMEMBER please","tz":"Asia/Kolkata"}' $B/api/corner/jelly
+expect "a reminder note" '"kind":"remind"'
+expect "a memory note" '"kind":"remember"'
+expect "the notes are taken out of her answer" '\[remind:' absent
+expect "and out of the follow-ups" '"suggestions":\["FOLLOW-ONE?","FOLLOW-TWO?","FOLLOW-THREE?"\]'
+cp "$D/groq-req-last.json" "$D/body"
+expect "she knows her clock" "Asia/Kolkata"
+expect "and how to set reminders" "remind: YYYY-MM-DD HH:MM"
+check "the reminder is set" 200 -b "$SA" $B/api/reminders
+expect "with its words" "Call home before class"
+same "in her time zone" "$(jget .open[0].tz)" "Asia/Kolkata"
+IN2=$(node -e "console.log(new Date(Date.now()+2*86400000).toISOString().slice(0,10))")
+same "09:30 in Mumbai" "$(jget .open[0].at)" "${IN2}T04:00:00.000Z"
+same "every week" "$(jget .open[0].repeat)" "weekly"
+check "and Jelly remembers" 200 -b "$SA" $B/api/jelly/memory
+expect "the gelato" "loves pistachio gelato"
+fresh_minute
+check "ask again" 200 -b "$SA" -X POST "${J[@]}" -d '{"question":"JELLY-Q3 anything"}' $B/api/corner/jelly
+cp "$D/groq-req-last.json" "$D/body"
+expect "what she remembers goes along" "Things Saanika told you before"
+expect "her reminders too" "Call home before class"
 # Jelly reads an answer aloud (tap to hear), a piece at a time, each recorded once
 check "back to the chat" 200 -b "$SA" $B/api/corner/jelly
 TURN=$(node -e "const d=JSON.parse(require('fs').readFileSync('$D/body','utf8'));console.log(d.chats.find(c=>c.id==='$JC').turns[0].id)")
@@ -244,7 +267,7 @@ check "pats" 200 -b "$SA" -X POST "${J[@]}" -d '{"n":12}' $B/api/corner/jelly/pe
 expect "are counted" '"pets":12'
 check "too many at once are capped" 200 -b "$SA" -X POST "${J[@]}" -d '{"n":5000}' $B/api/corner/jelly/pet
 expect "at 60" '"pets":72'
-expect "and friendship grows" '"level":3'
+expect "and friendship grows" '"level":4'
 check "rename a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"title":"JELLY-RENAMED"}' $B/api/corner/jelly/chats/$JC
 expect "renamed" "JELLY-RENAMED"
 check "pin a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"pinned":true}' $B/api/corner/jelly/chats/$JC
@@ -252,7 +275,7 @@ expect "pinned" '"pinned":true'
 expect "keeps its name" "JELLY-RENAMED"
 check "Jelly's Chats tab" 200 -b "$SA" "$B/home/jelly?tab=chats"
 expect "lists her chats" "JELLY-RENAMED"
-expect "with the new tab" "Jelly’s Chats"
+expect "with the chats tab" 'aria-label="Chats"'
 # Jelly's Corner: pearls, the shop, her room, achievements
 check "her home" 200 -b "$SA" $B/api/jelly/home
 expect "no second daily bonus today" '"kind":"daily"' absent
@@ -311,7 +334,7 @@ done
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 5
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 7
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
