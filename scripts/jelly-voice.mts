@@ -66,9 +66,19 @@ function finish(wavs: Buffer[], file: string) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
+/** Orpheus now and then sends something that isn't audio; ask again (twice) before giving up on a piece. */
+class BadAudio extends Error {}
+async function wav(input: string, voice: string) {
+  for (let i = 0; i < 3; i++) {
+    const b = await tts(input, voice);
+    if (b.length > 1000 && b.subarray(0, 4).toString() === 'RIFF' && b.subarray(8, 12).toString() === 'WAVE') return b;
+  }
+  throw new BadAudio(`no usable audio for “${input.slice(0, 60)}”`);
+}
+
 async function say(text: string, dir: string, voice: string, file: string) {
   const wavs: Buffer[] = [];
-  for (const p of pieces(text, dir)) wavs.push(await tts(p, voice));
+  for (const p of pieces(text, dir)) wavs.push(await wav(p, voice));
   finish(wavs, file);
 }
 
@@ -122,6 +132,7 @@ if (mode === 'samples') {
   const manifest: Record<string, string> = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) : {};
   const lines = allLines();
   let made = 0;
+  const skipped: string[] = [];
   for (const l of lines) {
     const k = lineKey(l.text);
     if (manifest[k] && fs.existsSync(path.join(OUT, manifest[k]))) continue;
@@ -132,6 +143,12 @@ if (mode === 'samples') {
         console.log(`Free allowance used for now (${made} new lines). Run again later to carry on.`);
         break;
       }
+      // one bad line shouldn't stop the rest; it's tried again on the next run
+      if (e instanceof BadAudio || (e instanceof Error && 'stderr' in e)) {
+        skipped.push(l.text.slice(0, 50));
+        fs.rmSync(path.join(OUT, `${k}.m4a`), { force: true });
+        continue;
+      }
       throw e;
     }
     manifest[k] = `${k}.m4a`;
@@ -140,6 +157,7 @@ if (mode === 'samples') {
     process.stdout.write(`${made} `);
   }
   const left = lines.filter((l) => !manifest[lineKey(l.text)]).length;
+  if (skipped.length) console.log(`\nskipped for now (bad audio): ${skipped.map((t) => `“${t}”`).join(', ')}`);
   console.log(`\nrecorded ${made} new, ${left} still to go, ${lines.length} in all`);
 } else {
   console.log('usage: jelly-voice.mts samples [folder] | record');
