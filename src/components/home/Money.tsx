@@ -78,6 +78,10 @@ export default function Money({ initial }: { initial: Month }) {
 
   return (
     <div className="soldi">
+      <section className="soldi-hero" aria-label="Jelly’s word on your money">
+        <img src="/corner/jelly/hd/finance.webp" alt="Jelly in round glasses, doing the sums with a calculator, a laptop and a budget notebook" width={880} height={733} />
+        <p className="cal3-tip">{jellyLine(m.summary)}</p>
+      </section>
       <RateCard rate={rate} />
       <section className="soldi-month" aria-label="This month">
         <div className="soldi-monthbar">
@@ -90,10 +94,6 @@ export default function Money({ initial }: { initial: Month }) {
           </button>
         </div>
         <Ring s={m.summary} rate={rate} onBudget={() => setBudgetOpen(true)} />
-        <p className="soldi-jelly">
-          <img src="/corner/jelly/joyful.webp" alt="" />
-          <span>{jellyLine(m.summary)}</span>
-        </p>
       </section>
 
       {m.month === thisMonth && <TellJelly onAdded={() => load()} />}
