@@ -66,7 +66,7 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
     <article className="cn-turn">
       <p className="cn-q">{t.q}</p>
       <div className="cn-a">
-        <img className="cn-a-face" src={moodSrc(t.mood ?? 'studious')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'studious'].feeling}`} width={40} height={40} loading="lazy" />
+        <img className="cn-a-face" src={moodSrc(t.mood ?? 'studious')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'studious'].feeling}`} width={66} height={66} loading="lazy" />
         <Answer text={t.a} />
         {hexes.length >= 2 && (
           <div className="cn-swatches" aria-label="Colours in this answer">
@@ -160,7 +160,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
     return (
       <div className="cn-panel">
         <section className="cn-section cn-setup">
-          <img className="cn-jelly-face" src={moodSrc('sleepy')} alt="" width={72} height={72} />
+          <img className="cn-jelly-face" src={moodSrc('sleepy')} alt="" width={112} height={112} />
           <h3 className="cn-h">Jelly is still asleep</h3>
           <p>Once she’s awake, Jelly reads this project (the brief, notes, links, palettes, fabrics, moodboard, PDFs and images) and helps you think it through. Everything else in My Corner works without her.</p>
           <ol>
@@ -301,7 +301,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
         {!chats.length && <p className="cn-hint">Studio questions about this project are saved here, so you can pick them up again.</p>}
         {chatList(chats)}
         <h4 className="cn-ai-group">
-          <img src={moodSrc('wink')} alt="" width={22} height={22} /> Chats with Jelly
+          <img src={moodSrc('wink')} alt="" width={30} height={30} /> Chats with Jelly
         </h4>
         {!jellyChats.length ? <p className="cn-hint">Everything you ask the floating Jelly, anywhere in My Corner, is saved here too.</p> : chatList(jellyChats)}
       </aside>
@@ -310,7 +310,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
         {!chat ? (
           <>
             <div className="cn-jelly-hi">
-              <img src={moodSrc(busy ? 'studious' : face)} alt="" width={84} height={84} />
+              <img src={moodSrc(busy ? 'studious' : face)} alt="" width={112} height={112} />
               <div>
                 <h3 className="cn-h">Jelly got this! What shall we work on?</h3>
                 <p className="cn-hint">Pick a lens and a question, or ask your own below. In studio mode Jelly only uses what’s saved in this project.</p>
@@ -333,7 +333,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
           <div className="cn-turn">
             <p className="cn-q">{busy}</p>
             <p className="cn-thinking">
-              <img src={moodSrc('studious')} alt="" width={32} height={32} /> Jelly is reading your project…
+              <img src={moodSrc('studious')} alt="" width={52} height={52} /> Jelly is reading your project…
             </p>
           </div>
         )}
