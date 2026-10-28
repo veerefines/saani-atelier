@@ -10,7 +10,7 @@ import { radioOff, radioOn } from './radio';
  * the lookbook, a marimba under the sea for Jelly's home. Themes cross-fade as she moves around.
  */
 
-export type ThemeId = 'desk' | 'italia' | 'love' | 'studio' | 'runway' | 'play' | 'ocean';
+export type ThemeId = 'desk' | 'italia' | 'love' | 'studio' | 'runway' | 'play' | 'ocean' | 'gift';
 export const THEME_NAMES: Record<ThemeId, string> = {
   desk: 'Mattina in atelier · soft harp',
   italia: 'Caffè in Brera · mandolin & accordion',
@@ -19,11 +19,18 @@ export const THEME_NAMES: Record<ThemeId, string> = {
   runway: 'Passerella · runway lounge',
   play: 'Giochi in piazza · marimba',
   ocean: 'Sotto il mare · Jelly’s lullaby',
+  gift: 'Un regalo per te · music box & harp',
 };
 
 /** Which tune plays where (null: no music, e.g. where songs play or a book is printed). */
 export function themeFor(path: string): ThemeId | null {
-  if (/^\/home\/(songs|book)/.test(path)) return null;
+  if (/^\/(home|wall)\/(songs|book)/.test(path)) return null;
+  // her friends' side of the desk
+  if (/^\/wall\/milano/.test(path)) return 'italia';
+  if (/^\/wall\/(letters|love|jar|scrapbook)/.test(path)) return 'love';
+  if (/^\/wall\/bingo/.test(path)) return 'play';
+  if (/^\/wall\/moments/.test(path)) return 'runway';
+  if (/^\/wall/.test(path)) return 'desk';
   if (/^\/home\/(milano|passport)/.test(path)) return 'italia';
   if (/^\/home\/(letters|love|jar|scrapbook)/.test(path)) return 'love';
   if (/^\/home\/(corner|chapter|checklist)/.test(path)) return 'studio';
@@ -237,6 +244,11 @@ const ITALIA_MELODY = [
   [69, 72, 77], [76, 77, 81], [79, 77, 74], [77, 76, 74], [70, 74, 79], [76, 79, 82], [81, 79, 77], [76, 72, 0],
   [74, 77, 82], [81, 77, 74], [72, 77, 81], [79, 77, 72], [70, 74, 79], [82, 79, 76], [77, 81, 84], [77, 0, 0],
 ];
+// Un regalo per te: the gift. A sweet music-box waltz over a rippling harp
+const GIFT_MELODY = [
+  [79, 84, 88], [86, 84, 79], [81, 84, 88], [86, 83, 79], [77, 81, 84], [83, 81, 77], [79, 84, 86], [84, 0, 0],
+  [88, 86, 84], [83, 84, 86], [81, 84, 89], [88, 84, 81], [77, 81, 86], [84, 83, 79], [79, 83, 86], [84, 0, 0],
+];
 const LOVE_MELODY = [[76, 79, 84], [83, 79, 74], [84, 81, 76], [77, 81, 84], [79, 76, 72], [74, 79, 83], [81, 77, 72], [72, 0, 0]];
 
 const THEMES: Record<ThemeId, Theme> = {
@@ -256,6 +268,28 @@ const THEMES: Record<ThemeId, Theme> = {
       if (beat === 0) k.pluck(lowest(chord) - 12, t, 0.32, { bright: 0.4, decay: 0.997 });
       else k.accordion(chord, t, spb * 0.55, 0.035);
       if (beat === 0 && bar % 2 === 0) k.accordion(chord.map((n) => n + 12), t, spb * 5.6, 0.012);
+    },
+  },
+  gift: {
+    bpm: 92,
+    beats: 3,
+    level: 1,
+    bars: [C, Am, Fl, G, Fl, G, C, C, C, G, Fl, Am, Fl, G, G, C],
+    play: ({ t, bar, beat, sub, chord, spb, k }) => {
+      if (sub === 0) {
+        const note = GIFT_MELODY[bar % GIFT_MELODY.length][beat];
+        if (note) k.musicbox(note, t, 0.15);
+        if (beat === 0) {
+          k.pad(chord, t, spb * 3, 0.022);
+          k.pluck(lowest(chord) - 12, t, 0.16, { bright: 0.35, decay: 0.998 });
+        }
+      }
+      // the harp ripples on every eighth note
+      if (sub === 0 || sub === 2) {
+        const i = beat * 2 + sub / 2;
+        k.pluck(chord[i % chord.length] + (i > 2 ? 12 : 0), t, 0.06, { bright: 0.5, decay: 0.997 });
+      }
+      if (bar % 4 === 3 && beat === 2 && sub === 2) k.musicbox(96, t, 0.04); // a little twinkle
     },
   },
   love: {
@@ -416,9 +450,11 @@ function start() {
   if (!io || !c) return;
   const allowed = p.on && p.music > 0 && !document.hidden && !external ? want : null;
   // Radio Italia plays across the whole desk; the corner tunes are the other choice
-  if (p.style === 'radio' && allowed) radioOn(allowed === 'italia' ? 'italia' : allowed === 'desk' ? 'desk' : 'other');
+  // (the gift always has its own music box)
+  const radio = p.style === 'radio' && allowed !== 'gift';
+  if (radio && allowed) radioOn(allowed === 'italia' ? 'italia' : allowed === 'desk' ? 'desk' : 'other');
   else radioOff();
-  const id = p.style === 'radio' ? null : allowed;
+  const id = radio ? null : allowed;
   if (current?.id === id) return;
   stopCurrent(c);
   clearInterval(timer);

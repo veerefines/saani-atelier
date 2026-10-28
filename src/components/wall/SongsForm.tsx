@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useState } from 'react';
 import type { Song } from '@/lib/extras';
 import { api } from '@/lib/upload-client';
@@ -21,6 +22,7 @@ export default function SongsForm({ songs: initial }: { songs: Song[] }) {
     try {
       const s = await api<Song>('/api/songs', 'POST', { url, note });
       setSongs((x) => [s, ...x]);
+      sfx('sparkle');
       setUrl('');
       setNote('');
     } catch (e) {

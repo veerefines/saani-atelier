@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useState } from 'react';
 import type { DiaryEntry, LookItem } from '@/lib/extras';
 import { reactions } from '@/content/home';
@@ -29,6 +30,7 @@ export default function HerMilano({
   const [look, setLook] = useState(initial);
 
   async function react(x: LookItem, emoji: string) {
+    sfx('pop');
     try {
       const next = await api<LookItem>(`/api/lookbook/${x.id}/react`, 'POST', { emoji });
       setLook((xs) => xs.map((y) => (y.id === x.id ? next : y)));

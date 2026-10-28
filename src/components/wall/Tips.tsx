@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Wish } from '@/lib/data';
@@ -24,6 +25,7 @@ export default function Tips({ tips: initial, name }: { tips: Wish[]; name: stri
     try {
       const w = await api<Wish>('/api/tips', 'POST', { text });
       setTips((ts) => [w, ...ts]);
+      sfx('sparkle');
       setText('');
     } catch (e) {
       setErr((e as Error).message);

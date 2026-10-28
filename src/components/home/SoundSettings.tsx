@@ -50,7 +50,7 @@ function Level({ icon, label, hint, value, onChange, onTry }: { icon: string; la
 }
 
 /** Sound & feel: one switch for everything at the bottom of her desk, and a panel for the details. */
-export default function SoundSettings() {
+export default function SoundSettings({ friend = false }: { friend?: boolean }) {
   const [p, set] = usePrefs();
   const [open, setOpen] = useState(false);
   const here = themeFor(usePathname());
@@ -63,7 +63,7 @@ export default function SoundSettings() {
         <img src={moodSrc(p.on ? 'joyful' : 'sleepy')} alt="" width={64} height={64} />
         <div>
           <b>Sound & feel</b>
-          <small>{p.on ? 'Music in every corner, little jingles, Jelly’s voice and gentle buzzes.' : 'All quiet. Jelly will just smile and wave.'}</small>
+          <small>{p.on ? (friend ? 'Radio Italia, little jingles and gentle buzzes, just like Saani’s desk.' : 'Music in every corner, little jingles, Jelly’s voice and gentle buzzes.') : friend ? 'All quiet.' : 'All quiet. Jelly will just smile and wave.'}</small>
         </div>
         <button
           type="button"
@@ -127,8 +127,8 @@ export default function SoundSettings() {
             </ul>
           )}
           <Level icon="🔔" label="Sounds & jingles" hint="Taps, achievements, stamps, pats" value={p.sfx} onChange={(sfx_) => change({ sfx: sfx_ })} onTry={() => sfx('sparkle')} />
-          <Level icon="🪼" label="Jelly’s voice" hint="Her chatter, facts, cheers and answers read aloud" value={p.voice} onChange={(v) => change({ voice: v })} onTry={() => voice(PETTED[0]) || sfx('blip')} />
-          <Level icon="🎙️" label="Voice notes & videos" hint="From your people, and your moments" value={p.notes} onChange={(notes) => change({ notes })} onTry={() => {}} />
+          {!friend && <Level icon="🪼" label="Jelly’s voice" hint="Her chatter, facts, cheers and answers read aloud" value={p.voice} onChange={(v) => change({ voice: v })} onTry={() => voice(PETTED[0]) || sfx('blip')} />}
+          <Level icon="🎙️" label="Voice notes & videos" hint={friend ? 'Saani’s moments, and everyone’s notes' : 'From your people, and your moments'} value={p.notes} onChange={(notes) => change({ notes })} onTry={() => {}} />
           <div className="ss-row">
             <span className="ss-icon" aria-hidden="true">
               📳

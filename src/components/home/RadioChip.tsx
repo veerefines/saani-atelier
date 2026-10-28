@@ -5,7 +5,7 @@ import { MOOD_NAMES, radioPause, radioSkip, useRadio } from '@/lib/radio';
 import { setExternalMusic } from '@/lib/music';
 import { spotifyKind, spotifyUri } from '@/lib/spotify';
 import { api } from '@/lib/upload-client';
-import { usePrefs } from '@/lib/sound';
+import { isUnlocked, usePrefs } from '@/lib/sound';
 import type { JellyView } from '@/lib/jelly';
 
 type Station = 'italia' | 'saani';
@@ -38,8 +38,19 @@ const LABEL: Record<string, string> = { playlist: 'playlist', album: 'album', ar
  * stations: Radio Italia, her Italian music; and Saani's radio, her own Spotify, through Spotify's
  * official player. When Spotify plays, Radio Italia steps aside.
  */
-export default function RadioChip() {
+export default function RadioChip({ friend = false }: { friend?: boolean }) {
   const r = useRadio();
+  // browsers wait for a first tap before any sound; until then, a gentle hint
+  const [waiting, setWaiting] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => !isUnlocked() && setWaiting(true), 1500);
+    const done = () => setWaiting(false);
+    window.addEventListener('jelly:unlocked', done);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener('jelly:unlocked', done);
+    };
+  }, []);
   const [prefs, setPrefs] = usePrefs();
   const [peek, setPeek] = useState(false);
   const [open, setOpen] = useState(false);
@@ -57,11 +68,12 @@ export default function RadioChip() {
 
   // her connected playlist, from the server
   useEffect(() => {
+    if (friend) return; // Saani's radio is hers
     api<{ spotify: string | null }>('/api/jelly/settings', 'GET')
       .then((d) => d.spotify && setUri(d.spotify))
       .catch(() => {});
     try {
-      if (localStorage.getItem('radio-station') === 'saani') setStation('saani');
+      if (!friend && localStorage.getItem('radio-station') === 'saani') setStation('saani');
     } catch {}
   }, []);
 
@@ -176,7 +188,12 @@ export default function RadioChip() {
           </span>
         )}
       </button>
-      {peek && !open && playing === 'italia' && mood && (
+      {waiting && !open && (
+        <span className="radio-peek hint" aria-live="polite">
+          <b>Tap anywhere</b> for music 🎶
+        </span>
+      )}
+      {peek && !waiting && !open && playing === 'italia' && mood && (
         <span className="radio-peek" aria-live="polite">
           <b>{mood[0]}</b> {mood[1]}
         </span>
@@ -216,7 +233,7 @@ export default function RadioChip() {
           </span>
         </div>
 
-        <div className="radio-tabs" role="tablist" aria-label="Station">
+        <div className="radio-tabs" role="tablist" aria-label="Station" hidden={friend}>
           <button type="button" role="tab" aria-selected={station === 'italia'} onClick={() => pick('italia')}>
             Radio Italia
           </button>

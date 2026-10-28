@@ -3,6 +3,8 @@ import { getSession } from '@/lib/auth';
 import '@/components/journey/journey.css';
 import '@/components/home/home.css';
 import '@/components/wall/wall.css';
+import MusicPlayer from '@/components/home/MusicPlayer';
+import RadioChip from '@/components/home/RadioChip';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,5 +13,12 @@ export default async function WallLayout({ children }: { children: React.ReactNo
   const session = await getSession();
   if (!session) redirect('/');
   if (session.role === 'saanika') redirect('/home');
-  return <div className="h-root">{children}</div>;
+  return (
+    <div className="h-root">
+      {children}
+      {/* the same music, sounds and buzzes as Saani's desk (her settings stay hers; theirs stay on their phone) */}
+      <MusicPlayer />
+      <RadioChip friend />
+    </div>
+  );
 }

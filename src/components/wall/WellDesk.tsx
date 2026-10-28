@@ -1,5 +1,6 @@
 'use client';
 
+import SoundSettings from '@/components/home/SoundSettings';
 import { motion } from 'framer-motion';
 import { site } from '@/content/site';
 import { mediaUrl } from '@/lib/upload-client';
@@ -279,6 +280,8 @@ export default function WellDesk({
       </section>
 
       <NotifyToggle offLabel="Remind me before her special days" onLabel="You’ll get reminders and her replies" />
+
+      <SoundSettings friend />
 
       <footer className="h-foot">
         <a href="/api/logout">Sign out</a>

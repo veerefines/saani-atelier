@@ -32,6 +32,16 @@ try {
   }
 } catch {}
 const unlockers: (() => void)[] = [];
+const gestureHooks: (() => void)[] = [];
+/** Run on every tap (cheap checks only): e.g. the radio retrying a song the browser blocked. */
+export const onGesture = (f: () => void) => gestureHooks.push(f);
+export const isUnlocked = () => unlocked;
+function markUnlocked() {
+  if (unlocked) return;
+  unlocked = true;
+  unlockers.splice(0).forEach((f) => f());
+  window.dispatchEvent(new Event('jelly:unlocked'));
+}
 
 function setup() {
   if (ctx || typeof window === 'undefined') return ctx;
@@ -66,13 +76,24 @@ if (typeof window !== 'undefined') {
   const unlock = () => {
     const c = setup();
     if (c && c.state === 'suspended') c.resume();
-    if (!unlocked) {
-      unlocked = true;
-      unlockers.splice(0).forEach((f) => f());
-    }
+    markUnlocked();
+    gestureHooks.forEach((f) => f());
   };
   window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
   window.addEventListener('keydown', unlock, { capture: true });
+}
+
+/**
+ * Try to start sound without a tap. Browsers usually say no (they need a tap first; iPhone always
+ * does), but some allow it on sites a person uses a lot, and then the music simply starts.
+ */
+export function tryAutoplay() {
+  if (unlocked || typeof window === 'undefined') return;
+  const c = setup();
+  if (!c) return;
+  c.resume()
+    .then(() => c.state === 'running' && markUnlocked())
+    .catch(() => {});
 }
 
 const ready = () => prefs.on && unlocked && setup() !== null && ctx!.state !== 'closed';
@@ -102,7 +123,8 @@ export function setPrefs(patch: Partial<AudioPrefs>, fromServer = false) {
   levels();
   applyMedia();
   window.dispatchEvent(new CustomEvent(EVENT, { detail: prefs }));
-  if (!fromServer) {
+  // her settings are saved for all her devices; her friends' stay on their own phone
+  if (!fromServer && !location.pathname.startsWith('/wall')) {
     clearTimeout(saveAt);
     saveAt = window.setTimeout(() => {
       fetch('/api/jelly/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ audio: prefs }) }).catch(() => {});

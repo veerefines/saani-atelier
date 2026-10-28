@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import TRACKS from './radio-tracks.json';
 import { milanHour } from './jelly-mood';
-import { musicOut } from './sound';
+import { musicOut, onGesture } from './sound';
 
 /**
  * Radio Italia: Saani's own Italian music (public/radio, cut into its tracks and sorted by mood),
@@ -159,3 +159,14 @@ export function useRadio(): RadioState {
   }, []);
   return s;
 }
+
+// if the browser blocked a song (it started before any tap), her next tap starts it
+if (typeof window !== 'undefined')
+  onGesture(() => {
+    if (!playing || paused || !decks.length) return;
+    const d = decks[live];
+    if (d.el.paused && d.el.src) {
+      d.el.play().catch(() => {});
+      fadeTo(d, 1, 1);
+    }
+  });

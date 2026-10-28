@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { JarNote, Letter, Post } from '@/lib/data';
@@ -177,6 +178,8 @@ export default function Composer({
     setPct(0);
     setStep('');
     setSent(msg);
+    sfx('whoosh');
+    setTimeout(() => sfx('chime'), 350);
     setTimeout(() => setSent(''), 3200);
   }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Square } from '@/content/home';
@@ -31,6 +32,7 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
     try {
       const d = await api<Dare>('/api/dares', 'POST', { squareId: active.id, text });
       setDares((ds) => [d, ...ds]);
+      sfx('stitch');
       setText('');
     } catch (e) {
       setErr((e as Error).message);

@@ -228,6 +228,8 @@ check "not a Spotify link 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":"h
 expect "says how to get one" "Copy link"
 check "friend can't change it 403" 403 -b "$D/ai-fr.jar" -X PATCH "${J[@]}" -d '{"spotify":null}' $B/api/jelly/settings
 check "friend can't see it 403" 403 -b "$D/ai-fr.jar" $B/api/jelly/settings
+check "friends get music and sounds on their desk too" 200 -b "$D/ai-fr.jar" $B/wall
+expect "their own Sound & feel" "Sound &amp; feel"
 check "disconnect" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"spotify":null}' $B/api/jelly/settings
 expect "gone" '"spotify":null'
 same "Radio Italia's songs are served" "$(curl -s -o /dev/null -w '%{http_code}' $B/radio/r01.m4a)" 200

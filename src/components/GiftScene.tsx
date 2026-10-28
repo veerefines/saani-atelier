@@ -1,5 +1,7 @@
 'use client';
 
+import { playTheme } from '@/lib/music';
+import { sfx } from '@/lib/sound';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion';
@@ -79,8 +81,21 @@ export default function GiftScene({
   }, [stage]);
 
   const untie = useCallback(() => {
+    sfx('harp');
     setStage(reduce ? 'note' : 'untying');
   }, [reduce]);
+
+  // a sweet music box for her gift, from her first tap (browsers need one before any sound);
+  // little sounds as the bouquet blooms and the note appears
+  useEffect(() => {
+    if (stage === 'locked') return;
+    playTheme('gift');
+    if (stage === 'open') sfx('sparkle');
+    if (stage === 'thread') sfx('whoosh');
+    if (stage === 'note') sfx('paper');
+  }, [stage]);
+  // leaving the gift: the music box hands over to the next page (the journey has its own music)
+  useEffect(() => () => playTheme(null), []);
 
   const unlocked = useCallback(
     (who: Unlocked) => {
