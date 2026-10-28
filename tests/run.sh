@@ -28,6 +28,7 @@ export GROQ_API_KEY=off
 cleanup() {
   [ -n "${SERVER:-}" ] && kill "$SERVER" 2>/dev/null
   [ -n "${FAKE:-}" ] && kill "$FAKE" 2>/dev/null
+  [ -n "${FAKEFX:-}" ] && kill "$FAKEFX" 2>/dev/null
   rm -rf .data
   [ -d "$TEST_TMP/data-backup" ] && cp -R "$TEST_TMP/data-backup" .data
   rm -rf "$TEST_TMP"
@@ -36,6 +37,11 @@ trap cleanup EXIT
 
 # a throwaway certificate for the fake push service
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$TEST_TMP/push-test.key" -out "$TEST_TMP/push-test.crt" -days 1 -subj "/CN=localhost" 2>/dev/null
+
+# a fake for the euro to rupee rates (both servers use it)
+node tests/fake-fx.js 4611 "$TEST_TMP" &
+FAKEFX=$!
+export FX_BASE_URL=http://localhost:4611
 
 # the push library must trust that certificate; nothing else here talks to anything private
 NODE_TLS_REJECT_UNAUTHORIZED=0 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
@@ -59,6 +65,7 @@ run "endpoints, part 1" bash tests/endpoints-1.sh
 run "endpoints, part 2" bash tests/endpoints-2.sh
 run "endpoints, part 3" bash tests/endpoints-3.sh
 run "endpoints, part 4" bash tests/endpoints-4.sh
+run "endpoints, part 5" bash tests/endpoints-5.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Groq server

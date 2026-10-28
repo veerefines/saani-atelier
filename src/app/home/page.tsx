@@ -9,6 +9,8 @@ import { checklist } from '@/content/checklist';
 import { places } from '@/content/milano';
 import { jellyState } from '@/lib/jelly';
 import { friendship } from '@/lib/jelly-mood';
+import { monthOf, summary } from '@/lib/money';
+import { getBudget, listExpenses } from '@/lib/money-store';
 
 export default async function HomePage() {
   const [posts, letters, jar, board, seen, look, stamps, diary, songs, check, pages, occasions, moments, invites, story] = await Promise.all([
@@ -28,7 +30,8 @@ export default async function HomePage() {
     getInvites(),
     journeyHighlights(),
   ]);
-  const jelly = await jellyState();
+  const [jelly, expenses, budget] = await Promise.all([jellyState(), listExpenses(), getBudget()]);
+  const money = summary(expenses, budget, monthOf(milanDay()));
   const newPosts = posts.filter((p) => !seen.love || p.createdAt > seen.love).length;
   const ready = letters.filter((l) => !isLocked(l) && !l.openedAt).length;
   const sealed = letters.filter((l) => isLocked(l)).length;
@@ -64,6 +67,8 @@ export default async function HomePage() {
         pearls: jelly.pearls ?? 0,
         jellyLevel: friendship(jelly.pets, jelly.chats).level,
         moments: moments.length,
+        moneyLeft: money.left,
+        moneySpent: money.spent,
       }}
     />
   );

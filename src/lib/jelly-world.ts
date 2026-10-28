@@ -3,6 +3,8 @@ import { addDays, getChecklist, getMood, listDiary, listLook, listMoments, listN
 import { listAllChats, listAllItems, listProjects, JELLY_CHATS } from './corner';
 import { getInvites } from './invites';
 import { milanoWeather, sky } from './today';
+import { monthOf, summary } from './money';
+import { getBudget, listExpenses } from './money-store';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, goalOf, itemById, progressOf, type Stats } from './jelly-catalog';
 import { streakOf, sync, view, type JellyState } from './jelly';
@@ -19,7 +21,7 @@ import { MOODS as HER_MOODS } from '@/content/mood';
  * Surprises stay surprises: sealed letters, unread jar notes and scheduled posts are counted, never read.
  */
 async function gather() {
-  const [board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats] = await Promise.all([
+  const [board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget] = await Promise.all([
     getBingo(),
     getChecklist(),
     listStamps(),
@@ -36,8 +38,10 @@ async function gather() {
     listProjects(),
     listAllItems(),
     listAllChats(),
+    listExpenses(),
+    getBudget(),
   ]);
-  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats };
+  return { board, check, stamps, wishes, diary, moments, look, letters, jar, nudges, songs, posts, pages, projects, items, chats, expenses, budget };
 }
 type World = Awaited<ReturnType<typeof gather>>;
 
@@ -98,6 +102,7 @@ const PAGES: [RegExp, string][] = [
   [/^\/home\/love/, 'the love wall'],
   [/^\/home\/jar/, 'the jar of notes'],
   [/^\/home\/songs/, 'songs for her'],
+  [/^\/home\/money/, 'Soldi, her spending tracker'],
   [/^\/home\/scrapbook/, 'the scrapbooks'],
   [/^\/home\/book/, 'her printable book'],
 ];
@@ -154,6 +159,14 @@ export async function platformContext(s: JellyState, path: string | null, max = 
   const fresh = w.nudges.filter((n) => !n.dismissedAt).slice(0, 3);
   if (fresh.length) L.push(`Thinking-of-you nudges: ${fresh.map((n) => `${n.emoji} from ${n.authorName}${n.text ? ` “${short(n.text, 50)}”` : ''}`).join(', ')}.`);
   if (w.pages.length) L.push(`Scrapbook pages her people made: ${w.pages.map((p) => `${p.emoji} ${p.title}`).slice(0, 5).join(', ')}.`);
+
+  if (w.expenses.length || w.budget.monthly) {
+    const m = summary(w.expenses, w.budget, monthOf(today), today);
+    const cats = m.byCat.slice(0, 5).map((c) => `${c.label} €${c.eur}${c.cap ? ` of €${c.cap}` : ''}`).join('; ');
+    L.push(
+      `Soldi (her spending, private to her): this month €${m.spent} (₹${Math.round(m.spentInr)}) over ${m.count} spends${m.budget ? `, budget €${m.budget}, €${m.left} left with ${m.daysLeft} days to go (${m.onTrack ? 'on track' : 'ahead of pace'})` : ', no budget set'}; this week €${m.week.eur}${cats ? `. By category: ${cats}` : ''}.`,
+    );
+  }
 
   const soon = occasions.filter((o) => o.date >= today && o.date <= addDays(today, 45)).slice(0, 3);
   if (soon.length) L.push(`Coming up: ${soon.map((o) => `${o.emoji} ${o.title} (${fmt(o.date)})`).join(', ')}.`);
