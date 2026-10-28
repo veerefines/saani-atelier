@@ -12,7 +12,9 @@ import {
   backdropById,
   backdropUnlockedBy,
   goalOf,
+  inSeason,
   itemById,
+  seasonsOf,
   itemSrc,
   progressOf,
   unlockedBy,
@@ -518,7 +520,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                 {season.name} shelf <small>only until {new Date(`${season.end}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</small>
               </h3>
               <div className="jh-featured-row">
-                {ITEMS.filter((it) => it.season === season.key).map((it) => (
+                {ITEMS.filter((it) => it.season && inSeason(it, season.key)).map((it) => (
                   <article key={it.id} className={`jh-card mini${home.owned[it.id] ? ' owned' : ''}${bought === it.id ? ' bought' : ''}`}>
                     {(home.owned[it.id] ?? 0) > 0 && <span className="jh-count">×{home.owned[it.id]}</span>}
                     <span className="jh-card-art">
@@ -573,7 +575,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                   const by = unlockedBy(it.id);
                   const exclusive = it.price === undefined;
                   // a festival's things wait for their festival (once hers, they're hers)
-                  const away = Boolean(it.season && it.season !== season?.key);
+                  const away = !inSeason(it, season?.key);
                   return (
                     <article key={it.id} className={`jh-card k-${it.kind}${n ? ' owned' : ''}${exclusive ? ' exclusive' : ''}${exclusive && !n ? ' locked' : ''}${bought === it.id ? ' bought' : ''}`}>
                       {exclusive && <span className="jh-ribbon">Exclusive</span>}
@@ -584,7 +586,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                       <b>{it.name}</b>
                       {!exclusive ? (
                         away ? (
-                          <span className="jh-lock">{n ? '✓ Jelly’s' : `🗓️ back for ${SEASON_NAMES[it.season!]}`}</span>
+                          <span className="jh-lock">{n ? '✓ Jelly’s' : `🗓️ back for ${SEASON_NAMES[seasonsOf(it)[0]]}`}</span>
                         ) : (
                           <button type="button" className="jh-buy" disabled={home.pearls < it.price! || buying === it.id} onClick={() => buy(it.id, it.name)}>
                             <Pearl /> {it.price}

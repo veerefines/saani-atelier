@@ -28,7 +28,10 @@ export type Season = {
   quest?: Quest;
 };
 
-export const SEASON_KEYS = ['halloween', 'natale', 'diwali', 'holi', 'capodanno', 'gudi', 'pasqua', 'valentino', 'carnevale', 'graduation', 'study', 'inverno'] as const;
+export const SEASON_KEYS = [
+  'halloween', 'natale', 'diwali', 'holi', 'capodanno', 'gudi', 'pasqua', 'valentino', 'carnevale', 'graduation', 'study', 'inverno',
+  'sankranti', 'pongal', 'shivratri', 'eid', 'rakhi', 'janmashtami', 'ganesh', 'onam', 'navratri', 'dussehra', 'karvachauth',
+] as const;
 export type SeasonKey = (typeof SEASON_KEYS)[number];
 /** Jelly dressed for it (public/corner/jelly/festive, from the festive pack) */
 export const festiveSrc = (key: SeasonKey) => `/corner/jelly/festive/${key}.webp`;
@@ -95,6 +98,61 @@ const T: Record<SeasonKey, Template> = {
     key: 'graduation', name: 'Graduation', emoji: '🎓', fall: 'confetti', tint: 'rgba(247, 227, 161, 0.22)', pearls: 60,
     hello: 'Congratulations, graduate! 🎓 Jelly is SO proud of you, Saani. You did it!', backdrop: 'graduation',
   },
+  sankranti: {
+    key: 'sankranti', name: 'Makar Sankranti', emoji: '🪁', fall: 'confetti', tint: 'rgba(150, 200, 255, 0.16)', pearls: 20,
+    hello: 'Happy Makar Sankranti, Saani! 🪁 Til gul ghya, god god bola. Jelly’s kite is the highest in the sky!', backdrop: 'kites',
+    quest: { id: 'season-sankranti', tier: 3, icon: '🪁', title: 'Sankranti: send your people a sweet moment', metric: 'moments', n: 1, href: '/home/moments' },
+  },
+  pongal: {
+    key: 'pongal', name: 'Pongal', emoji: '🍚', fall: 'petals', tint: 'rgba(255, 210, 120, 0.16)', pearls: 20,
+    hello: 'Pongalo pongal! 🍚 May your pot overflow with happiness, Saani.', backdrop: 'gudi',
+    quest: { id: 'season-pongal', tier: 3, icon: '🍚', title: 'Pongal: tick off a settling-in task (a fresh start!)', metric: 'checklist', n: 1, href: '/home/checklist' },
+  },
+  shivratri: {
+    key: 'shivratri', name: 'Maha Shivaratri', emoji: '🔱', fall: 'sparks', tint: 'rgba(90, 80, 160, 0.16)', pearls: 20,
+    hello: 'Har Har Mahadev! 🔱 A quiet, starry night for Maha Shivaratri. Jelly is keeping you company.', backdrop: 'moonlit',
+    quest: { id: 'season-shivratri', tier: 3, icon: '🌙', title: 'Shivaratri: write a calm line in My chapter', metric: 'diaryDays', n: 1, href: '/home/chapter' },
+  },
+  eid: {
+    key: 'eid', name: 'Eid', emoji: '🌙', fall: 'sparks', tint: 'rgba(90, 170, 130, 0.15)', pearls: 20,
+    hello: 'Eid Mubarak, Saani! 🌙 Jelly lit her lantern. Sheer khurma for everyone!', backdrop: 'moonlit',
+    quest: { id: 'season-eid', tier: 3, icon: '🏮', title: 'Eid: send Eid wishes to your people', metric: 'moments', n: 1, href: '/home/moments' },
+  },
+  rakhi: {
+    key: 'rakhi', name: 'Raksha Bandhan', emoji: '🎁', fall: 'petals', tint: 'rgba(255, 180, 160, 0.16)', pearls: 25,
+    hello: 'Happy Raksha Bandhan! 🎁 Jelly has a rakhi and a little present. Miss your people, cara?', backdrop: 'hearts',
+    quest: { id: 'season-rakhi', tier: 3, icon: '🎀', title: 'Raksha Bandhan: share a moment with home', metric: 'moments', n: 1, href: '/home/moments' },
+  },
+  janmashtami: {
+    key: 'janmashtami', name: 'Janmashtami', emoji: '🪈', fall: 'petals', tint: 'rgba(110, 150, 230, 0.16)', pearls: 20,
+    hello: 'Happy Janmashtami! 🪈 Jelly found a flute and a peacock feather. Makhan, anyone?', backdrop: 'peacock',
+    quest: { id: 'season-janmashtami', tier: 3, icon: '🪈', title: 'Janmashtami: give Jelly 20 pats', metric: 'pets', n: 20 },
+  },
+  ganesh: {
+    key: 'ganesh', name: 'Ganesh Chaturthi', emoji: '🐘', fall: 'petals', tint: 'rgba(255, 170, 90, 0.16)', pearls: 25,
+    hello: 'Ganpati Bappa Morya! 🐘 Jelly made modaks (well… she tried). Happy Ganesh Chaturthi!', backdrop: 'gudi',
+    quest: { id: 'season-ganesh', tier: 3, icon: '🌺', title: 'Ganesh Chaturthi: put something new in Jelly’s home', metric: 'placed', n: 1, href: '/home/jelly' },
+  },
+  onam: {
+    key: 'onam', name: 'Onam', emoji: '🌼', fall: 'petals', tint: 'rgba(250, 230, 160, 0.18)', pearls: 20,
+    hello: 'Happy Onam, Saani! 🌼 Jelly made a pookalam and brought the sadya. Payasam first!', backdrop: 'gudi',
+    quest: { id: 'season-onam', tier: 3, icon: '🍃', title: 'Onam: share a festive moment with home', metric: 'moments', n: 1, href: '/home/moments' },
+  },
+  navratri: {
+    key: 'navratri', name: 'Navratri', emoji: '💃', fall: 'confetti', tint: 'rgba(255, 120, 140, 0.14)', pearls: 25,
+    hello: 'Navratri is here! 💃 Jelly has her dandiya sticks ready. Garba tonight?', backdrop: 'garba',
+    quest: { id: 'season-navratri', tier: 3, icon: '💃', title: 'Navratri: pin a festive outfit to your Lookbook', metric: 'looks', n: 1, href: '/home/lookbook' },
+  },
+  dussehra: {
+    key: 'dussehra', name: 'Dussehra', emoji: '🏹', fall: 'sparks', tint: 'rgba(255, 190, 90, 0.16)', pearls: 20,
+    hello: 'Happy Dussehra! 🏹 Good always wins, Saani. Jelly’s bow is ready.', backdrop: 'diwali',
+    quest: { id: 'season-dussehra', tier: 3, icon: '🏹', title: 'Dussehra: tick off something you’ve been putting off', metric: 'checklist', n: 1, href: '/home/checklist' },
+  },
+  karvachauth: {
+    key: 'karvachauth', name: 'Karva Chauth', emoji: '🌕', fall: 'sparks', tint: 'rgba(200, 60, 80, 0.12)', pearls: 20,
+    hello: 'Happy Karva Chauth! 🌕 Jelly has her chalni ready to spot the moon.', backdrop: 'moonlit',
+    quest: { id: 'season-karvachauth', tier: 3, icon: '🌕', title: 'Karva Chauth: send a moment to your people tonight', metric: 'moments', n: 1, href: '/home/moments' },
+  },
 };
 export const SEASON_NAMES = Object.fromEntries(SEASON_KEYS.map((k) => [k, T[k].name])) as Record<SeasonKey, string>;
 
@@ -107,17 +165,29 @@ const at = (key: SeasonKey, start: string, end: string): Season => ({ ...T[key],
  */
 export const SEASONS: Season[] = [
   at('halloween', '2026-10-25', '2026-11-01'),
+  at('karvachauth', '2026-10-29', '2026-10-29'),
   at('diwali', '2026-11-05', '2026-11-11'),
   at('study', '2026-11-14', '2026-11-29'),
   at('natale', '2026-12-01', '2026-12-30'),
   at('capodanno', '2026-12-31', '2027-01-06'),
   at('inverno', '2027-01-07', '2027-01-29'),
+  at('sankranti', '2027-01-13', '2027-01-14'),
+  at('pongal', '2027-01-15', '2027-01-17'),
   at('carnevale', '2027-01-30', '2027-02-09'),
   at('valentino', '2027-02-10', '2027-02-15'),
+  at('shivratri', '2027-03-06', '2027-03-06'),
+  at('eid', '2027-03-09', '2027-03-11'),
   at('holi', '2027-03-20', '2027-03-23'),
   at('pasqua', '2027-03-25', '2027-03-29'),
   at('gudi', '2027-04-06', '2027-04-08'),
+  at('rakhi', '2027-08-16', '2027-08-17'),
+  at('janmashtami', '2027-08-24', '2027-08-25'),
+  at('ganesh', '2027-09-04', '2027-09-08'),
   at('study', '2027-09-06', '2027-09-19'),
+  at('onam', '2027-09-11', '2027-09-12'),
+  at('navratri', '2027-09-30', '2027-10-08'),
+  at('dussehra', '2027-10-09', '2027-10-09'),
+  at('karvachauth', '2027-10-18', '2027-10-18'),
   at('halloween', '2027-10-23', '2027-10-26'),
   at('diwali', '2027-10-27', '2027-11-02'),
   at('natale', '2027-12-01', '2027-12-30'),
@@ -137,6 +207,10 @@ export const SEASON_BACKDROPS = [
   { id: 'holi', name: 'Gulal', sky: 'radial-gradient(circle at 20% 30%, #ff8fc4aa 0 30px, transparent 60px), radial-gradient(circle at 75% 25%, #8fd3ffaa 0 30px, transparent 60px), radial-gradient(circle at 50% 50%, #ffe27aaa 0 30px, transparent 60px), linear-gradient(180deg, #fff2f8 0%, #f2fbff 100%)', floor: '#f6e2c4' },
   { id: 'spring', name: 'Easter garden', sky: 'linear-gradient(180deg, #cfeefa 0%, #e9f7e4 55%, #fde9f1 100%)', floor: '#e3ecc9' },
   { id: 'gudi', name: 'Marigold morning', sky: 'radial-gradient(circle at 50% 100%, #ffd27a 0 18%, transparent 45%), linear-gradient(180deg, #ffd9b0 0%, #ffe9c9 55%, #fff6e6 100%)', floor: '#e8b07a' },
+  { id: 'kites', name: 'Sky full of kites', sky: 'linear-gradient(45deg, transparent 46%, #f4a6c088 47% 53%, transparent 54%) 18% 22% / 34px 34px no-repeat, linear-gradient(45deg, transparent 46%, #e0a84b88 47% 53%, transparent 54%) 72% 14% / 26px 26px no-repeat, linear-gradient(45deg, transparent 46%, #7fb7b088 47% 53%, transparent 54%) 50% 32% / 22px 22px no-repeat, linear-gradient(180deg, #8fd0f5 0%, #c6e8fa 55%, #fff4dc 100%)', floor: '#e9cf9e' },
+  { id: 'moonlit', name: 'Moonlit night', sky: 'radial-gradient(circle at 76% 20%, #fff6d0 0 20px, rgba(255, 246, 208, 0.25) 22px 38px, transparent 40px), radial-gradient(circle at 25% 30%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 55% 15%, #fff 0 1.5px, transparent 2.5px), linear-gradient(180deg, #1f2550 0%, #3d3a78 55%, #8a6fa8 100%)', floor: '#5d5486' },
+  { id: 'peacock', name: 'Peacock blue', sky: 'radial-gradient(circle at 30% 30%, #2fb3a399 0 30px, transparent 60px), radial-gradient(circle at 70% 25%, #3f6fd199 0 34px, transparent 64px), linear-gradient(180deg, #2a4b8c 0%, #4f8fb8 55%, #cfe9e4 100%)', floor: '#8fb9a8' },
+  { id: 'garba', name: 'Garba night', sky: 'radial-gradient(circle at 20% 25%, #ffcf5a 0 3px, transparent 4px), radial-gradient(circle at 50% 18%, #ff6f91 0 3px, transparent 4px), radial-gradient(circle at 80% 28%, #7fd0ff 0 3px, transparent 4px), linear-gradient(180deg, #5a1846 0%, #b2305f 55%, #ffb36b 100%)', floor: '#c9774f' },
   { id: 'graduation', name: 'Gold confetti', sky: 'radial-gradient(circle at 18% 30%, #f2c84b 0 3px, transparent 4px), radial-gradient(circle at 70% 20%, #f2c84b 0 3px, transparent 4px), radial-gradient(circle at 45% 45%, #fff 0 2px, transparent 3px), linear-gradient(180deg, #2b2730 0%, #5a4a5e 55%, #e9d9b8 100%)', floor: '#d9c39a' },
 ];
 

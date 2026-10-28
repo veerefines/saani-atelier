@@ -2,7 +2,7 @@ import * as db from './db';
 import { cleanPrefs, DEFAULT_PREFS, type AudioPrefs } from './audio-prefs';
 import { milanDay, addDays } from './extras';
 import { friendship } from './jelly-mood';
-import { ACHIEVEMENTS, BACKDROPS, goalOf, itemById, MAX_PLACED, type Placed, type Stats } from './jelly-catalog';
+import { ACHIEVEMENTS, BACKDROPS, goalOf, inSeason, itemById, MAX_PLACED, seasonsOf, type Placed, type Stats } from './jelly-catalog';
 import { SEASON_NAMES, type Season, type SeasonKey } from './jelly-seasons';
 import { ALL_BONUS, EVENTS, pickQuests, questById, TIER_PEARLS, valueOf, type EventName, type Quest, type QuestState } from './quests';
 
@@ -277,7 +277,7 @@ export async function buy(id: string, season: SeasonKey | null = null): Promise<
   const price = item?.price ?? bd?.price;
   if (!item && !bd) return 'That isn’t in the shop.';
   // a festival's own things are only in the shop while it's on
-  if (item?.season && item.season !== season) return `That one’s only in the shop for ${SEASON_NAMES[item.season]}.`;
+  if (item && !inSeason(item, season)) return `That one’s only in the shop for ${seasonsOf(item).map((k) => SEASON_NAMES[k]).join(' or ')}.`;
   if (price === undefined) return 'That one can’t be bought: it’s unlocked by an achievement.';
   let err = '';
   const s = await change((s) => {

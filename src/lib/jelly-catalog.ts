@@ -71,7 +71,11 @@ export const KINDS: { id: ItemKind; label: string }[] = [
  * w: how wide it stands in her room, as a % of the room's width (before she resizes it).
  * season: festive things are only in the shop while their festival is on (she keeps them after).
  */
-export type Thing = { id: string; name: string; kind: ItemKind; w: number; price?: number; season?: SeasonKey };
+export type Thing = { id: string; name: string; kind: ItemKind; w: number; price?: number; season?: SeasonKey | SeasonKey[] };
+/** Is a festive thing in the shop for this festival? (Every-day things always are.) */
+export const inSeason = (it: Thing, key: SeasonKey | null | undefined) => !it.season || (key != null && [it.season].flat().includes(key));
+/** The festivals a thing belongs to. */
+export const seasonsOf = (it: Thing): SeasonKey[] => (it.season ? [it.season].flat() : []);
 export const itemSrc = (id: string) => `/corner/home/items/${id}.webp`;
 
 export const ITEMS: Thing[] = [
@@ -257,24 +261,24 @@ export const ITEMS: Thing[] = [
   { id: 'xmas-bow', name: 'Festive red bow', kind: 'festive', w: 4.7, price: 15, season: 'natale' },
   { id: 'holly-bow', name: 'Holly bow', kind: 'festive', w: 8.4, price: 20, season: 'natale' },
   { id: 'holly-wreath', name: 'Holly wreath', kind: 'festive', w: 6.2, price: 25, season: 'natale' },
-  { id: 'diya', name: 'Diya', kind: 'festive', w: 4, price: 15, season: 'diwali' },
-  { id: 'brass-lamp', name: 'Brass lamp', kind: 'festive', w: 4, price: 30, season: 'diwali' },
-  { id: 'diya-tray', name: 'Golden diya tray', kind: 'festive', w: 4.4, price: 35, season: 'diwali' },
-  { id: 'rangoli', name: 'Rangoli', kind: 'festive', w: 6.8, price: 40, season: 'diwali' },
-  { id: 'mithai', name: 'Mithai bowl', kind: 'festive', w: 4.6, price: 20, season: 'diwali' },
-  { id: 'lotus', name: 'Pink lotus', kind: 'festive', w: 4.5, price: 22, season: 'diwali' },
+  { id: 'diya', name: 'Diya', kind: 'festive', w: 4, price: 15, season: ['diwali', 'karvachauth'] },
+  { id: 'brass-lamp', name: 'Brass lamp', kind: 'festive', w: 4, price: 30, season: ['diwali', 'onam', 'navratri'] },
+  { id: 'diya-tray', name: 'Golden diya tray', kind: 'festive', w: 4.4, price: 35, season: ['diwali', 'dussehra'] },
+  { id: 'rangoli', name: 'Rangoli', kind: 'festive', w: 6.8, price: 40, season: ['diwali', 'onam'] },
+  { id: 'mithai', name: 'Mithai bowl', kind: 'festive', w: 4.6, price: 20, season: ['diwali', 'ganesh', 'rakhi'] },
+  { id: 'lotus', name: 'Pink lotus', kind: 'festive', w: 4.5, price: 22, season: ['diwali', 'ganesh'] },
   { id: 'gulal-bowl', name: 'Bowl of gulal', kind: 'festive', w: 4, price: 25, season: 'holi' },
   { id: 'holi-colours', name: 'Holi colours', kind: 'festive', w: 6.7, price: 30, season: 'holi' },
   { id: 'champagne-glass', name: 'Champagne glass', kind: 'festive', w: 4, price: 15, season: 'capodanno' },
   { id: 'champagne', name: 'Bottle of bubbly', kind: 'festive', w: 4, price: 30, season: 'capodanno' },
   { id: 'party-hat', name: 'New Year top hat', kind: 'festive', w: 6.2, price: 35, season: 'capodanno' },
   { id: 'gold-star', name: 'Golden star', kind: 'festive', w: 4, price: 12, season: 'capodanno' },
-  { id: 'marigold-pot', name: 'Marigold pot', kind: 'festive', w: 4.7, price: 25, season: 'gudi' },
-  { id: 'dhol', name: 'Dhol & flowers', kind: 'festive', w: 8.2, price: 40, season: 'gudi' },
+  { id: 'marigold-pot', name: 'Marigold pot', kind: 'festive', w: 4.7, price: 25, season: ['gudi', 'ganesh', 'navratri', 'dussehra'] },
+  { id: 'dhol', name: 'Dhol & flowers', kind: 'festive', w: 8.2, price: 40, season: ['gudi', 'navratri', 'dussehra'] },
   { id: 'gudi', name: 'Little gudi', kind: 'festive', w: 4, price: 20, season: 'gudi' },
-  { id: 'neem', name: 'Neem sprig', kind: 'festive', w: 4, price: 12, season: 'gudi' },
+  { id: 'neem', name: 'Sugarcane & neem', kind: 'festive', w: 4, price: 12, season: ['gudi', 'pongal', 'sankranti'] },
   { id: 'easter-eggs', name: 'Easter eggs', kind: 'festive', w: 6, price: 30, season: 'pasqua' },
-  { id: 'flower-basket', name: 'Flower basket', kind: 'festive', w: 6.2, price: 25, season: 'pasqua' },
+  { id: 'flower-basket', name: 'Flower basket', kind: 'festive', w: 6.2, price: 25, season: ['pasqua', 'onam'] },
   { id: 'bunny-ears', name: 'Bunny ears', kind: 'festive', w: 6.1, price: 20, season: 'pasqua' },
   { id: 'heart-balloons', name: 'Heart balloons', kind: 'festive', w: 9.1, price: 30, season: 'valentino' },
   { id: 'heart-balloon', name: 'Heart balloon', kind: 'festive', w: 4, price: 15, season: 'valentino' },
@@ -287,7 +291,7 @@ export const ITEMS: Thing[] = [
   { id: 'grad-cap', name: 'Graduation cap', kind: 'festive', w: 6.7, price: 30, season: 'graduation' },
   { id: 'jelly-book', name: 'Jelly storybook', kind: 'festive', w: 6.2, price: 15, season: 'study' },
   { id: 'study-set', name: 'Study set', kind: 'festive', w: 8.9, price: 25, season: 'study' },
-  { id: 'golden-moon', name: 'Golden moon', kind: 'festive', w: 4.6, price: 25, season: 'inverno' },
+  { id: 'golden-moon', name: 'Golden moon', kind: 'festive', w: 4.6, price: 25, season: ['inverno', 'eid'] },
   { id: 'star-plush', name: 'Star cushion', kind: 'festive', w: 4.5, price: 20, season: 'inverno' },
   { id: 'jelly-candle', name: 'Jelly candle', kind: 'festive', w: 4.5, price: 18, season: 'inverno' },
   { id: 'jelly-dome', name: 'Jelly in a dome', kind: 'treasures', w: 4.1, price: 40 },
@@ -319,6 +323,11 @@ export const ITEMS: Thing[] = [
   { id: 'sweet-bowl', name: 'Bowl of sweets', kind: 'decor', w: 5.5, price: 15 },
   { id: 'perfume', name: 'Perfume bottle', kind: 'treasures', w: 4, price: 20 },
   { id: 'star-flask', name: 'Star flask', kind: 'treasures', w: 4, price: 15 },
+  { id: 'patang', name: 'Patang (kite)', kind: 'festive', w: 4, price: 20, season: 'sankranti' },
+  { id: 'trishul', name: 'Little trishul', kind: 'festive', w: 4, price: 25, season: 'shivratri' },
+  { id: 'chalni', name: 'Karva chalni', kind: 'festive', w: 4.2, price: 25, season: 'karvachauth' },
+  { id: 'peacock-crown', name: 'Peacock crown', kind: 'festive', w: 7.1, price: 30, season: 'janmashtami' },
+  { id: 'rakhi', name: 'Rakhi', kind: 'festive', w: 4, price: 15, season: 'rakhi' },
 ];
 export const itemById = (id: string) => ITEMS.find((x) => x.id === id);
 
