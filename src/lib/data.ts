@@ -240,15 +240,16 @@ export async function deleteMedia(id: string) {
   await db.remove('media', id);
 }
 
-/* seed Varun's default letters & jar notes once (from content/home.ts) */
-export async function ensureSeeded(seed: {
-  letters: { title: string; body: string; unlockAt?: string | null; from: string }[];
-  jar: { mood: Mood; text: string; from: string }[];
-}) {
-  const flag = await db.get('state', 'seeded');
-  if (flag) return;
-  for (const l of seed.letters)
-    await addLetter({ id: 'seed', name: l.from, role: 'wellwisher' }, l);
-  for (const n of seed.jar) await addJarNote({ id: 'seed', name: n.from, role: 'wellwisher' }, n);
+/**
+ * The placeholder letters and jar notes ("Replace this with your real letter") that the site used to
+ * add for testing (signed by "seed"). Taken out once, so only what her people really wrote is left.
+ */
+export async function removeSeeded() {
+  if (await db.get('state', 'seed-removed')) return;
+  const [letters, jar] = await Promise.all([listLetters(), listJar()]);
+  for (const l of letters) if (l.authorId === 'seed') await db.remove('letters', l.id);
+  for (const n of jar) if (n.authorId === 'seed') await db.remove('jar', n.id);
+  // never add them again either
   await db.put('state', { id: 'seeded', createdAt: now() });
+  await db.put('state', { id: 'seed-removed', createdAt: now() });
 }

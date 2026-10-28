@@ -55,42 +55,6 @@ export const bingo: Square[] = [
   { id: 'letter-home', label: 'Send a postcard home', icon: '💌', group: 'You', reward: { kind: 'cheer', line: 'It’ll arrive in three weeks. Worth it.' } },
 ];
 
-/* ---------- Seed content (added once, the first time the dashboard opens) ---------- */
-
-export const seedLetters: { title: string; body: string; unlockAt?: string | null; from: string }[] = [
-  {
-    title: 'Open when you miss home',
-    body: 'Close your eyes. Somewhere right now, someone at home is thinking about you. Probably all of us, honestly. Call us. Then go and get something warm to eat. (Replace this with your real letter.)',
-    from: 'Varun',
-  },
-  {
-    title: 'Open when a critique goes badly',
-    body: 'One bad day in a studio does not undo all the years that got you there. They are critiquing the work, not you. Fix the hem, keep the vision. (Replace this with your real letter.)',
-    from: 'Varun',
-  },
-  {
-    title: 'Open on your birthday',
-    body: 'Happy birthday, Milanese girl. (Write the real one here.)',
-    unlockAt: '2027-03-01',
-    from: 'Varun',
-  },
-  {
-    title: 'Open after your first month',
-    body: 'One month in. Look how far you’ve come. (Write the real one here.)',
-    unlockAt: '2026-12-01',
-    from: 'Varun',
-  },
-];
-
-export const seedJar: { mood: Mood; text: string; from: string }[] = [
-  { mood: 'happy', text: 'Tell us everything. Every single detail. We want the gossip.', from: 'Varun' },
-  { mood: 'sad', text: 'It’s okay to have a heavy day. You don’t have to be brave every minute. Make some chai, call someone, sleep early.', from: 'Varun' },
-  { mood: 'homesick', text: 'Home isn’t going anywhere. It’s waiting for you, a little prouder every day.', from: 'Varun' },
-  { mood: 'unmotivated', text: 'Do one tiny thing. Sharpen one pencil. Pin one hem. Momentum starts small.', from: 'Varun' },
-  { mood: 'anxious', text: 'Breathe in for four, hold for four, out for six. You have done harder things than this.', from: 'Varun' },
-  { mood: 'proud', text: 'WE KNEW IT. Screenshot this moment and send it to all of us immediately.', from: 'Varun' },
-];
-
 export const moods: { id: Mood; label: string; emoji: string }[] = [
   { id: 'happy', label: 'happy', emoji: '🌷' },
   { id: 'sad', label: 'a little sad', emoji: '🌧️' },

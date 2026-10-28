@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
-import { ensureSeeded } from '@/lib/data';
+import { removeSeeded } from '@/lib/data';
 import { touchPresence } from '@/lib/extras';
-import { seedJar, seedLetters } from '@/content/home';
 import '@/components/journey/journey.css';
 import '@/components/home/home.css';
 import '@/components/wall/wall.css';
@@ -17,7 +16,8 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
   const session = await getSession();
   if (!session) redirect('/');
   if (session.role !== 'saanika') redirect('/wall');
-  await ensureSeeded({ letters: seedLetters, jar: seedJar });
+  // the old placeholder letters and jar notes go, once
+  await removeSeeded().catch(() => {});
   // so the admin page can show when she was last here
   await touchPresence().catch(() => {});
   return (

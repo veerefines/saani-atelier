@@ -118,6 +118,8 @@ check "empty name 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"title":" "}' $B/api
 check "another project's conversation 404" 404 -b "$SA" -X POST "${J[@]}" -d "{\"mode\":\"summary\",\"chatId\":\"$CH\"}" $B/api/corner/projects/nope/assistant
 check "unknown conversation 404" 404 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary","chatId":"ch_nope"}' $B/api/corner/projects/$P/assistant
 curl -s -o /dev/null -c "$D/ai-fr.jar" $B/hello/CHANGE-ME-2
+# a sealed letter from a friend, so Jelly is told never to reveal it
+curl -s -o /dev/null -b "$D/ai-fr.jar" -X POST -H "Content-Type: application/json" -d '{"title":"Later","body":"SEALED-WORDS","unlockAt":"2099-01-01"}' $B/api/letters
 check "friend can't read them 403" 403 -b "$D/ai-fr.jar" $B/api/corner/projects/$P/assistant
 check "friend can't delete 403" 403 -b "$D/ai-fr.jar" -X DELETE $B/api/corner/projects/$P/assistant/chats/$CH
 check "delete one" 200 -b "$SA" -X DELETE $B/api/corner/projects/$P/assistant/chats/$CH2
