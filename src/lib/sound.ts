@@ -151,14 +151,25 @@ export function haptic(kind: Buzz = 'light') {
     tick.htmlFor = id;
     for (const el of [input, tick]) {
       el.setAttribute('aria-hidden', 'true');
+      el.setAttribute('data-quiet', ''); // never let our own tick count as one of her taps
       el.tabIndex = -1;
       Object.assign(el.style, { position: 'fixed', left: '-100px', top: '0', width: '1px', height: '1px', opacity: '0', pointerEvents: 'none' });
       document.body.appendChild(el);
     }
   }
   const n = kind === 'success' ? 3 : kind === 'heavy' ? 2 : 1;
-  for (let i = 0; i < n; i++) setTimeout(() => tick?.click(), i * 90);
+  for (let i = 0; i < n; i++)
+    setTimeout(() => {
+      ticking = true;
+      try {
+        tick?.click();
+      } finally {
+        ticking = false;
+      }
+    }, i * 90);
 }
+// set while we toggle the hidden switch, so a buzz can never set off another buzz
+let ticking = false;
 
 /* ---------- voice notes and videos from her people ---------- */
 let mediaPlaying = 0;
@@ -195,6 +206,8 @@ if (typeof window !== 'undefined') {
   document.addEventListener(
     'click',
     (e) => {
+      // only her real taps: not clicks made by code (like our hidden haptic switch)
+      if (!e.isTrusted || ticking) return;
       const el = (e.target as Element | null)?.closest?.('button, a[href], [role="button"], [role="tab"], [role="switch"], summary, input[type="checkbox"], input[type="radio"], select');
       if (!el || el.closest('[data-quiet]') || (el as HTMLButtonElement).disabled) return;
       sfx('tap');
