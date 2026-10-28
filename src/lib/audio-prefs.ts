@@ -14,8 +14,10 @@ export type AudioPrefs = {
   notes: number;
   /** little buzzes when she taps things (iPhone and Android) */
   haptics: boolean;
+  /** Radio Italia everywhere, or a little tune made for each corner */
+  style: 'radio' | 'tunes';
 };
-export const DEFAULT_PREFS: AudioPrefs = { on: true, music: 0.45, sfx: 0.7, voice: 0.9, notes: 1, haptics: true };
+export const DEFAULT_PREFS: AudioPrefs = { on: true, music: 0.45, sfx: 0.7, voice: 0.9, notes: 1, haptics: true, style: 'radio' };
 
 const vol = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, Math.round(v * 100) / 100)) : d);
 /** Settings from anywhere (a request, storage), made safe; anything missing or odd keeps its default. */
@@ -28,5 +30,6 @@ export function cleanPrefs(raw: unknown, base: AudioPrefs = DEFAULT_PREFS): Audi
     voice: vol(r.voice, base.voice),
     notes: vol(r.notes, base.notes),
     haptics: typeof r.haptics === 'boolean' ? r.haptics : base.haptics,
+    style: r.style === 'radio' || r.style === 'tunes' ? r.style : base.style,
   };
 }

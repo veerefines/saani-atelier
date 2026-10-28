@@ -166,7 +166,7 @@ function applyMedia() {
   if (typeof document === 'undefined') return;
   document.querySelectorAll('audio, video').forEach((el) => {
     const m = el as HTMLMediaElement;
-    if (m.muted && m.autoplay) return; // silent previews stay silent
+    if (m.dataset.radio || (m.muted && m.autoplay)) return; // the radio has its own volume; silent previews stay silent
     m.volume = prefs.on ? prefs.notes : 0;
   });
 }
@@ -176,7 +176,7 @@ if (typeof window !== 'undefined') {
     'play',
     (e) => {
       const m = e.target as HTMLMediaElement;
-      if (!(m instanceof HTMLMediaElement) || (m.muted && m.autoplay)) return;
+      if (!(m instanceof HTMLMediaElement) || m.dataset.radio || (m.muted && m.autoplay)) return;
       m.volume = prefs.on ? prefs.notes : 0;
       mediaPlaying++;
       levels();

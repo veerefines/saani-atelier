@@ -212,6 +212,13 @@ expect "loudest is 100%" '"sfx":1'
 expect "quietest is off" '"voice":0'
 check "remembered for every device" 200 -b "$SA" $B/api/jelly/home
 expect "still 20%" '"music":0.2'
+expect "Radio Italia by default" '"style":"radio"'
+check "corner tunes instead" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"style":"tunes"}}' $B/api/jelly/settings
+expect "tunes" '"style":"tunes"'
+check "not a style" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"style":"disco"}}' $B/api/jelly/settings
+expect "keeps the last one" '"style":"tunes"'
+same "Radio Italia's songs are served" "$(curl -s -o /dev/null -w '%{http_code}' $B/radio/r01.m4a)" 200
+same "and can be streamed from the middle" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Range: bytes=1000-2000' $B/radio/r12.m4a)" 206
 check "her chats are saved" 200 -b "$SA" $B/api/corner/jelly
 expect "with both questions" "JELLY-Q2"
 check "and show in the project's Jelly Got This! tab" 200 -b "$SA" "$B/home/corner/$P?tab=assistant"

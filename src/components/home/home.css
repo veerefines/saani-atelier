@@ -5835,3 +5835,182 @@ a.pc-rating:hover {
     animation: none;
   }
 }
+
+/* ---------- Radio Italia, the little player in the corner ---------- */
+.radio {
+  position: fixed;
+  left: 14px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 44;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 6px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(0, 146, 70, 0.14), rgba(255, 255, 255, 0.92) 30%, rgba(255, 255, 255, 0.92) 70%, rgba(206, 43, 55, 0.14)),
+    rgba(255, 250, 246, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px rgba(178, 48, 95, 0.14),
+    0 14px 28px -16px rgba(70, 25, 45, 0.6);
+  animation: radio-in 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.radio.small {
+  padding: 6px;
+}
+.radio-dial {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.12);
+  font-size: 18px;
+  cursor: pointer;
+}
+.radio-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.radio-eq i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ce2b37, #f4a6c0 50%, #009246);
+  transform-origin: bottom;
+  animation: radio-eq 0.9s ease-in-out infinite;
+}
+.radio-eq i:nth-child(2) { animation-delay: 0.2s; }
+.radio-eq i:nth-child(3) { animation-delay: 0.4s; }
+.radio-eq i:nth-child(4) { animation-delay: 0.1s; }
+.radio.paused .radio-eq i {
+  animation: none;
+  transform: scaleY(0.3);
+}
+.radio-text {
+  display: grid;
+  line-height: 1.15;
+}
+.radio-text b {
+  font: 400 15px var(--font-display);
+  color: var(--burgundy);
+}
+.radio-text small {
+  font: 600 11px var(--font-body);
+  color: #8a6a7b;
+  white-space: nowrap;
+}
+.radio-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  color: #fff;
+  cursor: pointer;
+}
+.radio-btn + .radio-btn {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
+  color: var(--burgundy);
+}
+.radio-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+@keyframes radio-eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+@keyframes radio-in {
+  from {
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+  }
+}
+@media (max-width: 480px) {
+  .radio {
+    left: 10px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .radio-text small {
+    display: none;
+  }
+}
+/* above the sticky "Ask Jelly" bar in My Corner */
+body:has(.cn-ask) .radio {
+  bottom: calc(84px + env(safe-area-inset-bottom));
+}
+@media print {
+  .radio {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radio-eq i {
+    animation: none;
+  }
+}
+
+.ss-style {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 2px 0 2px 58px;
+}
+.ss-style button {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.14);
+  color: var(--burgundy);
+  font: 800 13px var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.ss-style button small {
+  font: 500 11px var(--font-body);
+  color: #8a6a7b;
+}
+.ss-style button[aria-checked='true'] {
+  background: linear-gradient(135deg, #fde4ee, #efe6fc);
+  box-shadow: 0 0 0 2px var(--berry);
+}
+.ss-radio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 2px 0 6px 58px;
+  font: 500 11.5px / 1.4 var(--font-body);
+  color: #8a6a7b;
+}
+.ss-radio button {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
+  color: var(--burgundy);
+  font: 700 12px var(--font-body);
+  cursor: pointer;
+}
+@media (max-width: 480px) {
+  .ss-style,
+  .ss-radio {
+    margin-left: 0;
+  }
+}

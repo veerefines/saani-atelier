@@ -1,6 +1,7 @@
 'use client';
 
 import { audioPrefs, musicOut, whenUnlocked } from './sound';
+import { radioOff, radioOn } from './radio';
 
 /**
  * Background music for each corner of her desk, played live in the browser (no tracks to download
@@ -413,7 +414,11 @@ function start() {
   const p = audioPrefs();
   const c = io?.ctx;
   if (!io || !c) return;
-  const id = p.on && p.music > 0 && !document.hidden ? want : null;
+  const allowed = p.on && p.music > 0 && !document.hidden ? want : null;
+  // Radio Italia plays across the whole desk; the corner tunes are the other choice
+  if (p.style === 'radio' && allowed) radioOn(allowed === 'italia' ? 'italia' : allowed === 'desk' ? 'desk' : 'other');
+  else radioOff();
+  const id = p.style === 'radio' ? null : allowed;
   if (current?.id === id) return;
   stopCurrent(c);
   clearInterval(timer);

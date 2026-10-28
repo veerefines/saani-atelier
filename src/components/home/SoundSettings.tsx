@@ -6,6 +6,7 @@ import { DEFAULT_PREFS, type AudioPrefs } from '@/lib/audio-prefs';
 import { moodSrc } from '@/lib/jelly-mood';
 import { THEME_NAMES, themeFor, type ThemeId } from '@/lib/music';
 import { haptic, sfx, usePrefs, voice } from '@/lib/sound';
+import { MOOD_NAMES, radioSkip, useRadio } from '@/lib/radio';
 import { PETTED } from '@/components/jelly/lines';
 
 const CORNERS: [ThemeId, string][] = [
@@ -53,6 +54,7 @@ export default function SoundSettings() {
   const [p, set] = usePrefs();
   const [open, setOpen] = useState(false);
   const here = themeFor(usePathname());
+  const radio = useRadio();
   const change = (patch: Partial<AudioPrefs>) => set(patch);
 
   return (
@@ -88,14 +90,42 @@ export default function SoundSettings() {
       {open && (
         <div className={`ss-panel${p.on ? '' : ' muted'}`}>
           {!p.on && <p className="ss-note">Sound is off. Turn it on above to hear any of these.</p>}
-          <Level icon="🎵" label="Background music" hint={here ? `Now: ${THEME_NAMES[here]}` : 'No music on this page'} value={p.music} onChange={(music) => change({ music })} onTry={() => {}} />
-          <ul className="ss-tunes" aria-label="A tune for every corner">
-            {CORNERS.map(([id, where]) => (
-              <li key={id} className={id === here ? 'on' : ''}>
-                <b>{where}</b> {THEME_NAMES[id]}
-              </li>
-            ))}
-          </ul>
+          <Level
+            icon="🎵"
+            label="Background music"
+            hint={!here ? 'No music on this page' : p.style === 'radio' ? (radio.mood ? `Radio Italia · ${MOOD_NAMES[radio.mood]}` : 'Radio Italia') : `Now: ${THEME_NAMES[here]}`}
+            value={p.music}
+            onChange={(music) => change({ music })}
+            onTry={() => {}}
+          />
+          <div className="ss-style" role="radiogroup" aria-label="Music">
+            <button type="button" role="radio" aria-checked={p.style === 'radio'} onClick={() => change({ style: 'radio' })}>
+              📻 Radio Italia
+              <small>Your Italian music, all over the desk</small>
+            </button>
+            <button type="button" role="radio" aria-checked={p.style === 'tunes'} onClick={() => change({ style: 'tunes' })}>
+              🎼 Corner tunes
+              <small>A little tune made for each corner</small>
+            </button>
+          </div>
+          {p.style === 'radio' ? (
+            <p className="ss-radio">
+              33 songs in three moods (vivace mornings, romantico afternoons, dolce evenings), with a surprise now and then.
+              {radio.on && (
+                <button type="button" onClick={radioSkip}>
+                  ⏭ Next song
+                </button>
+              )}
+            </p>
+          ) : (
+            <ul className="ss-tunes" aria-label="A tune for every corner">
+              {CORNERS.map(([id, where]) => (
+                <li key={id} className={id === here ? 'on' : ''}>
+                  <b>{where}</b> {THEME_NAMES[id]}
+                </li>
+              ))}
+            </ul>
+          )}
           <Level icon="🔔" label="Sounds & jingles" hint="Taps, achievements, stamps, pats" value={p.sfx} onChange={(sfx_) => change({ sfx: sfx_ })} onTry={() => sfx('sparkle')} />
           <Level icon="🪼" label="Jelly’s voice" hint="Her chatter, facts, cheers and answers read aloud" value={p.voice} onChange={(v) => change({ voice: v })} onTry={() => voice(PETTED[0]) || sfx('blip')} />
           <Level icon="🎙️" label="Voice notes & videos" hint="From your people, and your moments" value={p.notes} onChange={(notes) => change({ notes })} onTry={() => {}} />
