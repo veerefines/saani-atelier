@@ -5877,99 +5877,149 @@ a.pc-rating:hover {
   }
 }
 
-/* ---------- the radio in the corner: a little icon that opens into two stations ---------- */
+/* ---------- the radio in the corner: a little pastel record that opens into two stations ---------- */
 .radio {
   position: fixed;
-  left: 14px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 16px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
   z-index: 44;
 }
 .radio-icon {
   position: relative;
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  padding: 0;
+  width: 58px;
+  height: 58px;
+  padding: 5px;
   border: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #fdf0f5 70%);
+  background: rgba(255, 250, 246, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   box-shadow:
-    0 0 0 1.5px rgba(255, 255, 255, 0.9) inset,
-    0 0 0 1px rgba(178, 48, 95, 0.16),
-    0 12px 24px -12px rgba(70, 25, 45, 0.6);
-  font-size: 24px;
+    0 0 0 1.5px rgba(255, 255, 255, 0.95) inset,
+    0 0 0 1px rgba(205, 180, 240, 0.45),
+    0 14px 26px -14px rgba(107, 30, 58, 0.55);
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .radio-icon:hover,
 .radio.open .radio-icon {
-  transform: scale(1.06);
+  transform: translateY(-2px) scale(1.05);
 }
-/* playing: a soft ring pulses around it, in Italian colours or Spotify green */
-.radio.playing .radio-icon::before {
+
+/* the record: grooves, a soft sheen, and a label in the middle */
+.radio-disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1; /* a round record, whatever box it sits in */
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), transparent 38%),
+    repeating-radial-gradient(circle, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 3px),
+    conic-gradient(from 20deg, #e7a3c0, #c7aef0, #f4bcd2, #b9a2ea, #e7a3c0);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.6), inset 0 -4px 8px rgba(107, 30, 58, 0.18);
+}
+.radio-disc-label {
+  position: relative;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #9fdcbd 0 33%, #fffaf3 33% 66%, #f6a8b6 66%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+.radio-disc-label::after {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: 40%;
   border-radius: 50%;
-  border: 2.5px solid transparent;
-  background: conic-gradient(#009246, #fff, #ce2b37, #009246) border-box;
-  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: radio-spin 4s linear infinite;
+  background: #6b1e3a;
+  opacity: 0.55;
 }
-.radio.playing.saani .radio-icon::before {
-  background: conic-gradient(#1ed760, #b8f5cf, #1db954, #1ed760) border-box;
+.radio-disc.green .radio-disc-label {
+  background: radial-gradient(circle at 40% 35%, #c6f6d8, #5fd38d);
 }
-.radio-eq {
+.radio.playing .radio-icon .radio-disc,
+.radio-disc.spin {
+  animation: radio-spin 5s linear infinite;
+}
+/* little notes drifting up while it plays */
+.radio-notes i {
   position: absolute;
-  right: 6px;
-  bottom: 8px;
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 1.5px;
-  height: 11px;
+  left: 50%;
+  top: 2px;
+  font: 700 14px var(--font-body);
+  font-style: normal;
+  color: var(--berry);
+  opacity: 0;
+  pointer-events: none;
+  animation: radio-note 3.6s ease-out infinite;
 }
-.radio-eq i {
-  width: 2.5px;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--berry);
-  transform-origin: bottom;
-  animation: radio-eq 0.9s ease-in-out infinite;
+.radio-notes i:nth-child(2) {
+  left: 70%;
+  color: #a98ae0;
+  animation-delay: 1.2s;
 }
-.radio.saani .radio-eq i {
-  background: #1db954;
+.radio-notes i:nth-child(3) {
+  left: 30%;
+  color: #4fb98d;
+  animation-delay: 2.4s;
 }
-.radio-eq i:nth-child(2) { animation-delay: 0.2s; }
-.radio-eq i:nth-child(3) { animation-delay: 0.4s; }
+.radio.saani .radio-notes i {
+  color: #1db954;
+}
 
-/* the card that opens above it */
+/* the mood of a new song, peeking out for a moment */
+.radio-peek {
+  position: absolute;
+  left: 66px;
+  bottom: 12px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(205, 180, 240, 0.5),
+    0 10px 20px -12px rgba(107, 30, 58, 0.5);
+  font: 500 12px var(--font-body);
+  color: #8a6a7b;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: radio-peek 3.8s ease-in-out both;
+}
+.radio-peek b {
+  font: 400 15px var(--font-display);
+  color: var(--burgundy);
+}
+
+/* the card */
 .radio-card {
   position: absolute;
   left: 0;
-  bottom: 64px;
+  bottom: 70px;
   display: grid;
-  gap: 10px;
-  width: min(340px, calc(100vw - 28px));
-  padding: 10px;
-  border-radius: 24px;
-  background: rgba(255, 250, 246, 0.96);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  gap: 12px;
+  width: min(330px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 70% at 0% 0%, rgba(255, 225, 236, 0.95), transparent 60%),
+    radial-gradient(120% 70% at 100% 100%, rgba(230, 220, 251, 0.95), transparent 60%),
+    #fffaf6;
   box-shadow:
-    0 0 0 1px rgba(178, 48, 95, 0.14),
-    0 24px 44px -22px rgba(70, 25, 45, 0.65);
+    0 0 0 1.5px rgba(255, 255, 255, 0.95) inset,
+    0 0 0 1px rgba(205, 180, 240, 0.45),
+    0 26px 50px -24px rgba(70, 25, 45, 0.65);
   transform-origin: bottom left;
-  transform: translateY(8px) scale(0.92);
+  transform: translateY(10px) scale(0.9);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition:
-    transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
+    transform 0.32s cubic-bezier(0.3, 1.4, 0.5, 1),
     opacity 0.2s,
-    visibility 0s 0.28s;
+    visibility 0s 0.32s;
 }
 .radio.open .radio-card {
   transform: none;
@@ -5977,36 +6027,22 @@ a.pc-rating:hover {
   visibility: visible;
   pointer-events: auto;
   transition:
-    transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
+    transform 0.32s cubic-bezier(0.3, 1.4, 0.5, 1),
     opacity 0.2s;
 }
-.radio-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(178, 48, 95, 0.07);
-}
-.radio-tabs button {
-  min-height: 34px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--burgundy);
-  font: 800 12.5px var(--font-body);
-  white-space: nowrap;
-  cursor: pointer;
-}
-.radio-tabs button[aria-selected='true'] {
-  background: #fff;
-  box-shadow: 0 4px 10px -6px rgba(107, 30, 58, 0.5);
-}
-.radio-now {
+.radio-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 4px 4px 8px;
+  gap: 12px;
+}
+.radio-disc.big {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.6),
+    inset 0 -5px 10px rgba(107, 30, 58, 0.18),
+    0 10px 18px -10px rgba(107, 30, 58, 0.55);
 }
 .radio-text {
   display: grid;
@@ -6014,43 +6050,163 @@ a.pc-rating:hover {
   min-width: 0;
   line-height: 1.2;
 }
+.radio-text small {
+  font: 800 9.5px var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--berry);
+}
 .radio-text b {
-  font: 400 17px var(--font-display);
+  font: 400 20px var(--font-display);
   color: var(--burgundy);
 }
-.radio-text small {
+.radio-text em {
   overflow: hidden;
-  font: 600 11.5px var(--font-body);
+  font: 500 12px var(--font-body);
+  font-style: normal;
   color: #8a6a7b;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.radio-btn {
+.radio-wave {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  height: 26px;
+}
+.radio-wave i {
+  width: 3.5px;
+  height: 30%;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #f4a6c0, #b39ae8);
+}
+.radio-wave.on i {
+  animation: radio-wave 1.1s ease-in-out infinite;
+}
+.radio-wave.on i:nth-child(2) { animation-delay: 0.15s; }
+.radio-wave.on i:nth-child(3) { animation-delay: 0.3s; }
+.radio-wave.on i:nth-child(4) { animation-delay: 0.45s; }
+.radio-wave.on i:nth-child(5) { animation-delay: 0.6s; }
+
+.radio-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 0 0 1px rgba(178, 48, 95, 0.1);
+}
+.radio-tabs button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: #8a6a7b;
+  font: 700 12.5px var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.radio-tabs button[aria-selected='true'] {
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  color: #fff;
+  box-shadow: 0 8px 14px -10px rgba(178, 48, 95, 0.9);
+}
+.radio-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.radio-play,
+.radio-skip {
   display: grid;
   flex: none;
   place-items: center;
-  width: 38px;
-  height: 38px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0618f, var(--berry));
-  color: #fff;
-  font: 800 15px var(--font-body);
   cursor: pointer;
+  transition: transform 0.15s;
 }
-.radio-now .radio-btn + .radio-btn {
+.radio-play {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  box-shadow: 0 10px 18px -10px rgba(178, 48, 95, 0.9);
+  color: #fff;
+}
+.radio-skip {
+  width: 38px;
+  height: 38px;
   background: #fff;
   box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
   color: var(--burgundy);
 }
-.radio-btn:disabled {
+.radio-play:active,
+.radio-skip:active {
+  transform: scale(0.92);
+}
+.radio-play:disabled,
+.radio-skip:disabled {
   opacity: 0.4;
 }
-.radio-btn svg {
-  width: 16px;
-  height: 16px;
+.radio-play svg,
+.radio-skip svg {
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
+.radio-vol {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+}
+.radio-vol input {
+  --v: 50%;
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.radio-vol input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #f4a6c0, var(--berry) var(--v), #eadde4 var(--v));
+}
+.radio-vol input::-moz-range-track {
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #f4a6c0, var(--berry) var(--v), #eadde4 var(--v));
+}
+.radio-vol input::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--berry);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.radio-vol input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--berry);
+}
+
+/* Saani's radio */
 .radio-saani {
   display: grid;
   gap: 8px;
@@ -6062,7 +6218,6 @@ a.pc-rating:hover {
 .radio-connect {
   display: grid;
   gap: 6px;
-  padding: 4px 6px;
 }
 .radio-connect b {
   font: 400 17px var(--font-display);
@@ -6080,10 +6235,10 @@ a.pc-rating:hover {
 .radio-field {
   display: flex;
   gap: 6px;
-  padding: 4px 4px 4px 12px;
+  padding: 4px 4px 4px 14px;
   border-radius: 999px;
   background: #fff;
-  box-shadow: 0 0 0 1.5px rgba(29, 185, 84, 0.45);
+  box-shadow: 0 0 0 1.5px rgba(29, 185, 84, 0.4);
 }
 .radio-field input {
   flex: 1;
@@ -6094,10 +6249,21 @@ a.pc-rating:hover {
   font: 500 16px var(--font-body);
   color: var(--ink);
 }
-.radio-field .radio-btn {
+.radio-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
   width: 34px;
   height: 34px;
+  border: 0;
+  border-radius: 50%;
   background: #1db954;
+  color: #fff;
+  font: 800 15px var(--font-body);
+  cursor: pointer;
+}
+.radio-btn:disabled {
+  opacity: 0.4;
 }
 .radio-err {
   color: var(--berry) !important;
@@ -6106,14 +6272,14 @@ a.pc-rating:hover {
 .radio-spotify iframe {
   display: block;
   border: 0;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 .radio-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
-  padding: 0 6px 2px;
+  gap: 4px 12px;
+  padding: 0 4px;
 }
 .radio-row small {
   flex-basis: 100%;
@@ -6127,13 +6293,41 @@ a.pc-rating:hover {
   text-decoration: underline;
   cursor: pointer;
 }
-@keyframes radio-eq {
-  0%, 100% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
-}
 @keyframes radio-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@keyframes radio-note {
+  0% {
+    transform: translate(-50%, 0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + 10px), -46px) scale(1.1) rotate(15deg);
+    opacity: 0;
+  }
+}
+@keyframes radio-wave {
+  0%, 100% { height: 30%; }
+  50% { height: 100%; }
+}
+@keyframes radio-peek {
+  0% {
+    transform: translateX(-10px) scale(0.9);
+    opacity: 0;
+  }
+  10%,
+  85% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-6px);
+    opacity: 0;
   }
 }
 /* above the sticky "Ask Jelly" bar in My Corner */
@@ -6142,16 +6336,19 @@ body:has(.cn-ask) .radio {
 }
 @media (max-width: 480px) {
   .radio {
-    left: 10px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 12px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
   }
   .radio-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 21px;
+    width: 52px;
+    height: 52px;
   }
   .radio-card {
-    bottom: 58px;
+    bottom: 64px;
+  }
+  .radio-peek {
+    left: 60px;
+    bottom: 10px;
   }
 }
 @media print {
@@ -6160,11 +6357,14 @@ body:has(.cn-ask) .radio {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .radio-eq i,
-  .radio.playing .radio-icon::before {
-    animation: none;
+  .radio .radio-disc,
+  .radio-notes i,
+  .radio-wave.on i,
+  .radio-peek {
+    animation: none !important;
   }
 }
+
 .ss-style {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

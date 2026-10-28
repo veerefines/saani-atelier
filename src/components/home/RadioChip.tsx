@@ -40,7 +40,8 @@ const LABEL: Record<string, string> = { playlist: 'playlist', album: 'album', ar
  */
 export default function RadioChip() {
   const r = useRadio();
-  const [prefs] = usePrefs();
+  const [prefs, setPrefs] = usePrefs();
+  const [peek, setPeek] = useState(false);
   const [open, setOpen] = useState(false);
   const [station, setStation] = useState<Station>('italia');
   const [uri, setUri] = useState<string | null>(null);
@@ -85,6 +86,14 @@ export default function RadioChip() {
       }),
     );
   }, [mountSpotify, uri]);
+
+  // a new song: the name of its mood peeks out beside the record for a moment
+  useEffect(() => {
+    if (!r.track || r.paused) return;
+    setPeek(true);
+    const id = setTimeout(() => setPeek(false), 3800);
+    return () => clearTimeout(id);
+  }, [r.track, r.paused]);
 
   // Spotify loads the first time she opens Saani's radio (not on every page)
   useEffect(() => {
@@ -155,35 +164,70 @@ export default function RadioChip() {
 
   return (
     <div ref={box} className={`radio${open ? ' open' : ''}${playing ? ` playing ${playing}` : ''}`} onPointerEnter={hover(true)} onPointerLeave={hover(false)}>
-      <button type="button" className="radio-icon" data-quiet onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Close the radio' : 'Open the radio'}>
-        <span aria-hidden="true">📻</span>
+      <button type="button" className="radio-icon" data-quiet onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Close the radio' : `Open the radio${playing ? ' (playing)' : ''}`}>
+        <span className={`radio-disc${playing === 'saani' || (!playing && station === 'saani') ? ' green' : ''}`} aria-hidden="true">
+          <span className="radio-disc-label" />
+        </span>
         {playing && (
-          <span className="radio-eq" aria-hidden="true">
+          <span className="radio-notes" aria-hidden="true">
+            <i>♪</i>
+            <i>♫</i>
+            <i>♪</i>
+          </span>
+        )}
+      </button>
+      {peek && !open && playing === 'italia' && mood && (
+        <span className="radio-peek" aria-live="polite">
+          <b>{mood[0]}</b> {mood[1]}
+        </span>
+      )}
+
+      {/* the card stays in the page while folded, so Spotify keeps playing */}
+      <div className="radio-card" role="region" aria-label="Radio" aria-hidden={!open}>
+        <div className="radio-head">
+          <span className={`radio-disc big${station === 'saani' ? ' green' : ''}${playing === station ? ' spin' : ''}`} aria-hidden="true">
+            <span className="radio-disc-label" />
+          </span>
+          <span className="radio-text">
+            <small>{playing === station ? 'On air' : 'Radio'}</small>
+            <b>{station === 'italia' ? 'Radio Italia' : 'Saani’s radio'}</b>
+            <em>
+              {station === 'saani'
+                ? uri
+                  ? spotifyPlaying
+                    ? 'Playing your Spotify'
+                    : 'Your Spotify, ready when you are'
+                  : 'Your own Spotify music'
+                : prefs.style === 'tunes'
+                  ? 'Corner tunes are on (see Sound & feel)'
+                  : spotifyPlaying
+                    ? 'Resting while Saani’s radio plays'
+                    : mood
+                      ? `${mood[0]} · ${mood[1]}`
+                      : 'Tap play to start'}
+            </em>
+          </span>
+          <span className={`radio-wave${playing === station ? ' on' : ''}`} aria-hidden="true">
+            <i />
+            <i />
             <i />
             <i />
             <i />
           </span>
-        )}
-      </button>
+        </div>
 
-      {/* the card stays in the page while folded, so Spotify keeps playing */}
-      <div className="radio-card" role="region" aria-label="Radio" aria-hidden={!open}>
-        <div className="radio-tabs" role="tablist">
+        <div className="radio-tabs" role="tablist" aria-label="Station">
           <button type="button" role="tab" aria-selected={station === 'italia'} onClick={() => pick('italia')}>
-            🇮🇹 Radio Italia
+            Radio Italia
           </button>
           <button type="button" role="tab" aria-selected={station === 'saani'} onClick={() => pick('saani')}>
-            💚 Saani’s radio
+            Saani’s radio
           </button>
         </div>
 
         {station === 'italia' && (
-          <div className="radio-now">
-            <span className="radio-text">
-              <b>Radio Italia</b>
-              <small>{prefs.style === 'tunes' ? 'Corner tunes are on (change it in Sound & feel)' : spotifyPlaying ? 'Paused while Saani’s radio plays' : mood ? `${mood[0]} · ${mood[1]}` : 'Tap play to start'}</small>
-            </span>
-            <button type="button" className="radio-btn" onClick={() => (italiaPlaying ? radioPause(true) : playItalia())} aria-label={italiaPlaying ? 'Pause' : 'Play'} disabled={prefs.style === 'tunes'}>
+          <div className="radio-controls">
+            <button type="button" className="radio-play" onClick={() => (italiaPlaying ? radioPause(true) : playItalia())} aria-label={italiaPlaying ? 'Pause' : 'Play'} disabled={prefs.style === 'tunes'}>
               {italiaPlaying ? (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
@@ -194,11 +238,24 @@ export default function RadioChip() {
                 </svg>
               )}
             </button>
-            <button type="button" className="radio-btn" onClick={() => (ctl.current?.pause(), radioSkip())} aria-label="Next song" disabled={prefs.style === 'tunes'}>
+            <button type="button" className="radio-skip" onClick={() => (ctl.current?.pause(), radioSkip())} aria-label="Next song" disabled={prefs.style === 'tunes'}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 5.5v13l9-6.5zM15 5h3v14h-3z" />
               </svg>
             </button>
+            <label className="radio-vol">
+              <span aria-hidden="true">🔈</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={Math.round(prefs.music * 100)}
+                style={{ ['--v' as string]: `${Math.round(prefs.music * 100)}%` }}
+                onChange={(e) => setPrefs({ music: Number(e.target.value) / 100 })}
+                aria-label="Music volume"
+              />
+            </label>
           </div>
         )}
 
