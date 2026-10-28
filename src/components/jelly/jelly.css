@@ -34,8 +34,7 @@
   -webkit-tap-highlight-color: transparent;
   animation: jelly-bob 4.2s ease-in-out infinite;
 }
-.jelly-pet img,
-.jelly-avatar img {
+.jelly-pet img {
   display: block;
   width: 100%;
   height: 100%;
@@ -49,8 +48,7 @@
 .jelly-pet img {
   filter: drop-shadow(0 8px 14px rgba(244, 166, 192, 0.7)) drop-shadow(0 0 12px rgba(205, 180, 240, 0.45));
 }
-.jelly-pet:focus-visible,
-.jelly-avatar:focus-visible {
+.jelly-pet:focus-visible {
   outline: 3px solid var(--berry);
   outline-offset: 2px;
 }
@@ -69,14 +67,12 @@
 .jelly-pet.mood-joyful {
   animation: jelly-bounce 1.5s ease-in-out infinite;
 }
-.jelly-pet.mood-love img,
-.jelly-avatar.mood-love img {
+.jelly-pet.mood-love img {
   animation:
     jelly-pop 0.35s ease-out,
     jelly-beat 0.9s 0.35s ease-in-out infinite;
 }
-.jelly-pet.mood-grumpy,
-.jelly-avatar.mood-grumpy {
+.jelly-pet.mood-grumpy {
   animation: jelly-shake 0.5s ease-in-out 3;
 }
 .jelly-pet.mood-sad {
@@ -321,14 +317,6 @@
   color: var(--burgundy);
   animation: jelly-in 0.25s ease-out;
 }
-.jelly-line.in-panel {
-  align-self: center;
-  max-width: none;
-  margin: 8px 14px 0;
-  border-radius: 14px;
-  text-align: center;
-  box-shadow: none;
-}
 .jelly-x {
   position: absolute;
   top: 6px;
@@ -368,212 +356,6 @@
   box-shadow: 0 24px 50px -24px rgba(70, 25, 45, 0.6);
   overflow: hidden;
   animation: jelly-in 0.3s ease-out;
-}
-.jelly-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px 10px 12px;
-  background: linear-gradient(120deg, #fde4ee, #efe6fc);
-}
-.jelly-avatar {
-  position: relative;
-  flex: none;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.jelly-who {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-  gap: 1px;
-}
-.jelly-who b {
-  font: 400 22px var(--font-display);
-  color: var(--burgundy);
-  line-height: 1.1;
-}
-.jelly-who small {
-  overflow: hidden;
-  font: 400 12.5px var(--font-body);
-  color: var(--cn-ink-soft);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.jelly-friend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font: 600 11px var(--font-body);
-  color: var(--berry);
-}
-.jelly-friend i {
-  flex: 1;
-  max-width: 90px;
-  height: 5px;
-  border-radius: 99px;
-  background: linear-gradient(90deg, var(--rose) var(--p), rgba(178, 48, 95, 0.12) var(--p));
-}
-.jelly-tools {
-  display: flex;
-  flex: none;
-  gap: 2px;
-}
-.jelly-tools button {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: var(--burgundy);
-  font-size: 17px;
-  cursor: pointer;
-}
-.jelly-tools button:hover:not(:disabled),
-.jelly-tools button[aria-pressed='true'] {
-  background: rgba(255, 255, 255, 0.75);
-}
-.jelly-tools button:disabled {
-  opacity: 0.35;
-}
-.jelly-thread {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 12px 14px;
-}
-.jelly-say {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 6px 16px 16px 16px;
-  background: #f5eefc;
-  font: 400 14.5px/1.5 var(--font-body);
-  color: var(--ink);
-}
-.jelly-hint {
-  margin: 0 0 8px;
-  font: 400 12.5px var(--font-body);
-  color: var(--cn-ink-faint);
-}
-.jelly-history {
-  display: grid;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.jelly-history button {
-  display: grid;
-  width: 100%;
-  gap: 1px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 12px;
-  background: #fff;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-.jelly-history button.on {
-  background: #fbe7ee;
-}
-.jelly-history b {
-  overflow: hidden;
-  font: 600 13.5px var(--font-body);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.jelly-history small {
-  font-size: 11.5px;
-  color: var(--cn-ink-faint);
-}
-.jelly-turn + .jelly-turn {
-  margin-top: 14px;
-}
-.jelly-q {
-  width: fit-content;
-  max-width: 85%;
-  margin: 0 0 6px auto;
-  padding: 8px 12px;
-  border-radius: 16px 16px 6px 16px;
-  background: linear-gradient(180deg, #c8487a, var(--berry));
-  color: #fff;
-  font: 500 14px/1.4 var(--font-body);
-  overflow-wrap: anywhere;
-}
-.jelly-a {
-  padding: 8px 12px;
-  border-radius: 6px 16px 16px 16px;
-  background: #f5eefc;
-  overflow-wrap: anywhere;
-}
-.jelly-a-face {
-  float: left;
-  margin: 2px 8px 2px -4px;
-}
-.jelly-a .cn-answer {
-  font-size: 14.5px;
-}
-.jelly-a .cn-answer h4 {
-  font-size: 19px;
-}
-.jelly-thinking {
-  margin: 0;
-  font: 400 20px var(--font-hand);
-  color: var(--berry);
-  animation: jelly-pulse 1.6s ease-in-out infinite;
-}
-.jelly-foot {
-  border-top: 1px solid var(--cn-line);
-  padding-top: 8px;
-}
-.jelly-chips {
-  display: flex;
-  gap: 6px;
-  padding: 0 14px 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.jelly-chips::-webkit-scrollbar {
-  display: none;
-}
-.jelly-chips button {
-  flex: none;
-  max-width: 250px;
-  min-height: 34px;
-  padding: 6px 12px;
-  border: 1.5px dashed rgba(178, 48, 95, 0.3);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--burgundy);
-  font: 600 12.5px var(--font-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-.jelly-about {
-  margin: 6px 14px 0;
-  font: 600 12px var(--font-body);
-  color: var(--cn-ink-faint);
-}
-.jelly-ask {
-  display: flex;
-  gap: 8px;
-  padding: 8px 14px 14px;
-}
-.jelly-ask .h-input {
-  min-width: 0;
 }
 
 /* iPad and laptops: the chat sits above her as a card */
@@ -667,19 +449,6 @@ body:has(.mil-listbtn) .jelly:not(.open) {
 }
 .jelly-pet.away {
   display: none;
-}
-.jelly-pearls {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 4px;
-  padding: 1px 8px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--burgundy);
-  font: 700 11px var(--font-body);
-  text-decoration: none;
-  white-space: nowrap;
 }
 a.jelly-more {
   display: inline-block;
@@ -2168,5 +1937,575 @@ small.jh-status {
   .jc-card::before {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- the chat with Jelly ---------- */
+.jelly-panel {
+  border: 0;
+  border-radius: 30px;
+  background:
+    radial-gradient(120% 60% at 100% 100%, rgba(225, 208, 255, 0.35), transparent 60%),
+    radial-gradient(100% 50% at 0% 100%, rgba(191, 230, 245, 0.35), transparent 60%),
+    #fffafc;
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.95) inset,
+    0 0 0 1px rgba(205, 180, 240, 0.45),
+    0 30px 60px -28px rgba(70, 25, 45, 0.65);
+}
+.jp-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 14px 12px 12px 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 120% at 0% 0%, #ffe1ec, transparent 60%),
+    radial-gradient(90% 120% at 100% 0%, #e6dcfb, transparent 60%),
+    linear-gradient(180deg, #fdeef5, #f6effc);
+  border-radius: 30px 30px 24px 24px;
+}
+.jp-head-bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.jp-head-bubbles i {
+  position: absolute;
+  bottom: -10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, rgba(255, 255, 255, 0.2));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  animation: jp-bubble 6s linear infinite;
+  pointer-events: none;
+}
+.jp-head-bubbles i:nth-child(1) { left: 22%; }
+.jp-head-bubbles i:nth-child(2) { left: 58%; width: 7px; height: 7px; animation-delay: 2s; }
+.jp-head-bubbles i:nth-child(3) { left: 84%; width: 12px; height: 12px; animation-delay: 4s; }
+.jp-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #fff, #f8eefb 60%, #eedff8);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px rgba(244, 166, 192, 0.55),
+    0 10px 20px -10px rgba(178, 48, 95, 0.7);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.jp-avatar img {
+  width: 96%;
+  height: 96%;
+  object-fit: contain;
+  animation: jelly-pop 0.35s ease-out, jc-jelly 1.6s 0.35s ease-in-out infinite alternate;
+}
+.jp-avatar.mood-love img {
+  animation: jelly-pop 0.35s ease-out, jelly-beat 0.9s 0.35s ease-in-out infinite;
+}
+.jp-avatar.mood-grumpy {
+  animation: jelly-shake 0.5s ease-in-out 3;
+}
+.jp-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.jp-who b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 23px/1 var(--font-display);
+  color: var(--burgundy);
+}
+.jp-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5fcf9b;
+  box-shadow: 0 0 0 3px rgba(95, 207, 155, 0.25);
+}
+.jp-mood {
+  overflow: hidden;
+  font: 600 12.5px var(--font-body);
+  color: var(--cn-ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jp-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.jp-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 800 11px var(--font-body);
+  color: var(--berry);
+}
+.jp-level i {
+  width: 54px;
+  height: 5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--rose) var(--p), rgba(178, 48, 95, 0.12) var(--p));
+}
+.jp-pearls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px 2px 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--burgundy);
+  font: 800 11.5px var(--font-body);
+  text-decoration: none;
+}
+.jp-tools {
+  display: flex;
+  align-self: start;
+  gap: 4px;
+}
+.jp-tools button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--burgundy);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.jp-tools button:hover:not(:disabled),
+.jp-tools button[aria-pressed='true'] {
+  background: #fff;
+}
+.jp-tools button:active {
+  transform: scale(0.92);
+}
+.jp-tools button:disabled {
+  opacity: 0.35;
+}
+.jp-tools svg,
+.jp-compose svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.jp-home {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.1), 0 8px 18px -14px rgba(107, 30, 58, 0.6);
+  color: var(--burgundy);
+  text-decoration: none;
+  transition: transform 0.2s, background 0.2s;
+}
+.jp-home:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+.jp-home img {
+  width: 36px;
+  height: 36px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #fde4ee;
+  object-fit: contain;
+}
+.jp-home > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  line-height: 1.2;
+}
+.jp-home b {
+  font: 800 13.5px var(--font-body);
+}
+.jp-home small {
+  font: 600 11px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jp-home > span:last-child {
+  font: 800 18px var(--font-body);
+  transition: transform 0.2s;
+}
+.jp-home:hover > span:last-child {
+  transform: translateX(3px);
+}
+.jp-line {
+  align-self: center;
+  margin: 10px 14px 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(205, 180, 240, 0.6);
+  font: 700 13px var(--font-body);
+  color: var(--burgundy);
+  text-align: center;
+  animation: jc-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.jp-thread {
+  flex: 1;
+  min-height: 0;
+  padding: 14px 14px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.jp-hint {
+  margin: 0 0 10px;
+  font: 500 12.5px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jp-empty {
+  margin: 0;
+  font: 500 14px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jp-history {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jp-history button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px 8px 8px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.08);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.jp-history button.on {
+  background: #fdeef4;
+  box-shadow: 0 0 0 1.5px var(--rose);
+}
+.jp-history img {
+  flex: none;
+  object-fit: contain;
+}
+.jp-history span {
+  display: grid;
+  min-width: 0;
+}
+.jp-history b {
+  overflow: hidden;
+  font: 700 13.5px var(--font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jp-history small {
+  font-size: 11.5px;
+  color: var(--cn-ink-faint);
+}
+/* the welcome, before the first message */
+.jp-welcome {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 4px 4px;
+  text-align: center;
+}
+.jp-welcome > img {
+  width: 116px;
+  height: 116px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(244, 166, 192, 0.55));
+  animation: jelly-pop 0.35s ease-out, jc-jelly 1.8s 0.35s ease-in-out infinite alternate;
+}
+.jp-welcome > b {
+  font: 400 24px var(--font-display);
+  color: var(--burgundy);
+}
+.jp-welcome > p {
+  max-width: 300px;
+  margin: 0 0 8px;
+  font: 500 13.5px/1.5 var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jp-quick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.jp-quick button {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  min-height: 74px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.1), 0 10px 18px -16px rgba(107, 30, 58, 0.6);
+  color: var(--burgundy);
+  font: 700 13px/1.3 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.jp-quick button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1.5px var(--rose), 0 14px 22px -16px rgba(107, 30, 58, 0.6);
+}
+.jp-quick button span {
+  font-size: 19px;
+}
+/* messages */
+.jp-turn {
+  display: grid;
+  gap: 8px;
+}
+.jp-turn + .jp-turn {
+  margin-top: 14px;
+}
+.jp-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: jp-in 0.3s ease-out both;
+}
+.jp-msg.me {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.jp-msg.me p {
+  max-width: 84%;
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 20px 20px 6px 20px;
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  box-shadow: 0 10px 18px -14px rgba(178, 48, 95, 0.9);
+  color: #fff;
+  font: 500 14.5px/1.45 var(--font-body);
+  overflow-wrap: anywhere;
+}
+.jp-msg.me small {
+  font: 600 10.5px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jp-face {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border-radius: 50%;
+  background: #f6eefb;
+  object-fit: contain;
+  box-shadow: 0 0 0 2px #fff;
+}
+.jp-bubble {
+  min-width: 0;
+  max-width: calc(100% - 44px);
+  padding: 10px 14px;
+  border-radius: 20px 20px 20px 6px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(205, 180, 240, 0.45), 0 10px 20px -18px rgba(107, 30, 58, 0.6);
+  overflow-wrap: anywhere;
+}
+.jp-bubble .cn-answer {
+  font-size: 14.5px;
+}
+.jp-bubble .cn-answer h4 {
+  font-size: 18px;
+}
+.jp-typing {
+  display: flex;
+  gap: 5px;
+  padding: 14px 16px;
+}
+.jp-typing i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rose);
+  animation: jp-dot 1.2s ease-in-out infinite;
+}
+.jp-typing i:nth-child(2) {
+  animation-delay: 0.15s;
+  background: #d9b9f0;
+}
+.jp-typing i:nth-child(3) {
+  animation-delay: 0.3s;
+  background: #b9d9f7;
+}
+.jp-err {
+  margin: 10px 0 0;
+  text-align: center;
+}
+/* the bottom: suggestions and the message box */
+.jp-foot {
+  padding: 8px 12px 12px;
+}
+.jp-chips {
+  display: flex;
+  gap: 6px;
+  margin: 0 -12px 8px;
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jp-chips::-webkit-scrollbar {
+  display: none;
+}
+.jp-chips button {
+  flex: none;
+  max-width: 260px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.16);
+  color: var(--burgundy);
+  font: 700 12.5px var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.jp-about {
+  margin: 0 4px 6px;
+  font: 600 11.5px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jp-compose {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 5px 5px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1.5px rgba(205, 180, 240, 0.7), 0 10px 20px -16px rgba(107, 30, 58, 0.6);
+  transition: box-shadow 0.2s;
+}
+.jp-compose:focus-within {
+  box-shadow: 0 0 0 2px var(--rose), 0 0 0 6px rgba(244, 166, 192, 0.2);
+}
+.jp-compose input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 16px var(--font-body); /* 16px so iPhone doesn't zoom in */
+}
+.jp-compose input::placeholder {
+  color: #b39aa8;
+}
+.jp-compose button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  box-shadow: 0 10px 18px -10px rgba(178, 48, 95, 0.9);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+}
+.jp-compose button:active {
+  transform: scale(0.9);
+}
+.jp-compose button:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+}
+@keyframes jp-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+@keyframes jp-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+@keyframes jp-bubble {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-120px);
+    opacity: 0;
+  }
+}
+@media (max-width: 600px) {
+  .jelly-panel {
+    border-radius: 28px 28px 0 0;
+  }
+  .jp-head {
+    border-radius: 28px 28px 22px 22px;
+  }
+}
+
+/* sea friends in her home swim gently in place */
+.jh-thing.swim img {
+  animation: jh-swim 4.5s var(--d, 0s) ease-in-out infinite;
+}
+@keyframes jh-swim {
+  0%,
+  100% {
+    transform: scaleX(var(--f)) translate(0, 0) rotate(-2deg);
+  }
+  50% {
+    transform: scaleX(var(--f)) translate(3%, -6%) rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jp-head-bubbles i,
+  .jp-msg,
+  .jp-typing i,
+  .jp-avatar img,
+  .jp-welcome > img,
+  .jh-thing.swim img {
+    animation: none !important;
   }
 }

@@ -7,7 +7,9 @@ import { usePathname } from 'next/navigation';
 import { api } from '@/lib/upload-client';
 import type { Chat } from '@/lib/corner-model';
 import type { Gain, JellyView } from '@/lib/jelly';
-import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
+import { MOODS, moodHd, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
+import { clock12 } from '@/lib/time';
+import { useMoodCycle } from './moods';
 import { Answer } from '@/components/corner/Assistant';
 import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
@@ -156,6 +158,9 @@ export default function Jelly() {
     },
     [say],
   );
+
+  // left alone, she drifts through all her moods
+  useMoodCycle(feel, Boolean(busy) || Boolean(reaction) || q.trim().length > 0);
 
   // her everyday mood follows the clock in Milano
   useEffect(() => {
@@ -522,9 +527,14 @@ export default function Jelly() {
 
       {open && (
         <div ref={panel} className="jelly-panel" role="dialog" aria-label="Chat with Jelly">
-          <header className="jelly-head">
-            <button type="button" className={`jelly-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Pet Jelly">
-              <img key={mood} src={moodSrc(mood)} alt="" width={56} height={56} />
+          <header className="jp-head">
+            <span className="jp-head-bubbles" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            <button type="button" className={`jp-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Tap to pet me!">
+              <img key={mood} src={moodSrc(mood)} alt="" width={60} height={60} />
               <span className="jelly-hearts" aria-hidden="true">
                 {hearts.map((h) => (
                   <i key={h.id} style={{ left: `${h.x}%` }}>
@@ -533,22 +543,30 @@ export default function Jelly() {
                 ))}
               </span>
             </button>
-            <div className="jelly-who">
-              <b>Jelly</b>
-              <small aria-live="polite">{status}</small>
+            <div className="jp-who">
+              <b>
+                Jelly <span className="jp-online" aria-hidden="true" />
+              </b>
+              <span className="jp-mood" aria-live="polite">
+                {status}
+              </span>
               {friend && (
-                <span className="jelly-friend" title={`${friend.pets} pats · ${friend.chats} chats`}>
-                  <span>💗 Lv {friend.level}</span>
-                  <i style={{ ['--p' as string]: `${Math.round(friend.progress * 100)}%` }} />
-                  <Link href="/home/jelly" className="jelly-pearls" onClick={() => setOpen(false)} title="Pearls to spend in Jelly’s Corner">
-                    <img src="/corner/pearl.webp" alt="" width={14} height={14} /> {friend.pearls}
+                <span className="jp-stats">
+                  <span className="jp-level" title={`${friend.pets} pats · ${friend.chats} chats`}>
+                    💗 Lv {friend.level}
+                    <i style={{ ['--p' as string]: `${Math.round(friend.progress * 100)}%` }} />
+                  </span>
+                  <Link href="/home/jelly?tab=shop" className="jp-pearls" onClick={() => setOpen(false)} title="Pearls to spend in Jelly’s Corner">
+                    <img src="/corner/pearl.webp" alt="" width={15} height={15} /> {friend.pearls}
                   </Link>
                 </span>
               )}
             </div>
-            <div className="jelly-tools">
+            <div className="jp-tools">
               <button type="button" onClick={() => setView(view === 'history' ? 'chat' : 'history')} aria-pressed={view === 'history'} aria-label="Past chats" title="Past chats">
-                🕘
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4M12 7v5l3 2" />
+                </svg>
               </button>
               <button
                 type="button"
@@ -561,7 +579,9 @@ export default function Jelly() {
                 aria-label="New chat"
                 title="New chat"
               >
-                ＋
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </button>
               <button
                 type="button"
@@ -572,97 +592,144 @@ export default function Jelly() {
                 aria-label="Close"
                 title="Close"
               >
-                ×
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
               </button>
             </div>
+            {!atHome && (
+              <Link href="/home/jelly" className="jp-home" onClick={() => setOpen(false)}>
+                <img src="/corner/home/items/shell-bed.webp" alt="" width={28} height={28} />
+                <span>
+                  <b>Visit my home</b>
+                  <small>decorate · shop · achievements</small>
+                </span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            )}
           </header>
 
           {line && (
-            <p className="jelly-line in-panel" aria-live="polite">
+            <p className="jp-line" aria-live="polite">
               {line}
             </p>
           )}
 
           {view === 'history' ? (
-            <div className="jelly-thread">
-              <p className="jelly-hint">Every chat is saved here, and in each project’s “Jelly Got This!” tab.</p>
-              {!chats.length && <p className="jelly-say">No chats yet. Ask me something! 🫧</p>}
-              <ul className="jelly-history">
-                {chats.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      type="button"
-                      className={c.id === chatId ? 'on' : ''}
-                      onClick={() => {
-                        setChatId(c.id);
-                        setView('chat');
-                      }}
-                    >
-                      <b>{c.title}</b>
-                      <small>
-                        {shortDate(c.updatedAt)} · {c.turns.length} {c.turns.length === 1 ? 'answer' : 'answers'}
-                      </small>
-                    </button>
-                  </li>
-                ))}
+            <div className="jp-thread">
+              <p className="jp-hint">Every chat is saved here, and in each project’s “Jelly Got This!” tab.</p>
+              {!chats.length && <p className="jp-empty">No chats yet. Ask me something! 🫧</p>}
+              <ul className="jp-history">
+                {chats.map((c) => {
+                  const lastMood = c.turns[c.turns.length - 1]?.mood ?? 'content';
+                  return (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        className={c.id === chatId ? 'on' : ''}
+                        onClick={() => {
+                          setChatId(c.id);
+                          setView('chat');
+                        }}
+                      >
+                        <img src={moodSrc(lastMood)} alt="" width={40} height={40} loading="lazy" />
+                        <span>
+                          <b>{c.title}</b>
+                          <small>
+                            {shortDate(c.updatedAt)} · {c.turns.length} {c.turns.length === 1 ? 'answer' : 'answers'}
+                          </small>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : (
-            <div className="jelly-thread">
+            <div className="jp-thread">
               {!data?.ready ? (
-                <p className="jelly-say">Blub… I can’t chat until the assistant is switched on (GROQ_API_KEY in Vercel). You can still give me pats, and I’ll share fun facts! 🫧</p>
+                <div className="jp-welcome">
+                  <img src={moodHd('sleepy')} alt="" width={120} height={120} />
+                  <b>Blub… I’m napping</b>
+                  <p>I can’t chat until the assistant is switched on (GROQ_API_KEY in Vercel). You can still give me pats, and I’ll share fun facts! 🫧</p>
+                </div>
               ) : (
                 <>
                   {!turns.length && !busy && (
-                    <p className="jelly-say">
-                      {base === 'sleepy' ? '*yawn* Hi Saani 🌙 ' : 'Ciao Saani! 🪼 '}
-                      Ask me anything about any of your projects, or about Milano and fashion. I’m all ears (well… all tentacles). Psst: tap my face up here, or rub me, for pats!
-                    </p>
+                    <div className="jp-welcome">
+                      <img key={mood} src={moodHd(mood)} alt="" width={120} height={120} />
+                      <b>{base === 'sleepy' ? '*yawn* Hi, Saani 🌙' : 'Ciao, Saani!'}</b>
+                      <p>Ask me anything about your projects, your Atelier, Milano or fashion. Psst: tap my face up top for pats!</p>
+                      <div className="jp-quick">
+                        {starters.slice(0, 4).map((s, i) => (
+                          <button key={s} type="button" onClick={() => ask(s)}>
+                            <span aria-hidden="true">{['✨', '🏆', '🇮🇹', '💗'][i]}</span>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
                   {turns.map((t) => (
-                    <div key={t.id} className="jelly-turn">
-                      <p className="jelly-q">{t.q}</p>
-                      <div className="jelly-a">
-                        <img className="jelly-a-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={34} height={34} loading="lazy" />
-                        <Answer text={t.a} />
+                    <div key={t.id} className="jp-turn">
+                      <div className="jp-msg me">
+                        <p>{t.q}</p>
+                        <small>{clock12(new Date(t.at).getHours(), new Date(t.at).getMinutes())}</small>
+                      </div>
+                      <div className="jp-msg her">
+                        <img className="jp-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={36} height={36} loading="lazy" />
+                        <div className="jp-bubble">
+                          <Answer text={t.a} />
+                        </div>
                       </div>
                     </div>
                   ))}
                   {busy && (
-                    <div className="jelly-turn">
-                      <p className="jelly-q">{busy}</p>
-                      <p className="jelly-thinking">Jelly is reading… 📖🫧</p>
+                    <div className="jp-turn">
+                      <div className="jp-msg me">
+                        <p>{busy}</p>
+                      </div>
+                      <div className="jp-msg her">
+                        <img className="jp-face" src={moodSrc('studious')} alt="" width={36} height={36} />
+                        <div className="jp-bubble jp-typing" aria-label="Jelly is typing">
+                          <i />
+                          <i />
+                          <i />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
               )}
-              {err && <p className="h-err">{err}</p>}
+              {err && <p className="h-err jp-err">{err}</p>}
               <div ref={end} />
             </div>
           )}
 
           {data?.ready && view === 'chat' && (
-            <div className="jelly-foot">
-              {chips.length > 0 && (
-                <div className="jelly-chips">
+            <div className="jp-foot">
+              {turns.length > 0 && chips.length > 0 && (
+                <div className="jp-chips">
                   {chips.map((s) => (
                     <button key={s} type="button" onClick={() => ask(s)}>
-                      {s}
+                      ✨ {s}
                     </button>
                   ))}
                 </div>
               )}
-              {here && <p className="jelly-about">Looking at: “{here.title}”</p>}
+              {here && <p className="jp-about">📌 Looking at “{here.title}”</p>}
               <form
-                className="jelly-ask"
+                className="jp-compose"
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (q.trim()) ask(q.trim());
                 }}
               >
-                <input ref={input} className="h-input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder="Ask Jelly anything…" aria-label="Your question for Jelly" enterKeyHint="send" />
-                <button className="cn-btn primary" disabled={Boolean(busy) || !q.trim()}>
-                  Ask
+                <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} maxLength={2000} placeholder="Message Jelly…" aria-label="Your message for Jelly" enterKeyHint="send" />
+                <button disabled={Boolean(busy) || !q.trim()} aria-label="Send">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h13M13 6l6 6-6 6" />
+                  </svg>
                 </button>
               </form>
             </div>

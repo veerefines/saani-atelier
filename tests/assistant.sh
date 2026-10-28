@@ -186,7 +186,7 @@ expect "renamed" "JELLY-RENAMED"
 check "her home" 200 -b "$SA" $B/api/jelly/home
 expect "no second daily bonus today" '"kind":"daily"' absent
 expect "pats and chats unlocked things" '"pats-50":"'
-expect "a reward in her things" '"clam-pearl":1'
+expect "a reward in her things" '"clam":1'
 expect "My Corner counts too" '"project-1":"'
 PEARLS=$(jget .home.pearls)
 same "she has pearls to spend" "$( [ "$PEARLS" -ge 20 ] && echo yes )" yes
@@ -200,7 +200,7 @@ check "nor made-up things" 400 -b "$SA" -X POST "${J[@]}" -d '{"id":"spaceship"}
 for i in 1 2 3; do curl -s -o /dev/null -b "$SA" -X POST "${J[@]}" -d '{"id":"shell-sofa"}' $B/api/jelly/shop; done
 check "too expensive" 400 -b "$SA" -X POST "${J[@]}" -d '{"id":"shell-sofa"}' $B/api/jelly/shop
 expect "says so kindly" "Not enough pearls"
-check "place it in her room" 200 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"uid":"a","item":"palm","x":40,"y":70,"s":9},{"uid":"b","item":"clam-pearl","x":-5,"y":50}],"backdrop":"stars"}' $B/api/jelly/home
+check "place it in her room" 200 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"uid":"a","item":"palm","x":40,"y":70,"s":9},{"uid":"b","item":"clam","x":-5,"y":50}],"backdrop":"stars"}' $B/api/jelly/home
 expect "sizes are kept sensible" '"s":2.5'
 expect "and inside the room" '"x":0'
 expect "a backdrop she doesn't own isn't used" '"backdrop":"lagoon"'
@@ -208,15 +208,16 @@ check "two plants when she has one" 400 -b "$SA" -X PUT "${J[@]}" -d '{"placed":
 check "a thing she doesn't have" 400 -b "$SA" -X PUT "${J[@]}" -d '{"placed":[{"item":"vanity"}]}' $B/api/jelly/home
 check "the house and her things are pictures" 200 $B/corner/home/house.webp
 same "a shop picture" "$(curl -s -o /dev/null -w '%{http_code}' $B/corner/home/items/shell-bed.webp)" 200
+same "a sea friend" "$(curl -s -o /dev/null -w '%{http_code}' $B/corner/home/items/turtle.webp)" 200
 same "a sharp face for her home" "$(curl -s -o /dev/null -w '%{http_code}' $B/corner/jelly/hd/joyful.webp)" 200
 check "checking in again" 200 -b "$SA" -X POST $B/api/jelly/check
 expect "nothing new" '"gains":\[\]'
 # an old (emoji) purchase is refunded once the illustrated catalog arrives
-node -e "const f='$ROOT/.data/jelly.json',d=JSON.parse(require('fs').readFileSync(f,'utf8'));d.friend.v=1;d.friend.owned.whale=1;d.friend.placed.push({uid:'old',item:'whale',x:50,y:50,s:1,flip:false});require('fs').writeFileSync(f,JSON.stringify(d))"
+node -e "const f='$ROOT/.data/jelly.json',d=JSON.parse(require('fs').readFileSync(f,'utf8'));d.friend.v=1;d.friend.owned.vespa=1;d.friend.placed.push({uid:'old',item:'vespa',x:50,y:50,s:1,flip:false});require('fs').writeFileSync(f,JSON.stringify(d))"
 BEFORE=$(curl -s -b "$SA" -X POST $B/api/jelly/check | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).home.pearls))")
 check "old things are tidied away" 200 -b "$SA" $B/api/jelly/home
-expect "the whale is gone" '"whale"' absent
-same "and it was refunded (120 pearls) just once" "$(jget .home.pearls)" "$BEFORE"
+expect "the old Vespa is gone" '"vespa"' absent
+same "and it was refunded just once" "$(jget .home.pearls)" "$BEFORE"
 check "Jelly's Corner opens" 200 -b "$SA" $B/home/jelly
 expect "her page" "Jelly’s Corner"
 check "and it's on her desk" 200 -b "$SA" $B/home

@@ -23,7 +23,7 @@ export type JellyState = db.Doc & {
   days?: string[];
   /** today's small earnings, so pats and chats can't be farmed */
   today?: { day: string; patPearls: number; chatPearls: number; pats: number };
-  /** which catalog her things belong to (2: the illustrated furniture) */
+  /** which catalog her things belong to (3: the high-quality furniture and sea friends) */
   v?: number;
 };
 
@@ -34,23 +34,31 @@ const LEGACY: Record<string, number> = {
   crab: 30, puffer: 35, octopus: 50, turtle: 55, unicorn: 90, whale: 120, sparkles: 8, star: 10, balloon: 10, lemon: 10, flag: 20, mask: 40, vespa: 70,
 };
 
-/** Move her things to the illustrated catalog: refund what's gone, and hand over the new rewards she's earned. */
+// and what the second (first illustrated) catalog charged for things that have since gone
+const V2: Record<string, number> = {
+  'coral-table': 40, bookshelf: 80, 'star-pendant': 10, 'shell-lantern': 20, moon: 25, 'moon-mobile': 30, 'star-garland': 35, 'coral-pot': 20,
+  'arrow-sign': 12, towels: 15, sign: 15, 'star-sign': 15, 'old-books': 18, curtains: 45, fish: 35, latte: 10,
+};
+
+/** Move her things to the current catalog: refund what's gone, and hand over the new rewards she's earned. */
 function migrate(s: JellyState): JellyState {
-  if ((s.v ?? 1) >= 2) return s;
+  const v = s.v ?? 1;
+  if (v >= 3) return s;
+  const prices = v === 2 ? V2 : LEGACY;
   const owned: Record<string, number> = {};
   let refund = 0;
   for (const [id, n] of Object.entries(s.owned ?? {})) {
     if (itemById(id)) owned[id] = n;
-    else refund += (LEGACY[id] ?? 0) * n;
+    else refund += (prices[id] ?? 0) * n;
   }
   for (const a of ACHIEVEMENTS) if (a.reward && (s.unlocked ?? {})[a.id] && !owned[a.reward]) owned[a.reward] = 1;
   const placed = (s.placed ?? []).filter((p) => itemById(p.item));
-  return { ...s, v: 2, owned, placed, pearls: (s.pearls ?? 0) + refund };
+  return { ...s, v: 3, owned, placed, pearls: (s.pearls ?? 0) + refund };
 }
 
 const COL = 'jelly';
 const ID = 'friend';
-const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null, v: 2 });
+const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null, v: 3 });
 
 export const jellyState = async () => migrate((await db.get<JellyState>(COL, ID)) ?? fresh());
 const save = (s: JellyState) => db.put<JellyState>(COL, s);

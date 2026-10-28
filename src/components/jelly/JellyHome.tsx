@@ -23,6 +23,7 @@ import {
 } from '@/lib/jelly-catalog';
 import { MOODS, moodHd, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { emit, useJelly } from './bus';
+import { useMoodCycle } from './moods';
 import './jelly.css';
 
 type Data = { home: JellyView; stats: Stats; gains: Gain[] };
@@ -128,6 +129,11 @@ export default function JellyHome({ initial, initialTab }: { initial: Data; init
       timers.current.l = window.setTimeout(() => setLine(''), Math.max(ms, 3200));
     }
   }, []);
+  // left alone, she drifts through all her moods here too
+  useMoodCycle(
+    useCallback((m: JellyMood, ms: number, text?: string) => feel(m, text, ms), [feel]),
+    Boolean(react),
+  );
   const pats = useRef(0);
   const pet = () => {
     const id = Math.random();
@@ -323,8 +329,8 @@ export default function JellyHome({ initial, initialTab }: { initial: Data; init
                 <button
                   key={p.uid}
                   type="button"
-                  className={`jh-thing${sel === p.uid && editing ? ' on' : ''}`}
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, zIndex: 20 + Math.round(p.y), ['--w' as string]: it.w * p.s, ['--f' as string]: p.flip ? -1 : 1 }}
+                  className={`jh-thing${sel === p.uid && editing ? ' on' : ''}${it.kind === 'friends' ? ' swim' : ''}`}
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, zIndex: 20 + Math.round(p.y), ['--w' as string]: it.w * p.s, ['--f' as string]: p.flip ? -1 : 1, ['--d' as string]: `${(p.uid.charCodeAt(p.uid.length - 1) % 7) * -0.6}s` }}
                   onPointerDown={(e) => onDown(e, p)}
                   onPointerMove={onMove}
                   onPointerUp={onUp}
