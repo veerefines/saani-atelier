@@ -247,9 +247,15 @@ function noise(at: number, dur: number, { from = 400, to = 2000, gain = 0.2, q =
 const N = (semi: number) => 523.25 * Math.pow(2, semi / 12); // semitones from C5
 
 /* ---------- the sounds ---------- */
-export type Sfx = 'tap' | 'page' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full';
+export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full';
 let lastPop = 0;
-const BUZZ: Partial<Record<Sfx, Buzz>> = { rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success' };
+let spinPitch = 0;
+/** One tick of the Surprise me wheel; `step` (0, 1, 2…) raises the pitch as it slows down. */
+export function spinTick(step: number) {
+  spinPitch = step;
+  sfx('spin');
+}
+const BUZZ: Partial<Record<Sfx, Buzz>> = { spin: 'light', land: 'success', go: 'medium', rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success' };
 export function sfx(name: Sfx) {
   if (BUZZ[name]) haptic(BUZZ[name]);
   if (!ready()) return;
@@ -269,6 +275,22 @@ export function sfx(name: Sfx) {
     case 'page':
       noise(t, 0.28, { from: 2200, to: 500, gain: 0.05, q: 0.8 });
       tone(N(19), t + 0.05, 0.25, { gain: 0.035 });
+      break;
+    case 'spin':
+      // one click of a spinning wheel (pitch rises as it slows; see spinTick)
+      tone(900 + spinPitch * 60, t, 0.035, { type: 'triangle', gain: 0.09, to: 700 + spinPitch * 60 });
+      noise(t, 0.02, { from: 4000, to: 3000, gain: 0.04, q: 3 });
+      break;
+    case 'land':
+      // ta-da! a little drum roll lands on a bright chord
+      [0, 0.04, 0.08, 0.12].forEach((d) => noise(t + d, 0.04, { from: 1800, to: 900, gain: 0.05, q: 1 }));
+      [12, 16, 19, 24].forEach((s2) => tone(N(s2), t + 0.16, 0.9, { type: 'triangle', gain: 0.09 }));
+      bell(N(31), t + 0.2, 1.2, 0.12);
+      break;
+    case 'go':
+      // off we go: a whoosh up and a bright little horn
+      noise(t, 0.3, { from: 400, to: 3200, gain: 0.08 });
+      [7, 12].forEach((s2, i) => tone(N(s2), t + 0.12 + i * 0.09, 0.25, { type: 'square', gain: 0.04 }));
       break;
     case 'rattle':
       // folded notes shaken in a glass jar

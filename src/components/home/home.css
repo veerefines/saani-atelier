@@ -1800,7 +1800,48 @@
   animation: spark 2.4s ease-in-out infinite;
 }
 .mil-rolling {
+  display: inline-block;
   font: italic 400 22px var(--font-whisper);
+  animation: mil-flick 0.12s ease-out;
+}
+/* while it spins: the button jiggles, the sparkle whirls, the colours race past */
+.mil-surprise:disabled {
+  cursor: default;
+  background-position: 100% 0;
+  animation: mil-jiggle 0.25s ease-in-out infinite;
+}
+.mil-surprise:disabled .mil-surprise-spark {
+  animation: mil-whirl 0.5s linear infinite;
+}
+@keyframes mil-flick {
+  from {
+    transform: translateY(-40%);
+    opacity: 0.2;
+  }
+}
+@keyframes mil-jiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-0.8deg) scale(1.01);
+  }
+  75% {
+    transform: rotate(0.8deg) scale(1.01);
+  }
+}
+@keyframes mil-whirl {
+  to {
+    transform: rotate(360deg) scale(1.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mil-surprise:disabled,
+  .mil-surprise:disabled .mil-surprise-spark,
+  .mil-rolling {
+    animation: none;
+  }
 }
 @keyframes spark {
   50% {

@@ -1,6 +1,6 @@
 'use client';
 
-import { sfx } from '@/lib/sound';
+import { sfx, spinTick } from '@/lib/sound';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
@@ -135,14 +135,14 @@ function PlaceCard({
       </div>
       <GoogleRating place={place} />
       <div className="pc-actions">
-        <a className="cta pc-go" href={mapsLink(place)} target="_blank" rel="noreferrer">
+        <a className="cta pc-go" href={mapsLink(place)} target="_blank" rel="noreferrer" data-quiet onClick={() => sfx('go')}>
           Take me there
         </a>
-        <button className="pc-btn" onClick={onSave} disabled={saved}>
+        <button className="pc-btn" data-quiet onClick={() => (sfx('sparkle'), onSave())} disabled={saved}>
           {saved ? 'On your list ✓' : 'Save to my list'}
         </button>
         {onAgain && (
-          <button className="pc-btn pc-again" onClick={onAgain}>
+          <button className="pc-btn pc-again" data-quiet onClick={onAgain}>
             Another one
           </button>
         )}
@@ -346,6 +346,7 @@ export default function Milano({
   }
 
   function choose(p: Place, surprise = false) {
+    if (!surprise) sfx('pop'); // a pin tapped on the map
     setSelected(p);
     setFromSurprise(surprise);
     recent.current = [p.id, ...recent.current.filter((id) => id !== p.id)].slice(0, Math.min(8, Math.floor(pool.length / 2)));
@@ -356,17 +357,22 @@ export default function Milano({
     const fresh = pool.filter((p) => !recent.current.includes(p.id) && p.id !== selected?.id);
     const from = fresh.length ? fresh : pool;
     const pick = from[Math.floor(Math.random() * from.length)];
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return choose(pick, true);
-    // a quick shuffle through names before landing
+    const land = () => {
+      setRolling(null);
+      choose(pick, true);
+      sfx('land');
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return land();
+    // a little roulette: names flick past, ticking and buzzing, slowing down until it lands
+    const ticks = 14;
     let n = 0;
-    const t = setInterval(() => {
+    const spin = () => {
       setRolling(pool[Math.floor(Math.random() * pool.length)].name);
-      if (++n >= 9) {
-        clearInterval(t);
-        setRolling(null);
-        choose(pick, true);
-      }
-    }, 70);
+      spinTick(n);
+      if (++n >= ticks) return void setTimeout(land, 220);
+      setTimeout(spin, 45 + Math.pow(n / ticks, 2.2) * 230);
+    };
+    spin();
   }
 
   async function save(p: Place) {
@@ -479,11 +485,17 @@ export default function Milano({
                 </p>
               </div>
               <div className="mil-card-col">
-                <button className="mil-surprise" onClick={surprise} disabled={!!rolling}>
+                <button className="mil-surprise" data-quiet onClick={surprise} disabled={!!rolling}>
                   <span className="mil-surprise-spark" aria-hidden="true">
                     ✦
                   </span>
-                  {rolling ? <span className="mil-rolling">{rolling}</span> : 'Surprise me'}
+                  {rolling ? (
+                    <span key={rolling} className="mil-rolling">
+                      {rolling}
+                    </span>
+                  ) : (
+                    'Surprise me'
+                  )}
                 </button>
                 <AnimatePresence mode="wait">
                   {selected ? (
