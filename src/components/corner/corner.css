@@ -2,7 +2,9 @@
    One button system (.cn-btn), one card surface (.cn-section), one heading style (.cn-h).
    Phones: single column. iPad: two-column grids where they help. Laptop: side-by-side panels. */
 /* Jelly floats outside the page, so she gets the same tokens */
+/* (dialogs are portalled to <body>, outside the page, so they need the tokens too) */
 .cn-page,
+.cn-dialog,
 .jelly,
 .jh {
   --cn-paper: #fffaf6;

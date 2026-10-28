@@ -25,7 +25,12 @@ export type JellyState = db.Doc & {
   today?: { day: string; patPearls: number; chatPearls: number; pats: number };
   /** which catalog her things belong to (3: the high-quality furniture and sea friends) */
   v?: number;
+  /** a fresh start: when this is behind RESET, everything is set back to zero (chats are kept) */
+  epoch?: number;
 };
+
+// bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
+const RESET = 1;
 
 // what the first (emoji) catalog charged, so anything bought from it is refunded
 const LEGACY: Record<string, number> = {
@@ -58,9 +63,14 @@ function migrate(s: JellyState): JellyState {
 
 const COL = 'jelly';
 const ID = 'friend';
-const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null, v: 3 });
+const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), pets: 0, chats: 0, lastSeen: null, v: 3, epoch: RESET });
 
-export const jellyState = async () => migrate((await db.get<JellyState>(COL, ID)) ?? fresh());
+export async function jellyState() {
+  const s = await db.get<JellyState>(COL, ID);
+  // a fresh start keeps when they last saw each other, so Jelly doesn't think they've just met
+  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen };
+  return migrate(s ?? fresh());
+}
 const save = (s: JellyState) => db.put<JellyState>(COL, s);
 
 /** Change Jelly's state in one go (read, change, write). */

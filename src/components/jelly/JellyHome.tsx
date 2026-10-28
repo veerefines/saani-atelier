@@ -24,14 +24,17 @@ import {
 import { MOODS, moodHd, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { emit, useJelly } from './bus';
 import { useMoodCycle } from './moods';
+import JellyChats from './JellyChats';
+import type { Chat } from '@/lib/corner-model';
 import './jelly.css';
 
 type Data = { home: JellyView; stats: Stats; gains: Gain[] };
-type Tab = 'room' | 'shop' | 'awards';
+type Tab = 'room' | 'shop' | 'awards' | 'chats';
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'room', label: 'Her home', icon: '🏠' },
   { id: 'shop', label: 'Shop', icon: '🛍️' },
   { id: 'awards', label: 'Achievements', icon: '🏆' },
+  { id: 'chats', label: 'Jelly’s Chats', icon: '💬' },
 ];
 
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
@@ -79,7 +82,7 @@ function Ring({ p, size = 56, stroke = 6, children, gold }: { p: number; size?: 
 const Pearl = ({ s = 18 }: { s?: number }) => <img className="jh-pearl" src="/corner/pearl.webp" alt="" width={s} height={s} />;
 
 /** Jelly's Corner: her house to decorate, a shop paid in pearls, and every achievement across the Atelier. */
-export default function JellyHome({ initial, initialTab }: { initial: Data; initialTab?: string }) {
+export default function JellyHome({ initial, initialTab, chats, ready }: { initial: Data; initialTab?: string; chats: Chat[]; ready: boolean }) {
   const [home, setHome] = useState(initial.home);
   const [stats, setStats] = useState(initial.stats);
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.id === initialTab) ? (initialTab as Tab) : 'room');
@@ -533,6 +536,8 @@ export default function JellyHome({ initial, initialTab }: { initial: Data; init
           )}
         </section>
       )}
+
+      {tab === 'chats' && <JellyChats initial={chats} ready={ready} />}
 
       {tab === 'awards' && (
         <section aria-label="Achievements">

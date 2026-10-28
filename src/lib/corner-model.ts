@@ -107,7 +107,7 @@ export type StudioId = (typeof STUDIO)[number]['id'];
 export type Mode = StudioId | 'question';
 
 export type ChatTurn = { id: string; at: string; mode: Mode; q: string; a: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood };
-export type Chat = { id: string; createdAt: string; updatedAt: string; projectId: string; title: string; turns: ChatTurn[] };
+export type Chat = { id: string; createdAt: string; updatedAt: string; projectId: string; title: string; turns: ChatTurn[]; pinned?: boolean };
 /** Chats with Jelly (from anywhere in My Corner) are saved with the project chats under this id. */
 export const JELLY_CHATS = 'jelly';
 

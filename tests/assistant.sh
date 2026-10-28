@@ -182,9 +182,16 @@ expect "at 60" '"pets":72'
 expect "and friendship grows" '"level":3'
 check "rename a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"title":"JELLY-RENAMED"}' $B/api/corner/jelly/chats/$JC
 expect "renamed" "JELLY-RENAMED"
+check "pin a jelly chat" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"pinned":true}' $B/api/corner/jelly/chats/$JC
+expect "pinned" '"pinned":true'
+expect "keeps its name" "JELLY-RENAMED"
+check "Jelly's Chats tab" 200 -b "$SA" "$B/home/jelly?tab=chats"
+expect "lists her chats" "JELLY-RENAMED"
+expect "with the new tab" "Jelly’s Chats"
 # Jelly's Corner: pearls, the shop, her room, achievements
 check "her home" 200 -b "$SA" $B/api/jelly/home
 expect "no second daily bonus today" '"kind":"daily"' absent
+same "lots to achieve" "$(node -e "const d=JSON.parse(require('fs').readFileSync('$D/body','utf8'));console.log(d.stats.placesTotal>100&&d.stats.bingoTotal>20)")" true
 expect "pats and chats unlocked things" '"pats-50":"'
 expect "a reward in her things" '"clam":1'
 expect "My Corner counts too" '"project-1":"'

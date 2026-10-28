@@ -33,6 +33,12 @@ export type Stats = {
   cornerItems: number;
   palettes: number;
   studioChats: number;
+  earned: number; // pearls earned, ever
+  owned: number; // things in Jelly's home, placed or not
+  friends: number; // different sea friends she has
+  backdrops: number; // backdrops besides the first
+  placesTotal: number;
+  bingoTotal: number;
 };
 export type Metric = keyof Stats;
 
@@ -264,6 +270,24 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'shop-1', group: 'Jelly', icon: '🛍️', title: 'First purchase', desc: 'Buy something for Jelly’s home', metric: 'bought', goal: 1, pearls: 10 },
   { id: 'decor-5', group: 'Jelly', icon: '💡', title: 'Interior designer', desc: 'Put 5 things in Jelly’s home', metric: 'placed', goal: 5, pearls: 25, reward: 'star-light' },
   { id: 'decor-15', group: 'Jelly', icon: '🪩', title: 'Maximalist', desc: 'Put 15 things in Jelly’s home', metric: 'placed', goal: 15, pearls: 60, reward: 'capitano' },
+  { id: 'chat-10', group: 'Jelly', icon: '💞', title: 'Chatty friends', desc: 'Have 10 chats with Jelly', metric: 'jellyChats', goal: 10, pearls: 25, reward: 'hourglass' },
+  { id: 'chat-100', group: 'Jelly', icon: '🤫', title: 'Best confidante', desc: 'Have 100 chats with Jelly', metric: 'jellyChats', goal: 100, pearls: 150, reward: 'whale' },
+  { id: 'pats-1000', group: 'Jelly', icon: '🫶', title: 'Pat-a-thon', desc: 'Give Jelly 1,000 pats', metric: 'pets', goal: 1000, pearls: 120, reward: 'blue-puffer' },
+  { id: 'level-10', group: 'Jelly', icon: '💫', title: 'Ocean soulmates', desc: 'Reach friendship level 10', metric: 'level', goal: 10, pearls: 200, reward: 'glow-jelly-lamp' },
+  { id: 'visits-7', group: 'Jelly', icon: '🗓️', title: 'Settling in nicely', desc: 'Visit on 7 different days', metric: 'visits', goal: 7, pearls: 30, reward: 'star-bottle' },
+  { id: 'visits-60', group: 'Jelly', icon: '🏡', title: 'Part of the furniture', desc: 'Visit on 60 different days', metric: 'visits', goal: 60, pearls: 120, reward: 'hanging-mirror' },
+  { id: 'visits-100', group: 'Jelly', icon: '💯', title: 'A hundred days of Jelly', desc: 'Visit on 100 different days', metric: 'visits', goal: 100, pearls: 250, reward: 'loveseat' },
+  { id: 'streak-14', group: 'Jelly', icon: '🔥', title: 'Two whole weeks', desc: 'Visit 14 days in a row', metric: 'streak', goal: 14, pearls: 80, reward: 'moonstone' },
+  { id: 'streak-30', group: 'Jelly', icon: '🌋', title: 'A month of mornings', desc: 'Visit 30 days in a row', metric: 'streak', goal: 30, pearls: 200, reward: 'aquarium-globe' },
+  { id: 'decor-30', group: 'Jelly', icon: '🏰', title: 'Dream home', desc: 'Put 30 things in Jelly’s home', metric: 'placed', goal: 30, pearls: 100, reward: 'pink-orb-lamp' },
+  { id: 'shop-10', group: 'Jelly', icon: '🛍️', title: 'Shopaholic', desc: 'Buy 10 things for Jelly', metric: 'bought', goal: 10, pearls: 40, reward: 'bow-present' },
+  { id: 'owned-25', group: 'Jelly', icon: '🎁', title: 'Treasure trove', desc: 'Own 25 things for Jelly’s home', metric: 'owned', goal: 25, pearls: 60, reward: 'gift-box' },
+  { id: 'earned-500', group: 'Jelly', icon: '🫧', title: 'Pearl collector', desc: 'Earn 500 pearls', metric: 'earned', goal: 500, pearls: 50, reward: 'pearl-dish' },
+  { id: 'earned-2000', group: 'Jelly', icon: '💎', title: 'Pearl tycoon', desc: 'Earn 2,000 pearls', metric: 'earned', goal: 2000, pearls: 150, reward: 'jewel-box' },
+  { id: 'friends-3', group: 'Jelly', icon: '🐠', title: 'Making friends', desc: 'Bring 3 sea friends home', metric: 'friends', goal: 3, pearls: 30, reward: 'tiny-fish' },
+  { id: 'friends-10', group: 'Jelly', icon: '🐢', title: 'Under the sea', desc: 'Bring 10 sea friends home', metric: 'friends', goal: 10, pearls: 100, reward: 'seahorse' },
+  { id: 'friends-25', group: 'Jelly', icon: '🐋', title: 'Ocean family', desc: 'Bring 25 sea friends home', metric: 'friends', goal: 25, pearls: 200, reward: 'ray' },
+  { id: 'backdrops-3', group: 'Jelly', icon: '🖼️', title: 'Change of scenery', desc: 'Collect 3 more backdrops', metric: 'backdrops', goal: 3, pearls: 40 },
   // Milano
   { id: 'stamp-1', group: 'Milano', icon: '🛂', title: 'First stamp', desc: 'Stamp your passport once', metric: 'stamps', goal: 1, pearls: 15, reward: 'message-bottle' },
   { id: 'stamp-10', group: 'Milano', icon: '🚋', title: 'Passport collector', desc: 'Collect 10 passport stamps', metric: 'stamps', goal: 10, pearls: 40, reward: 'anchor' },
@@ -272,15 +296,25 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'fashion-5', group: 'Milano', icon: '👠', title: 'Fashion pilgrim', desc: 'Stamp 5 fashion spots', metric: 'fashionStamps', goal: 5, pearls: 40, reward: 'vanity' },
   { id: 'wish-1', group: 'Milano', icon: '🌠', title: 'Make a wish', desc: 'Add something to your wish list', metric: 'wishes', goal: 1, pearls: 10, reward: 'star-glow' },
   { id: 'wishes-5', group: 'Milano', icon: '🌠', title: 'Dreams come true', desc: 'Tick off 5 wishes', metric: 'wishesDone', goal: 5, pearls: 40, reward: 'seal' },
+  { id: 'stamp-5', group: 'Milano', icon: '🗺️', title: 'Out and about', desc: 'Collect 5 passport stamps', metric: 'stamps', goal: 5, pearls: 25 },
+  { id: 'stamp-75', group: 'Milano', icon: '🏛️', title: 'Milanese at heart', desc: 'Collect 75 passport stamps', metric: 'stamps', goal: 75, pearls: 200, reward: 'sun-lamp' },
+  { id: 'stamp-all', group: 'Milano', icon: '👑', title: 'Every corner of Milano', desc: 'Stamp every place in the guide', metric: 'stamps', goal: 'all', pearls: 400, reward: 'glow-jelly-lamp' },
+  { id: 'fashion-15', group: 'Milano', icon: '👜', title: 'Fashion insider', desc: 'Stamp 15 fashion spots', metric: 'fashionStamps', goal: 15, pearls: 100, reward: 'sky-bow' },
+  { id: 'wish-5', group: 'Milano', icon: '✨', title: 'Dreamer', desc: 'Add 5 things to your wish list', metric: 'wishes', goal: 5, pearls: 20 },
+  { id: 'wishes-10', group: 'Milano', icon: '🌟', title: 'Wish list hero', desc: 'Tick off 10 wishes', metric: 'wishesDone', goal: 10, pearls: 80, reward: 'wish-bottle' },
   // settling in
   { id: 'check-1', group: 'Settling in', icon: '✅', title: 'First step', desc: 'Tick one settling-in task', metric: 'checklist', goal: 1, pearls: 10, reward: 'cloud-cushion' },
   { id: 'check-5', group: 'Settling in', icon: '🧳', title: 'Halfway home', desc: 'Tick 5 settling-in tasks', metric: 'checklist', goal: 5, pearls: 40, reward: 'blanket-roll' },
   { id: 'check-all', group: 'Settling in', icon: '🏡', title: 'All settled in', desc: 'Finish the whole settling-in list', metric: 'checklist', goal: 'all', pearls: 100, reward: 'shell-bed', backdrop: 'flat' },
+  { id: 'check-3', group: 'Settling in', icon: '📋', title: 'Getting the hang of it', desc: 'Tick 3 settling-in tasks', metric: 'checklist', goal: 3, pearls: 20 },
+  { id: 'check-8', group: 'Settling in', icon: '🗝️', title: 'Nearly there', desc: 'Tick 8 settling-in tasks', metric: 'checklist', goal: 8, pearls: 60 },
   // bingo
   { id: 'bingo-1', group: 'Bingo', icon: '🎯', title: 'First square', desc: 'Mark a bingo square', metric: 'bingo', goal: 1, pearls: 15, reward: 'conch' },
   { id: 'bingo-5', group: 'Bingo', icon: '🍹', title: 'On a roll', desc: 'Mark 5 bingo squares', metric: 'bingo', goal: 5, pearls: 40, reward: 'crystal' },
   { id: 'bingo-12', group: 'Bingo', icon: '🏆', title: 'Bingo champion', desc: 'Mark 12 bingo squares', metric: 'bingo', goal: 12, pearls: 80, reward: 'dolphin' },
   { id: 'bingo-20', group: 'Bingo', icon: '🦄', title: 'Bingo legend', desc: 'Mark 20 bingo squares', metric: 'bingo', goal: 20, pearls: 150, reward: 'whale-shark' },
+  { id: 'bingo-3', group: 'Bingo', icon: '🎲', title: 'Warming up', desc: 'Mark 3 bingo squares', metric: 'bingo', goal: 3, pearls: 20 },
+  { id: 'bingo-all', group: 'Bingo', icon: '🎉', title: 'Full house!', desc: 'Mark every bingo square', metric: 'bingo', goal: 'all', pearls: 300, reward: 'cielo' },
   // your story
   { id: 'diary-1', group: 'Your story', icon: '📓', title: 'Dear diary', desc: 'Write your first chapter day', metric: 'diaryDays', goal: 1, pearls: 10, reward: 'quill' },
   { id: 'diary-7', group: 'Your story', icon: '🖋️', title: 'A week of words', desc: 'Write on 7 days', metric: 'diaryDays', goal: 7, pearls: 40, reward: 'libro' },
@@ -289,6 +323,13 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'moment-10', group: 'Your story', icon: '🎞️', title: 'Little film-maker', desc: 'Share 10 moments', metric: 'moments', goal: 10, pearls: 50, reward: 'aquarium' },
   { id: 'look-1', group: 'Your story', icon: '👗', title: 'First look', desc: 'Add to your lookbook', metric: 'looks', goal: 1, pearls: 10, reward: 'lilac-bow' },
   { id: 'look-15', group: 'Your story', icon: '🪞', title: 'Style icon', desc: 'Add 15 looks', metric: 'looks', goal: 15, pearls: 60, reward: 'mirror' },
+  { id: 'diary-14', group: 'Your story', icon: '📔', title: 'Two weeks of pages', desc: 'Write on 14 days', metric: 'diaryDays', goal: 14, pearls: 60 },
+  { id: 'diary-60', group: 'Your story', icon: '📚', title: 'A whole season', desc: 'Write on 60 days', metric: 'diaryDays', goal: 60, pearls: 150, reward: 'coral-books' },
+  { id: 'diary-100', group: 'Your story', icon: '🏆', title: 'The Milano chronicles', desc: 'Write on 100 days', metric: 'diaryDays', goal: 100, pearls: 250, reward: 'quill' },
+  { id: 'moment-3', group: 'Your story', icon: '🤳', title: 'Sharing is caring', desc: 'Share 3 moments', metric: 'moments', goal: 3, pearls: 20 },
+  { id: 'moment-25', group: 'Your story', icon: '🎬', title: 'Director’s cut', desc: 'Share 25 moments', metric: 'moments', goal: 25, pearls: 100, reward: 'fish-plush' },
+  { id: 'look-5', group: 'Your story', icon: '👠', title: 'Building a wardrobe', desc: 'Add 5 looks', metric: 'looks', goal: 5, pearls: 25 },
+  { id: 'look-30', group: 'Your story', icon: '💄', title: 'Fashion week ready', desc: 'Add 30 looks', metric: 'looks', goal: 30, pearls: 120, reward: 'dresser' },
   // your people
   { id: 'letter-1', group: 'Your people', icon: '💌', title: 'Special delivery', desc: 'Open a letter', metric: 'lettersOpened', goal: 1, pearls: 10, reward: 'letter' },
   { id: 'letters-5', group: 'Your people', icon: '📮', title: 'Pen pals', desc: 'Open 5 letters', metric: 'lettersOpened', goal: 5, pearls: 40, reward: 'jewel-box' },
@@ -298,15 +339,30 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'songs-15', group: 'Your people', icon: '📻', title: 'On the radio', desc: 'Have 15 songs dedicated to you', metric: 'songs', goal: 15, pearls: 50, reward: 'turtle' },
   { id: 'love-10', group: 'Your people', icon: '💐', title: 'So very loved', desc: 'Get 10 notes on your love wall', metric: 'lovePosts', goal: 10, pearls: 30, reward: 'heart-locket' },
   { id: 'pages-1', group: 'Your people', icon: '📒', title: 'Scrapbook star', desc: 'Get a scrapbook page from your people', metric: 'pages', goal: 1, pearls: 15, reward: 'hatbox' },
+  { id: 'letters-10', group: 'Your people', icon: '💝', title: 'A drawer of letters', desc: 'Open 10 letters', metric: 'lettersOpened', goal: 10, pearls: 80, reward: 'letter' },
+  { id: 'jar-5', group: 'Your people', icon: '🍯', title: 'Jar dipper', desc: 'Draw 5 notes from the jar', metric: 'jarDrawn', goal: 5, pearls: 40 },
+  { id: 'jar-15', group: 'Your people', icon: '🫙', title: 'Bottomless jar', desc: 'Draw 15 notes from the jar', metric: 'jarDrawn', goal: 15, pearls: 100, reward: 'potion-bottles' },
+  { id: 'nudge-5', group: 'Your people', icon: '👋', title: 'Thinking of you lots', desc: 'Answer 5 nudges', metric: 'nudgesAnswered', goal: 5, pearls: 40 },
+  { id: 'nudge-15', group: 'Your people', icon: '💌', title: 'Always there', desc: 'Answer 15 nudges', metric: 'nudgesAnswered', goal: 15, pearls: 100, reward: 'pink-gift' },
+  { id: 'songs-30', group: 'Your people', icon: '🎤', title: 'Concert in my heart', desc: 'Have 30 songs dedicated to you', metric: 'songs', goal: 30, pearls: 120 },
+  { id: 'love-25', group: 'Your people', icon: '💖', title: 'Adored', desc: 'Get 25 notes on your love wall', metric: 'lovePosts', goal: 25, pearls: 60 },
+  { id: 'love-50', group: 'Your people', icon: '👑', title: 'The most loved', desc: 'Get 50 notes on your love wall', metric: 'lovePosts', goal: 50, pearls: 150, reward: 'heart-locket' },
+  { id: 'pages-3', group: 'Your people', icon: '📖', title: 'A scrapbook of love', desc: 'Get 3 scrapbook pages', metric: 'pages', goal: 3, pearls: 40 },
   // my corner
   { id: 'project-1', group: 'My Corner', icon: '✂️', title: 'First project', desc: 'Start a project in My Corner', metric: 'projects', goal: 1, pearls: 15, reward: 'study-desk' },
   { id: 'projects-5', group: 'My Corner', icon: '🧵', title: 'Busy studio', desc: 'Have 5 projects', metric: 'projects', goal: 5, pearls: 50, reward: 'telescope' },
   { id: 'items-25', group: 'My Corner', icon: '🧶', title: 'Collector of ideas', desc: 'Add 25 things to your projects', metric: 'cornerItems', goal: 25, pearls: 40, reward: 'lavender-pot' },
   { id: 'palette-1', group: 'My Corner', icon: '🎨', title: 'Colour story', desc: 'Save a colour palette', metric: 'palettes', goal: 1, pearls: 10, reward: 'flower-bowl' },
   { id: 'studio-1', group: 'My Corner', icon: '📖', title: 'Jelly got this', desc: 'Ask a studio question in a project', metric: 'studioChats', goal: 1, pearls: 10, reward: 'magnifier' },
+  { id: 'projects-10', group: 'My Corner', icon: '🌟', title: 'Studio superstar', desc: 'Have 10 projects', metric: 'projects', goal: 10, pearls: 120 },
+  { id: 'items-50', group: 'My Corner', icon: '🧵', title: 'Overflowing studio', desc: 'Add 50 things to your projects', metric: 'cornerItems', goal: 50, pearls: 60 },
+  { id: 'items-100', group: 'My Corner', icon: '🪡', title: 'Creative powerhouse', desc: 'Add 100 things to your projects', metric: 'cornerItems', goal: 100, pearls: 120, reward: 'ottoman' },
+  { id: 'palette-5', group: 'My Corner', icon: '🌈', title: 'Colour queen', desc: 'Save 5 colour palettes', metric: 'palettes', goal: 5, pearls: 50 },
+  { id: 'studio-10', group: 'My Corner', icon: '🎓', title: 'Studio regular', desc: 'Ask 10 studio questions', metric: 'studioChats', goal: 10, pearls: 60 },
+  { id: 'studio-30', group: 'My Corner', icon: '🥇', title: 'Jelly’s star pupil', desc: 'Ask 30 studio questions', metric: 'studioChats', goal: 30, pearls: 120, reward: 'magnifier' },
 ];
 
-export const goalOf = (a: Achievement, s: Stats) => (a.goal === 'all' ? s.checklistTotal : a.goal);
+export const goalOf = (a: Achievement, s: Stats) => (a.goal !== 'all' ? a.goal : a.metric === 'stamps' ? s.placesTotal : a.metric === 'bingo' ? s.bingoTotal : s.checklistTotal);
 export const progressOf = (a: Achievement, s: Stats) => Math.min(1, s[a.metric] / Math.max(1, goalOf(a, s)));
 /** Which reward an item came from, for the shop's "unlock by…" note. */
 export const unlockedBy = (itemId: string) => ACHIEVEMENTS.find((a) => a.reward === itemId);

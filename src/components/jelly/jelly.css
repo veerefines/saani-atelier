@@ -20,8 +20,8 @@
 /* Jelly herself: her motion follows her mood */
 .jelly-pet {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 132px;
+  height: 132px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -362,13 +362,13 @@
 @media (max-width: 1100px) {
   .cn-ask {
     flex-wrap: nowrap;
-    margin-right: 104px; /* room for Jelly */
+    margin-right: 132px; /* room for Jelly */
   }
 }
 @media (min-width: 601px) and (max-width: 1100px) {
   .jelly-pet {
-    width: 88px;
-    height: 88px;
+    width: 116px;
+    height: 116px;
   }
   .jelly-panel {
     width: min(430px, calc(100vw - 40px));
@@ -382,11 +382,11 @@
     bottom: calc(12px + env(safe-area-inset-bottom));
   }
   .jelly-pet {
-    width: 76px;
-    height: 76px;
+    width: 100px;
+    height: 100px;
   }
   .cn-ask {
-    margin-right: 84px;
+    margin-right: 108px;
   }
   .cn-ask .h-input {
     min-width: 0;
@@ -445,7 +445,7 @@
 
 /* the Milano guide's "back to my list" button sits where she floats: she moves up a little */
 body:has(.mil-listbtn) .jelly:not(.open) {
-  bottom: calc(80px + env(safe-area-inset-bottom));
+  bottom: calc(76px + env(safe-area-inset-bottom));
 }
 .jelly-pet.away {
   display: none;
@@ -1009,9 +1009,9 @@ a.jelly-more {
 .jh-seg {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   justify-self: center;
-  width: min(100%, 520px);
+  width: min(100%, 680px);
   padding: 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
@@ -1024,7 +1024,7 @@ a.jelly-more {
   top: 5px;
   bottom: 5px;
   left: 5px;
-  width: calc((100% - 10px) / 3);
+  width: calc((100% - 10px) / 4);
   border-radius: 999px;
   background: linear-gradient(180deg, #c8487a, var(--berry));
   box-shadow: 0 10px 18px -10px rgba(178, 48, 95, 0.9);
@@ -1990,8 +1990,8 @@ small.jh-status {
   position: relative;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -2235,8 +2235,8 @@ small.jh-status {
   text-align: center;
 }
 .jp-welcome > img {
-  width: 116px;
-  height: 116px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   filter: drop-shadow(0 10px 16px rgba(244, 166, 192, 0.55));
   animation: jelly-pop 0.35s ease-out, jc-jelly 1.8s 0.35s ease-in-out infinite alternate;
@@ -2316,8 +2316,8 @@ small.jh-status {
 }
 .jp-face {
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   padding: 2px;
   border-radius: 50%;
   background: #f6eefb;
@@ -2326,7 +2326,7 @@ small.jh-status {
 }
 .jp-bubble {
   min-width: 0;
-  max-width: calc(100% - 44px);
+  max-width: calc(100% - 54px);
   padding: 10px 14px;
   border-radius: 20px 20px 20px 6px;
   background: #fff;
@@ -2370,8 +2370,8 @@ small.jh-status {
 .jp-chips {
   display: flex;
   gap: 6px;
-  margin: 0 -12px 8px;
-  padding: 0 12px;
+  margin: -3px -12px 6px;
+  padding: 3px 12px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -2507,5 +2507,314 @@ small.jh-status {
   .jp-welcome > img,
   .jh-thing.swim img {
     animation: none !important;
+  }
+}
+
+/* ---------- Jelly's Chats ---------- */
+.jx {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 14px;
+  height: min(760px, calc(100dvh - 140px));
+  min-height: 520px;
+}
+.jx-side,
+.jx-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.9) inset,
+    0 18px 40px -26px rgba(107, 30, 58, 0.55);
+  overflow: hidden;
+}
+.jx-side {
+  padding: 14px 10px 10px;
+  gap: 10px;
+}
+.jx-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+}
+.jx-side-head h3 {
+  margin: 0;
+  font: 400 21px var(--font-display);
+  color: var(--burgundy);
+}
+.jx-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 14px 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  box-shadow: 0 10px 18px -12px rgba(178, 48, 95, 0.9);
+  color: #fff;
+  font: 800 13px var(--font-body);
+  cursor: pointer;
+}
+.jx-new svg,
+.jx-find svg,
+.jx-back svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.jx-find {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.14);
+  color: var(--cn-ink-faint);
+}
+.jx-find input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: 500 16px var(--font-body);
+  color: var(--ink);
+}
+.jx-only {
+  display: flex;
+  gap: 6px;
+  padding: 0 4px;
+}
+.jx-only button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(178, 48, 95, 0.07);
+  color: var(--burgundy);
+  font: 700 12.5px var(--font-body);
+  cursor: pointer;
+}
+.jx-only button[aria-selected='true'] {
+  background: var(--burgundy);
+  color: #fff;
+}
+.jx-list {
+  flex: 1;
+  min-height: 0;
+  padding: 0 2px 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.jx-none {
+  margin: 14px 8px;
+  font: 500 13.5px var(--font-body);
+  color: var(--cn-ink-soft);
+}
+.jx-shelf h4 {
+  margin: 12px 10px 4px;
+  font: 800 10.5px var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cn-ink-faint);
+}
+.jx-shelf ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jx-shelf li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 18px;
+  transition: background 0.15s;
+}
+.jx-shelf li:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+.jx-shelf li.on {
+  background: #fdeef4;
+  box-shadow: 0 0 0 1.5px var(--rose);
+}
+.jx-row {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.jx-row img {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.jx-row span {
+  display: grid;
+  min-width: 0;
+}
+.jx-row b {
+  overflow: hidden;
+  font: 700 13.5px var(--font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jx-row small {
+  font: 500 11.5px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jx-acts {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding-right: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.jx-shelf li:hover .jx-acts,
+.jx-shelf li.on .jx-acts,
+.jx-shelf li:focus-within .jx-acts,
+.jx-acts.always {
+  opacity: 1;
+}
+.jx-acts button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+  filter: grayscale(0.6);
+}
+.jx-acts button[aria-pressed='true'],
+.jx-acts button:hover {
+  filter: none;
+  background: #fff;
+}
+.jx-rename {
+  flex: 1;
+  padding: 6px;
+}
+.jx-rename input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--rose);
+  font: 600 16px var(--font-body);
+  color: var(--ink);
+  outline: 0;
+}
+.jx-main-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(120deg, rgba(253, 238, 245, 0.9), rgba(240, 233, 252, 0.9));
+}
+.jx-main-head > img {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.jx-main-head > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.jx-main-head b {
+  overflow: hidden;
+  font: 400 19px var(--font-display);
+  color: var(--burgundy);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.jx-main-head small {
+  font: 500 12px var(--font-body);
+  color: var(--cn-ink-faint);
+}
+.jx-main-head .jx-rename {
+  padding: 0;
+}
+.jx-back {
+  display: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--burgundy);
+  cursor: pointer;
+}
+.jx-thread {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 18px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.jx-main .jp-foot {
+  padding: 8px 14px 14px;
+}
+.jx-copy {
+  display: block;
+  margin: 6px 0 0 auto;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(178, 48, 95, 0.07);
+  color: var(--burgundy);
+  font: 700 11.5px var(--font-body);
+  cursor: pointer;
+}
+@media (max-width: 820px) {
+  .jx {
+    grid-template-columns: minmax(0, 1fr);
+    height: calc(100dvh - 150px);
+  }
+  .jx.reading .jx-side,
+  .jx:not(.reading) .jx-main {
+    display: none;
+  }
+  .jx-back {
+    display: grid;
+  }
+  .jx-acts {
+    opacity: 1;
+  }
+}
+@media (max-width: 700px) {
+  .jh-seg button {
+    font-size: 12px;
   }
 }

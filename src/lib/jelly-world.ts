@@ -4,7 +4,7 @@ import { listAllChats, listAllItems, listProjects, JELLY_CHATS } from './corner'
 import { getInvites } from './invites';
 import { milanoWeather, sky } from './today';
 import { friendship } from './jelly-mood';
-import { ACHIEVEMENTS, goalOf, progressOf, type Stats } from './jelly-catalog';
+import { ACHIEVEMENTS, goalOf, itemById, progressOf, type Stats } from './jelly-catalog';
 import { streakOf, sync, view, type JellyState } from './jelly';
 import { bingo } from '@/content/home';
 import { milano } from '@/content/home';
@@ -73,6 +73,12 @@ function statsOf(w: World, s: JellyState): Stats {
     cornerItems: w.items.length,
     palettes: w.items.filter((i) => i.kind === 'palette').length,
     studioChats: w.chats.filter((c) => c.projectId !== JELLY_CHATS).reduce((n, c) => n + c.turns.length, 0),
+    earned: s.earned ?? 0,
+    owned: Object.values(s.owned ?? {}).reduce((a, b) => a + b, 0),
+    friends: Object.keys(s.owned ?? {}).filter((id) => itemById(id)?.kind === 'friends').length,
+    backdrops: (s.backdrops ?? []).length,
+    placesTotal: places.length,
+    bingoTotal: bingo.length,
   };
 }
 
