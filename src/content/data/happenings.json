@@ -1,0 +1,610 @@
+[
+  {
+    "id": "mfw",
+    "kind": "dates",
+    "title": "Milano Fashion Week, women’s",
+    "where": "All over the city",
+    "note": "Most shows are invite-only, but the city fills with presentations, pop-ups, window installations and parties. The official calendar lists the open events.",
+    "editions": [
+      {
+        "start": "2027-02-23",
+        "end": "2027-03-01"
+      },
+      {
+        "start": "2027-09-21",
+        "end": "2027-09-27"
+      }
+    ],
+    "links": [
+      {
+        "label": "Official calendar",
+        "url": "https://www.cameramoda.it/en/milano-moda-donna/calendar/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "mfw-men",
+    "kind": "dates",
+    "title": "Milano Fashion Week, men’s",
+    "where": "All over the city",
+    "note": "The menswear shows. Quieter than women’s week, but the city still fills with presentations, showrooms and parties.",
+    "editions": [
+      {
+        "start": "2027-01-15",
+        "end": "2027-01-19"
+      },
+      {
+        "start": "2027-06-18",
+        "end": "2027-06-22"
+      }
+    ],
+    "links": [
+      {
+        "label": "Official calendar",
+        "url": "https://www.cameramoda.it/en/milano-moda-uomo/calendar/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "graduate",
+    "kind": "dates",
+    "title": "Milano Moda Graduate",
+    "where": "Camera Nazionale della Moda",
+    "note": "The national showcase for graduates of Italian fashion schools, with awards and mentoring. One to watch, and one to aim for.",
+    "usually": "Once a year; dates on the site",
+    "links": [
+      {
+        "label": "About & dates",
+        "url": "https://www.cameramoda.it/en/milano-moda-graduate/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "designweek",
+    "kind": "dates",
+    "title": "Milano Design Week · Fuorisalone",
+    "where": "Brera, Tortona, Isola and beyond",
+    "note": "A week when the whole city turns into installations, many of them free to walk into. The best week of the year to be in Milano.",
+    "editions": [
+      {
+        "start": "2027-04-12",
+        "end": "2027-04-18"
+      }
+    ],
+    "links": [
+      {
+        "label": "Fuorisalone guide",
+        "url": "https://www.fuorisalone.it/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "micam",
+    "kind": "dates",
+    "title": "MICAM, the shoe fair",
+    "where": "Fiera Milano, Rho",
+    "note": "The world’s big footwear fair. It’s a trade fair, but it offers a free ticket after registering; worth trying as a fashion student.",
+    "editions": [
+      {
+        "start": "2027-02-21",
+        "end": "2027-02-23"
+      },
+      {
+        "start": "2027-09-12",
+        "end": "2027-09-14"
+      }
+    ],
+    "links": [
+      {
+        "label": "MICAM",
+        "url": "https://www.micam.it/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "mipel",
+    "kind": "dates",
+    "title": "MIPEL, bags & leather goods",
+    "where": "Fiera Milano, Rho",
+    "note": "Handbags and leather goods from all over the world, alongside MICAM.",
+    "editions": [
+      {
+        "start": "2027-02-21",
+        "end": "2027-02-23"
+      }
+    ],
+    "links": [
+      {
+        "label": "MIPEL",
+        "url": "https://www.mipel.com/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "white",
+    "kind": "dates",
+    "title": "White Milano",
+    "where": "Via Tortona",
+    "note": "Contemporary designers and new brands in the Tortona fashion district. Great for discovering young labels.",
+    "editions": [
+      {
+        "start": "2027-02-25",
+        "end": "2027-02-28"
+      }
+    ],
+    "links": [
+      {
+        "label": "White Milano",
+        "url": "https://www.whiteshow.com/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "milanounica",
+    "kind": "dates",
+    "title": "Milano Unica, fabrics",
+    "where": "Fiera Milano, Rho",
+    "note": "Italy’s fabric and textile fair: where the cloth for next season gets chosen. Accreditation needed.",
+    "editions": [
+      {
+        "start": "2027-02-02",
+        "end": "2027-02-04"
+      }
+    ],
+    "links": [
+      {
+        "label": "Milano Unica",
+        "url": "https://www.milanounica.it/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "lineapelle",
+    "kind": "dates",
+    "title": "Lineapelle, leather & materials",
+    "where": "Fiera Milano, Rho",
+    "note": "Leathers, trims and materials for bags and shoes.",
+    "editions": [
+      {
+        "start": "2027-02-23",
+        "end": "2027-02-25"
+      }
+    ],
+    "links": [
+      {
+        "label": "Lineapelle",
+        "url": "https://www.lineapelle-fair.it/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "fashrev",
+    "kind": "dates",
+    "title": "Fashion Revolution Week",
+    "where": "Worldwide, with events in Milano",
+    "note": "Talks, swaps and mending workshops about who makes our clothes.",
+    "usually": "The week around 24 April",
+    "links": [
+      {
+        "label": "Fashion Revolution",
+        "url": "https://www.fashionrevolution.org/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "marangoni",
+    "kind": "workshop",
+    "title": "Istituto Marangoni short courses",
+    "where": "Via Pietro Verri, Milano",
+    "note": "One- to three-week courses in fashion design, drawing and pattern making, with a certificate.",
+    "links": [
+      {
+        "label": "Short courses",
+        "url": "https://www.istitutomarangoni.com/landing_pages/en/short-courses"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "secoli",
+    "kind": "workshop",
+    "title": "Istituto Secoli",
+    "where": "Milano",
+    "note": "Milano’s school of pattern making and tailoring. Look for their shorter courses.",
+    "links": [
+      {
+        "label": "Secoli",
+        "url": "https://secoli.com/en/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "eb-fashion",
+    "kind": "workshop",
+    "title": "Fashion & sewing workshops this month",
+    "where": "Live listings",
+    "note": "Sewing, embroidery, upcycling and styling classes around the city, updated all the time.",
+    "links": [
+      {
+        "label": "Fashion workshops",
+        "url": "https://www.eventbrite.it/d/italy--milano/workshop-moda/"
+      },
+      {
+        "label": "Sewing classes",
+        "url": "https://www.eventbrite.it/d/italy--milano/corso-di-cucito/"
+      },
+      {
+        "label": "Upcycling",
+        "url": "https://www.eventbrite.it/d/italy--milano/upcycling/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "eb-matcha",
+    "kind": "tea",
+    "title": "Matcha workshops & tastings",
+    "where": "Live listings",
+    "note": "Whisking classes, tastings and matcha mixology when they come up.",
+    "links": [
+      {
+        "label": "Matcha events",
+        "url": "https://www.eventbrite.it/d/italy--milano/matcha/"
+      },
+      {
+        "label": "Tea ceremony",
+        "url": "https://www.eventbrite.it/d/italy--milano/cerimonia-del-te/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "tea-calm",
+    "kind": "tea",
+    "title": "A slow tea afternoon",
+    "where": "Kagurazaka Saryō, Corso Como",
+    "note": "No class needed: a Japanese teahouse for ceremonial matcha when she needs calm. It’s in the guide above.",
+    "links": [
+      {
+        "label": "Directions",
+        "url": "https://www.google.com/maps/search/?api=1&query=Kagurazaka%20Saryo%20Milano"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "portamento",
+    "kind": "runway",
+    "title": "Runway walking courses",
+    "where": "Milano",
+    "note": "Courses in \"portamento\" (posture and the catwalk walk). Compare a few; some are a weekend, some much longer.",
+    "links": [
+      {
+        "label": "Course listings",
+        "url": "https://www.emagister.it/corsi_portamento-milano-kwprov-38513-2863.htm"
+      },
+      {
+        "label": "On Eventbrite",
+        "url": "https://www.eventbrite.it/d/italy--milano/portamento/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "sfilate",
+    "kind": "runway",
+    "title": "Fashion shows open to the public",
+    "where": "Live listings",
+    "note": "School graduate shows, emerging-designer runways and charity shows you can actually get into.",
+    "links": [
+      {
+        "label": "Upcoming shows",
+        "url": "https://www.eventbrite.it/d/italy--milano/sfilata/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "fashioncircle",
+    "kind": "network",
+    "title": "Fashion Circle Milano",
+    "where": "Meetup group",
+    "note": "Designers, stylists, buyers and creators meeting up for talks, workshops and drinks.",
+    "links": [
+      {
+        "label": "Join the group",
+        "url": "https://www.meetup.com/fashion-circle-milano/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "net-live",
+    "kind": "network",
+    "title": "Fashion & creative networking",
+    "where": "Live listings",
+    "note": "Industry evenings, portfolio nights and creative meetups.",
+    "links": [
+      {
+        "label": "Meetup",
+        "url": "https://www.meetup.com/find/?keywords=fashion&location=it--Milano&source=EVENTS"
+      },
+      {
+        "label": "Eventbrite",
+        "url": "https://www.eventbrite.it/d/italy--milano/networking-moda/"
+      },
+      {
+        "label": "Creative networking",
+        "url": "https://www.eventbrite.it/d/italy--milano/networking/"
+      }
+    ],
+    "added": "2026-10-24"
+  },
+  {
+    "id": "armani-prive",
+    "kind": "exhibition",
+    "title": "Giorgio Armani Privé 2005–2025",
+    "where": "Armani/Silos, Via Bergognone 40 (Tortona)",
+    "note": "Twenty years of Armani haute couture: about 150 gowns from the Privé collections, in Armani’s own museum. A must for a fashion student; go on a weekday for a quiet look.",
+    "editions": [
+      {
+        "start": "2026-10-28",
+        "end": "2026-12-20"
+      }
+    ],
+    "details": {
+      "time": "Wed, Fri, Sun 11 AM–7 PM · Thu & Sat 11 AM–9 PM (closed Mon–Tue)",
+      "price": "€12 · students €6 · under 26 €8.40",
+      "booking": "Tickets online at armanisilos.com",
+      "language": "Italian & English captions",
+      "address": "Via Bergognone 40, Milano",
+      "lat": 45.45141,
+      "lng": 9.16497,
+      "goodFor": "Couture, embroidery and draping up close"
+    },
+    "links": [
+      {
+        "label": "Armani/Silos",
+        "url": "https://www.armanisilos.com/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "matisse-mudec",
+    "kind": "exhibition",
+    "title": "Matisse. Il mondo in una stanza",
+    "where": "MUDEC, Via Tortona 56",
+    "note": "Matisse’s colour, cut-outs and patterned rooms. Lots to take for prints, palettes and moodboards.",
+    "editions": [
+      {
+        "start": "2026-10-08",
+        "end": "2027-02-21"
+      }
+    ],
+    "details": {
+      "price": "See the museum site",
+      "booking": "mudec.it",
+      "address": "Via Tortona 56, Milano",
+      "lat": 45.45205,
+      "lng": 9.16132,
+      "goodFor": "Colour and print inspiration"
+    },
+    "links": [
+      {
+        "label": "MUDEC",
+        "url": "https://www.mudec.it/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "per-filo",
+    "kind": "exhibition",
+    "title": "Per filo e per segno: textile art in Italy",
+    "where": "BUILDING BOX, Via Monte di Pietà 23 (Brera)",
+    "note": "A year of textile art in the gallery’s street windows, a new Italian artist each month (Antonio Marras and Maria Lai were in it). Free, and you can see it walking by.",
+    "editions": [
+      {
+        "start": "2026-10-28",
+        "end": "2027-01-07"
+      }
+    ],
+    "details": {
+      "price": "Free (seen from the street)",
+      "address": "Via Monte di Pietà 23, Milano",
+      "lat": 45.4702,
+      "lng": 9.19168,
+      "goodFor": "Textiles, weaving and embroidery as art"
+    },
+    "links": [
+      {
+        "label": "BUILDING",
+        "url": "https://building-gallery.com/en/exhibitions/per-filo-e-per-segno-percorsi-di-arte-tessile-in-italia"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "artemisia",
+    "kind": "exhibition",
+    "title": "Artemisia Gentileschi’s Annunciation",
+    "where": "Museo Diocesano, Corso di Porta Ticinese 95",
+    "note": "One masterpiece, shown on its own for the season: a calm half hour near the Navigli and the colonne di San Lorenzo.",
+    "editions": [
+      {
+        "start": "2026-10-27",
+        "end": "2027-01-31"
+      }
+    ],
+    "details": {
+      "address": "Corso di Porta Ticinese 95, Milano",
+      "lat": 45.45507,
+      "lng": 9.18135,
+      "goodFor": "A quiet, beautiful hour"
+    },
+    "links": [
+      {
+        "label": "Museo Diocesano",
+        "url": "https://www.chiostrisanteustorgio.it/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "artigiano",
+    "kind": "market",
+    "title": "Artigiano in Fiera",
+    "where": "Fieramilano, Rho (metro M1 to Rho Fiera)",
+    "note": "A huge crafts fair: makers from all over the world, with textiles, jewellery, leather and food from every region of Italy. Go early, wear comfy shoes, and bring a tote.",
+    "editions": [
+      {
+        "start": "2026-12-05",
+        "end": "2026-12-13"
+      }
+    ],
+    "details": {
+      "time": "Every day, 10 AM–10:30 PM",
+      "price": "Free (register online for your ticket)",
+      "booking": "artigianoinfiera.it",
+      "address": "Fieramilano, Rho",
+      "goodFor": "Christmas presents and textiles from around the world"
+    },
+    "links": [
+      {
+        "label": "Artigiano in Fiera",
+        "url": "https://artigianoinfiera.it/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "obej",
+    "kind": "market",
+    "title": "Oh Bej! Oh Bej! (Sant’Ambrogio fair)",
+    "where": "Around the Castello Sforzesco",
+    "note": "Milano’s oldest Christmas fair, around the feast of Sant’Ambrogio (7 Dec, a holiday in the city): stalls of sweets, crafts and vintage. Dates are confirmed by the Comune nearer the time.",
+    "editions": [
+      {
+        "start": "2026-12-05",
+        "end": "2026-12-08",
+        "tentative": true
+      }
+    ],
+    "details": {
+      "price": "Free",
+      "address": "Piazza Castello, Milano",
+      "lat": 45.47047,
+      "lng": 9.18192,
+      "goodFor": "Mulled wine, firone and vintage finds"
+    },
+    "links": [
+      {
+        "label": "YesMilano",
+        "url": "https://www.yesmilano.it/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "duomo-xmas",
+    "kind": "market",
+    "title": "Christmas market by the Duomo",
+    "where": "Piazza Duomo",
+    "note": "Wooden huts by the cathedral, with gifts, sweets and lights. Lovely after dark. Dates are as in past years; check the Comune nearer the time.",
+    "editions": [
+      {
+        "start": "2026-12-01",
+        "end": "2027-01-06",
+        "tentative": true
+      }
+    ],
+    "details": {
+      "time": "Usually 9 AM–9 PM",
+      "price": "Free",
+      "address": "Piazza del Duomo, Milano",
+      "lat": 45.46416,
+      "lng": 9.19199
+    },
+    "links": [
+      {
+        "label": "YesMilano",
+        "url": "https://www.yesmilano.it/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "east-market",
+    "kind": "market",
+    "title": "East Market (vintage)",
+    "where": "Via Mecenate 88/A (Lambrate)",
+    "note": "Milano’s big vintage market: clothes, bags, vinyl and furniture, usually on the third Sunday of the month, with a Christmas edition in December.",
+    "usually": "Usually the third Sunday of the month",
+    "editions": [
+      {
+        "start": "2026-12-20",
+        "end": "2026-12-20",
+        "tentative": true
+      }
+    ],
+    "details": {
+      "time": "10 AM–9 PM",
+      "price": "About €5 (tickets on DICE)",
+      "booking": "eastmarketmilano.com · Instagram @eastmarketmilano",
+      "address": "Via Mecenate 88/A, Milano",
+      "lat": 45.45233,
+      "lng": 9.24869,
+      "goodFor": "Vintage hunting for her lookbook"
+    },
+    "links": [
+      {
+        "label": "East Market",
+        "url": "https://www.eastmarketmilano.com/"
+      }
+    ],
+    "added": "2026-10-28"
+  },
+  {
+    "id": "prima-scala",
+    "kind": "dates",
+    "title": "Prima della Scala: Verdi’s Otello",
+    "where": "Teatro alla Scala, and screens around the city",
+    "note": "The opening night of La Scala on Sant’Ambrogio, Milano’s most glamorous evening. The 7 Dec night is sold out, but there’s an Under 30 preview on 4 Dec (€20), it’s live on Rai 1, and in past years the city showed it free on big screens (“Prima Diffusa”).",
+    "editions": [
+      {
+        "start": "2026-12-07",
+        "end": "2026-12-07",
+        "time": "18:00"
+      }
+    ],
+    "details": {
+      "time": "7 Dec at 6 PM · Under 30 preview 4 Dec",
+      "price": "Under 30 preview €20 · screenings usually free",
+      "booking": "teatroallascala.org",
+      "language": "Italian, with surtitles",
+      "address": "Piazza della Scala, Milano",
+      "lat": 45.46736,
+      "lng": 9.18956,
+      "goodFor": "Red-carpet looks and opera"
+    },
+    "links": [
+      {
+        "label": "Teatro alla Scala",
+        "url": "https://www.teatroallascala.org/"
+      }
+    ],
+    "added": "2026-10-28"
+  }
+]

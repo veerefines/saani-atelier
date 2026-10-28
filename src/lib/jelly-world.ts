@@ -153,6 +153,8 @@ const PAGES: [RegExp, string][] = [
   [/^\/home\/jar/, 'the jar of notes'],
   [/^\/home\/songs/, 'songs for her'],
   [/^\/home\/money/, 'Soldi, her spending tracker'],
+  [/^\/home\/calendar/, 'her Calendario (events, festivals, meetups)'],
+  [/^\/home\/meetups/, 'Meetups (video calls with her friends)'],
   [/^\/home\/scrapbook/, 'the scrapbooks'],
   [/^\/home\/book/, 'her printable book'],
 ];
@@ -226,8 +228,8 @@ export async function platformContext(s: JellyState, path: string | null, max = 
   const events = happenings
     .flatMap((h) => (h.editions ?? []).filter((e) => e.end >= today).map((e) => ({ h, e })))
     .sort((a, b) => a.e.start.localeCompare(b.e.start))
-    .slice(0, 3);
-  if (events.length) L.push(`Fashion happenings in Milano: ${events.map(({ h, e }) => `${h.title} (${fmt(e.start)})`).join('; ')}.`);
+    .slice(0, 8);
+  if (events.length) L.push(`Happenings in Milano (workshops, shows, markets…; tell her about the ones that fit, and that you can remind her): ${events.map(({ h, e }) => `${h.title} at ${h.where} (${fmt(e.start)}${e.end !== e.start ? `–${fmt(e.end)}` : ''}${e.tentative ? ', dates tbc' : ''}${h.details?.price ? `, ${h.details.price}` : ''})`).join('; ')}.`);
 
   const upcoming = w.reminders.filter((r) => !r.done).slice(0, 5);
   if (upcoming.length) L.push(`Her reminders (you set these for her): ${upcoming.map((r) => `“${short(r.text, 60)}” ${new Intl.DateTimeFormat('en-GB', { timeZone: r.tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(r.at))}${r.repeat !== 'none' ? ` (${r.repeat})` : ''}`).join('; ')}.`);

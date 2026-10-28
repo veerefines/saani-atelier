@@ -4,24 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNow } from './Clock';
 import { usePeople, type Other } from './usePeople';
 import { clock12, hour12 } from '@/lib/time';
+import { AWAKE, SLOT, awake, minutesIn } from '@/lib/overlap';
 
 type Group = { tz: string; city: string; names: string[] };
 
-const AWAKE = { from: 8 * 60, to: 23 * 60 }; // 8 AM–11 PM, when people are happy to pick up
-const SLOT = 30; // minutes; India is on a half hour
-
-const fmts = new Map<string, Intl.DateTimeFormat>();
-/** Minutes since midnight in a time zone. */
-function minutesIn(d: Date, tz: string) {
-  let f = fmts.get(tz);
-  if (!f) fmts.set(tz, (f = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz })));
-  const p = f.formatToParts(d);
-  return Number(p.find((x) => x.type === 'hour')!.value) * 60 + Number(p.find((x) => x.type === 'minute')!.value);
-}
-const awake = (d: Date, tz: string) => {
-  const m = minutesIn(d, tz);
-  return m >= AWAKE.from && m < AWAKE.to;
-};
 const hhmm = (m: number) => clock12(Math.floor(m / 60), m % 60);
 const clock = (d: Date, tz: string) => hhmm(minutesIn(d, tz));
 const names = (n: string[]) => (n.length > 2 ? `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}` : n.join(' and '));

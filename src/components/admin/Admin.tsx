@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { JourneyExtra, Occasion, Page, RevealNote } from '@/lib/extras';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 
-type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string };
+type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string; email?: string };
 type ChapterRef = { id: string; title: string };
 type Word = { key: string; group: string; label: string; value: string; original: string; long?: boolean };
 type Slot = { slot: string; kind: 'photo' | 'video' | 'voice' | 'music'; label: string; chapter: string; mediaId: string | null };
@@ -178,6 +178,7 @@ function Friends({ initial, me }: { initial: Friend[]; me: string }) {
                 {f.managed ? ' · added here' : ''}{f.id === me ? ' · you' : ''}
               </small>
             </span>
+            {f.role !== 'saanika' && <EmailBox f={f} onSaved={(email) => setList((l) => l.map((x) => (x.id === f.id ? { ...x, email } : x)))} />}
             <button className="pc-btn" onClick={() => copy(f)}>
               {copied === f.id ? 'Copied ✓' : 'Copy link'}
             </button>
@@ -202,6 +203,37 @@ function Friends({ initial, me }: { initial: Friend[]; me: string }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** A friend's email, so Google can send them meetup invites. */
+function EmailBox({ f, onSaved }: { f: Friend; onSaved: (email: string) => void }) {
+  const [v, setV] = useState(f.email ?? '');
+  const [state, setState] = useState<'' | 'saving' | 'saved' | 'bad'>('');
+  const save = async () => {
+    if (v.trim() === (f.email ?? '')) return;
+    setState('saving');
+    try {
+      const r = await api<{ email: string | null }>('/api/admin/friends/email', 'POST', { id: f.id, email: v.trim() });
+      onSaved(r.email ?? '');
+      setState('saved');
+      setTimeout(() => setState(''), 1500);
+    } catch {
+      setState('bad');
+    }
+  };
+  return (
+    <input
+      className={`h-input atl-email${state === 'bad' ? ' bad' : ''}`}
+      type="email"
+      value={v}
+      onChange={(e) => (setV(e.target.value), setState(''))}
+      onBlur={save}
+      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), save())}
+      placeholder={state === 'saved' ? 'Saved ✓' : 'email for Meet invites'}
+      aria-label={`${f.name}’s email, for meetup invites`}
+      title={state === 'saved' ? 'Saved' : state === 'bad' ? 'That doesn’t look like an email' : 'Used for Google Meet invites'}
+    />
   );
 }
 

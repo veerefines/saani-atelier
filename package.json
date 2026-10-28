@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "bash tests/run.sh"
+    "test": "bash tests/run.sh",
+    "check:content": "node scripts/check-content.mjs"
   },
   "dependencies": {
     "@fontsource-variable/caveat": "^5.3.0",

@@ -9,6 +9,7 @@ import { getBudget, listExpenses } from './money-store';
 import { seasonView } from './jelly-seasons';
 import { FACTS } from '@/components/jelly/facts';
 import { milano } from '@/content/home';
+import { happenings, happeningKinds } from '@/content/happenings';
 
 /**
  * Jelly's morning brief, at the top of Saani's desk: hello, the sky and what to wear, today's
@@ -54,6 +55,12 @@ export async function buildBrief(rawTz: unknown) {
   const fact = pick(FACTS, day);
   // now and then, something she told Jelly
   const remembered = facts.length && pick([0, 1, 2], day + 'm') === 0 ? pick(facts, day).text : null;
+  // Milano happenings starting in the next two weeks
+  const inTwoWeeks = new Date(Date.parse(`${day}T12:00:00Z`) + 14 * 86_400_000).toISOString().slice(0, 10);
+  const comingUp = happenings
+    .flatMap((h) => (h.editions ?? []).filter((e) => e.start >= day && e.start <= inTwoWeeks).map((e) => ({ id: h.id, title: h.title, start: e.start, where: h.where, icon: happeningKinds.find((k) => k.id === h.kind)?.icon ?? '✨', tentative: Boolean(e.tentative) })))
+    .sort((a, b) => (a.start < b.start ? -1 : 1))
+    .slice(0, 4);
   const daysToGo = Math.round((Date.parse(`${milano.arrival}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86_400_000);
   const hello = `${greeting(hourIn(tz))}, Saani!`;
   const weather = w ? { ...w, sky: sky(w.code, w.isDay) } : null;
@@ -86,6 +93,7 @@ export async function buildBrief(rawTz: unknown) {
     streak: streakOf(s.days ?? []),
     pearls: s.pearls ?? 0,
     money: money && { spent: money.spent, left: money.left, budget: money.budget },
+    comingUp,
     fact: { text: fact.text, ask: fact.ask },
     remembered,
     say: (await briefSaid(day)) ?? say,

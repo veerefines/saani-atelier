@@ -29,6 +29,7 @@ cleanup() {
   [ -n "${SERVER:-}" ] && kill "$SERVER" 2>/dev/null
   [ -n "${FAKE:-}" ] && kill "$FAKE" 2>/dev/null
   [ -n "${FAKEFX:-}" ] && kill "$FAKEFX" 2>/dev/null
+  [ -n "${FAKEG:-}" ] && kill "$FAKEG" 2>/dev/null
   rm -rf .data
   [ -d "$TEST_TMP/data-backup" ] && cp -R "$TEST_TMP/data-backup" .data
   rm -rf "$TEST_TMP"
@@ -42,6 +43,10 @@ openssl req -x509 -newkey rsa:2048 -nodes -keyout "$TEST_TMP/push-test.key" -out
 node tests/fake-fx.js 4611 "$TEST_TMP" &
 FAKEFX=$!
 export FX_BASE_URL=http://localhost:4611
+# a fake Google (OAuth + Calendar) for meetups
+node tests/fake-google.js 4612 "$TEST_TMP" &
+FAKEG=$!
+export GOOGLE_CLIENT_ID=test-client GOOGLE_CLIENT_SECRET=test-secret GOOGLE_API_BASE=http://localhost:4612 GOOGLE_AUTH_URL=http://localhost:4612/auth
 
 # the push library must trust that certificate; nothing else here talks to anything private
 NODE_TLS_REJECT_UNAUTHORIZED=0 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
@@ -66,6 +71,7 @@ run "endpoints, part 2" bash tests/endpoints-2.sh
 run "endpoints, part 3" bash tests/endpoints-3.sh
 run "endpoints, part 4" bash tests/endpoints-4.sh
 run "endpoints, part 5" bash tests/endpoints-5.sh
+run "endpoints, part 6" bash tests/endpoints-6.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Groq server

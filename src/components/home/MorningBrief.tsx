@@ -202,6 +202,31 @@ export default function MorningBrief() {
                 {adding && <AddReminder onDone={() => (setAdding(false), emit('jelly:reminders', null))} />}
               </div>
 
+              {b.comingUp.length > 0 && (
+                <div className="mb-card mb-soon">
+                  <h3>
+                    Coming up in Milano
+                    <Link href="/home/calendar" className="mb-add">
+                      calendar →
+                    </Link>
+                  </h3>
+                  <ul>
+                    {b.comingUp.map((e) => (
+                      <li key={e.id + e.start}>
+                        <Link href={`/home/milano?event=${e.id}#happenings`}>
+                          <span aria-hidden="true">{e.icon}</span>
+                          <b>{e.title}</b>
+                          <small>
+                            {new Date(`${e.start}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                            {e.tentative ? ' · tbc' : ''}
+                          </small>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="mb-chips">
                 <span>🔥 {b.streak}-day streak</span>
                 <Link href="/home/jelly?tab=shop">

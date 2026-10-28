@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import PageHead from '@/components/home/Back';
 import Admin from '@/components/admin/Admin';
 import { getInvites } from '@/lib/invites';
+import { friendEmails } from '@/lib/google';
 import { getSession } from '@/lib/auth';
 import { getBingo, listJar, listLetters, listPosts } from '@/lib/data';
 import { getChecklist, getContent, getJourneyText, getPresence, listJourneyExtras, listKeepsakeMedia, listOccasions, listPages, listSlotMedia, listStamps } from '@/lib/extras';
@@ -18,6 +19,7 @@ export default async function AdminPage() {
   const h = await headers();
   const me = (await getSession())?.id ?? '';
   const origin = `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}`;
+  const emails = await friendEmails();
   const [invites, occasions, pages, slotMedia, content, letters, jar, posts, board, stamps, check, presence, keepsakeMedia, extras, edits] = await Promise.all([
     getInvites(),
     listOccasions(),
@@ -45,7 +47,7 @@ export default async function AdminPage() {
         journeyChapters={chapters.map((c) => ({ id: c.id, title: c.title }))}
         extras={extras}
         words={journeyTextFields().map((f) => ({ ...f, original: f.value, value: edits[f.key] ?? f.value }))}
-        friends={invites.map((i) => ({ id: i.id, name: i.name, role: i.role, admin: Boolean(i.admin), managed: Boolean(i.managed), link: `${origin}/hello/${i.code}` }))}
+        friends={invites.map((i) => ({ id: i.id, name: i.name, role: i.role, admin: Boolean(i.admin), managed: Boolean(i.managed), link: `${origin}/hello/${i.code}`, email: emails[i.id] ?? '' }))}
         occasions={occasions}
         pages={pages}
         slots={journeySlots().map((x) => ({ ...x, mediaId: slotMedia.find((m) => m.slot === x.slot)?.mediaId ?? null }))}

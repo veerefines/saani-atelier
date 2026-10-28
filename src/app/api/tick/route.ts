@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fired, listReminders, saveReminder } from '@/lib/reminders';
-import { notifySaanika } from '@/lib/push';
+import { notifyPerson, notifySaanika } from '@/lib/push';
+import { listMeetups, saveMeetup } from '@/lib/meetups';
 
 /**
  * Every ten minutes (a free GitHub Actions timer, .github/workflows/tick.yml): send the reminders
@@ -21,5 +22,13 @@ export async function GET(req: Request) {
     sent += p.sent;
     await saveReminder(fired(r, now));
   }
-  return NextResponse.json({ ok: true, due: due.length, sent });
+  // meetups starting in the next 20 minutes: a nudge with the Meet link (once)
+  const soon = (await listMeetups()).filter((m) => !m.cancelled && !m.nudged && Date.parse(m.start) > now.getTime() - 5 * 60_000 && Date.parse(m.start) <= now.getTime() + 20 * 60_000);
+  for (const m of soon) {
+    const msg = { title: `💻 “${m.title}” starts soon`, body: 'Tap to join on Google Meet', url: m.meetLink ?? '/home/meetups' };
+    await notifySaanika({ ...msg, url: '/home/meetups' });
+    await Promise.all(m.friendIds.filter((f) => m.rsvp[f] !== 'no').map((f) => notifyPerson(f, { ...msg, url: '/wall' })));
+    await saveMeetup({ ...m, nudged: true });
+  }
+  return NextResponse.json({ ok: true, due: due.length, sent, meetups: soon.length });
 }

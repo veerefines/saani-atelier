@@ -4,6 +4,9 @@ import { notifyFriends, notifySaanika } from './push';
 import { listReminders } from './reminders';
 import { milanoWeather, sky } from './today';
 import { occasionSeasons, seasonOn } from './jelly-seasons';
+import { happenings } from '@/content/happenings';
+import { places } from '@/content/milano';
+import * as db from './db';
 
 const first = (name: string) => name.split(' ')[0];
 const between = (iso: string | null | undefined, from: Date, to: Date) => {
@@ -22,7 +25,7 @@ export async function runDaily(at = new Date()) {
   const since = state ? new Date(state.lastRun) : new Date(at.getTime() - 86_400_000);
   const today = milanDay(at);
   const newDay = milanDay(since) !== today || !state;
-  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0, morning: false };
+  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0, morning: false, ahead: [] as string[], month: 0 };
 
   const [letters, posts, occasions] = await Promise.all([listLetters(), listPosts(), listOccasions()]);
 
@@ -73,6 +76,36 @@ export async function runDaily(at = new Date()) {
     const bits = [w ? `${w.now}° and ${sky(w.code, w.isDay).words}` : '', todays ? `${todays} ${todays === 1 ? 'reminder' : 'reminders'}` : '', '3 new quests'].filter(Boolean);
     await notifySaanika({ title: season ? `${season.emoji} ${season.name}! Buongiorno, Saani` : '☀️ Buongiorno, Saani!', body: `${bits.join(' · ')}. Jelly has your morning brief ready 🪼`, url: '/home' });
     out.morning = true;
+
+    // Milano happenings: a week ahead (to plan), the day before, and on the 1st, the month's list
+    const nudged = new Set((await db.get<{ id: string; createdAt: string; ids: string[] }>('state', 'nudged-events'))?.ids ?? []);
+    const fresh: string[] = [];
+    const inWeek = addDays(today, 7);
+    const tomorrow = addDays(today, 1);
+    const dayName = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    for (const h of happenings) {
+      for (const e of h.editions ?? []) {
+        for (const [when, key, title, body] of [
+          [inWeek, `w:${h.id}:${e.start}`, `📅 Next ${dayName(e.start).split(' ')[0]}: ${h.title}`, `${h.where}${e.tentative ? ' (dates to be confirmed)' : ''}. Want to go? Jelly can remind you.`],
+          [tomorrow, `d:${h.id}:${e.start}`, `📅 Tomorrow: ${h.title}`, `${h.details?.time ? `${h.details.time} · ` : ''}${h.where}`],
+        ] as const) {
+          if (e.start !== when || nudged.has(key)) continue;
+          await notifySaanika({ title, body, url: `/home/milano?event=${h.id}#happenings` });
+          fresh.push(key);
+          out.ahead.push(key);
+        }
+      }
+    }
+    if (today.endsWith('-01') && !nudged.has(`m:${today.slice(0, 7)}`)) {
+      const month = today.slice(0, 7);
+      const things = happenings.filter((h) => (h.editions ?? []).some((e) => e.start.slice(0, 7) === month || (e.start < `${month}-01` && e.end >= `${month}-01`))).length;
+      const finds = places.filter((p) => p.added && p.added > addDays(today, -31)).length;
+      const name = new Date(`${today}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' });
+      await notifySaanika({ title: `🗓️ Your ${name} in Milano`, body: `${things} ${things === 1 ? 'thing' : 'things'} to do${finds ? ` and ${finds} new ${finds === 1 ? 'find' : 'finds'}` : ''}. Jelly made you a list ✨`, url: '/home/calendar' });
+      fresh.push(`m:${month}`);
+      out.month = things;
+    }
+    if (fresh.length) await db.put('state', { id: 'nudged-events', createdAt: new Date().toISOString(), ids: [...nudged, ...fresh].slice(-500) });
 
     // Sunday digest of the week's arrivals
     const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'short' }).format(at);

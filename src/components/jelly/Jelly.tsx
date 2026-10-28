@@ -13,6 +13,7 @@ import { useMoodCycle } from './moods';
 import { Answer } from '@/components/corner/Assistant';
 import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
+import { happenings } from '@/content/happenings';
 import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY, SNORE, STILL_LIKE, WAKE, hello } from './lines';
 import SpeakButton from './SpeakButton';
 import { setSound, sfx, useSound, voice } from '@/lib/sound';
@@ -276,7 +277,23 @@ export default function Jelly() {
       at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, hello(baseRef.current)));
     }
     const due = Date.now() - Number(store.get('jelly-last') ?? 0) > QUIET;
-    if (due && away !== null) at(7000, () => showBubble());
+    // something in Milano within a week she hasn't heard about from Jelly yet: that comes first
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+    const week = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
+    const soon = happenings
+      .flatMap((h) => (h.editions ?? []).filter((e) => e.start > today && e.start <= week).map((e) => ({ h, e })))
+      .find(({ h, e }) => !store.get(`jelly-told-${h.id}-${e.start}`));
+    if (soon && away !== null && path.startsWith('/home')) {
+      at(8000, () => {
+        const { h, e } = soon;
+        store.set(`jelly-told-${h.id}-${e.start}`, '1');
+        store.set('jelly-last', String(Date.now()));
+        const when = new Date(`${e.start}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
+        setBubble({ kind: 'checkin', label: 'Psst… coming up!', text: `${h.title}, ${when} at ${h.where}. Want to go? I can remind you 🪼`, ask: `Tell me more about ${h.title}. Should I go?`, mood: 'excited' });
+        sfx('blip');
+        feel('excited', 4000);
+      });
+    } else if (due && away !== null) at(7000, () => showBubble());
     return () => later.forEach(clearTimeout);
   }, [loaded, away, feel, showBubble]);
 

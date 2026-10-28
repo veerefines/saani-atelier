@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Wish } from '@/lib/data';
 import { api } from '@/lib/upload-client';
-import { categories, distanceKm, distanceLabel, mapsAround, mapsLink, places, type Category, type Place } from '@/content/milano';
+import { categories, distanceKm, distanceLabel, isNewFind, mapsAround, mapsLink, places, type Category, type Place } from '@/content/milano';
 import Happenings from './Happenings';
 import { useHere } from './useHere';
 import { dayInfo, timeIn, useNow } from './Clock';
@@ -118,6 +118,7 @@ function PlaceCard({
       <span className="pc-tag">
         {c.icon} {c.label}
       </span>
+      {isNewFind(place) && <span className="pc-new">✨ New find</span>}
       <h3 className="pc-name">{place.name}</h3>
       <p className="pc-area">
         {place.area}
@@ -293,7 +294,7 @@ export default function Milano({
   const now = useNow(15_000);
   const day = dayInfo(now, info.arrival);
   const [wishes, setWishes] = useState(initial);
-  const [cat, setCat] = useState<Category | 'all'>('all');
+  const [cat, setCat] = useState<Category | 'all' | 'new'>('all');
   const [selected, setSelected] = useState<Place | null>(null);
   const [fromSurprise, setFromSurprise] = useState(false);
   const [rolling, setRolling] = useState<string | null>(null);
@@ -319,7 +320,8 @@ export default function Milano({
   }, [here.at]);
 
   // the map and Surprise me share the mood chips; beaches only show when asked for
-  const byMood = useMemo(() => places.filter((p) => (cat === 'all' ? p.cat !== 'beach' : p.cat === cat)), [cat]);
+  const byMood = useMemo(() => places.filter((p) => (cat === 'all' ? p.cat !== 'beach' : cat === 'new' ? isNewFind(p) : p.cat === cat)), [cat]);
+  const newFinds = useMemo(() => places.filter((p) => isNewFind(p)).length, []);
   const nearest = useMemo(() => (here.at ? [...byMood].sort((a, b) => kmTo(a)! - kmTo(b)!) : byMood), [byMood, here.at, kmTo]);
   // far from Milano (say, still at home): nothing is "near", so keep the whole guide
   const farAway = here.at && nearest.length ? kmTo(nearest[0])! > 50 : false;
@@ -409,7 +411,7 @@ export default function Milano({
     guideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function pickCat(c: Category | 'all') {
+  function pickCat(c: Category | 'all' | 'new') {
     setCat(c);
     if (selected && c !== 'all' && selected.cat !== c) setSelected(null);
     if (selected && c === 'all' && selected.cat === 'beach') setSelected(null);
@@ -457,6 +459,11 @@ export default function Milano({
               >
                 📍 {here.status === 'asking' ? 'Finding you…' : 'Near me'}
               </button>
+              {newFinds > 0 && (
+                <button className="mil-chip mil-new" aria-pressed={cat === 'new'} onClick={() => pickCat('new')} style={{ ['--tint' as string]: '#fff1c4' }}>
+                  ✨ New finds · {newFinds}
+                </button>
+              )}
               <button className="mil-chip" aria-pressed={cat === 'all'} onClick={() => pickCat('all')} style={{ ['--tint' as string]: '#fbe3e8' }}>
                 ✨ Everything
               </button>

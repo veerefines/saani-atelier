@@ -15,6 +15,7 @@ import CallPlanner from '@/components/home/CallPlanner';
 import { NudgeSend } from '@/components/home/Nudges';
 import { MoodStatus } from '@/components/home/Mood';
 import { LatestMoment } from '@/components/home/Moments';
+import Meetups from '@/components/wall/Meetups';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string };
 type Counts = {
@@ -95,6 +96,7 @@ export default function WellDesk({
       {/* on a laptop these sit side by side under the header */}
       <div className="desk-top wall-top">
         <LatestMoment me={me} />
+        <Meetups />
         <div className="wall-right">
           {soon && (
             <section className="dk-card w-soon" aria-label="Coming up">
