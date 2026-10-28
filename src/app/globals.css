@@ -555,3 +555,32 @@ input:focus-visible {
     height: 10px;
   }
 }
+
+/* privacy and terms */
+.legal {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+  font: 400 16px / 1.6 var(--font-body);
+  color: var(--ink);
+}
+.legal h1 {
+  margin: 0;
+  font: 400 44px var(--font-whisper);
+  color: var(--burgundy);
+}
+.legal h2 {
+  margin: 28px 0 6px;
+  font: 400 26px var(--font-whisper);
+  color: var(--burgundy);
+}
+.legal-sub {
+  margin: 4px 0 20px;
+  color: #8a6a7b;
+}
+.legal code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #fde4ee;
+  font-size: 14px;
+}
