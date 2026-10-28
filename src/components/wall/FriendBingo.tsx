@@ -35,6 +35,7 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
       sfx('stitch');
       setText('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -44,6 +45,7 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
     try {
       if (await deleteMine('dares', id)) setDares((ds) => ds.filter((d) => d.id !== id));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

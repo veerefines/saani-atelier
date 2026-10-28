@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 import type { Post } from '@/lib/data';
 import type { PieceSpot } from '@/lib/extras';
 import { api, mediaUrl } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 import { PostBody } from './LoveWall';
 import ReplyBox from './ReplyBox';
 
@@ -159,10 +160,12 @@ export default function ScrapbookCollage({ pageId, posts: initial, layout: saved
     const next = { ...spots, [id]: { ...cur, x: Math.min(85, Math.max(0, ((cx - w / 2) / W) * 100)), y: Math.max(0, ((cy - hgt / 2) / W) * 100) } };
     setSpots(next);
     setVersion((v) => v + 1);
+    sfx('thunk');
     persist(next);
   }
 
   function shuffle() {
+    sfx('whoosh');
     const next = scatter(
       [...posts].sort(() => Math.random() - 0.5),
       Math.floor(Math.random() * 1000),

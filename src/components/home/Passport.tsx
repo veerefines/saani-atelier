@@ -49,6 +49,7 @@ export default function Passport({ stamps: initial }: { stamps: Stamp[] }) {
     setBusy(null);
   }
   async function unstamp(p: Place) {
+    sfx('paper');
     setStamps((x) => x.filter((y) => y.placeId !== p.id));
     api(`/api/stamps/${p.id}`, 'DELETE').catch(() => setStamps(initial));
   }

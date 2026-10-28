@@ -174,6 +174,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
       try {
         took(await api<Data>('/api/jelly/home', 'PUT', { placed: next, backdrop: bd }));
       } catch (e) {
+        sfx('nope');
         setErr((e as Error).message);
       }
     }, 600);
@@ -240,6 +241,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
       setNote(BACKDROPS.some((b) => b.id === id) ? `${name} is Jelly’s now. Choose it while decorating.` : `${name} is in Jelly’s things. Tap Decorate to place it!`);
       feel('excited', pick(LOVES));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
       feel('sad', undefined, 2000);
     }

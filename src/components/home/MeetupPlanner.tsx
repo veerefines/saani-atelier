@@ -70,6 +70,7 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
       load();
       checkSoon();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
     setBusy(false);
@@ -82,6 +83,7 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
       sfx('paper');
       load();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
   }

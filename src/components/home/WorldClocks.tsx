@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { timeIn, useNow } from './Clock';
 import { usePeople, type Someone } from './usePeople';
+import { sfx } from '@/lib/sound';
 
 type Place = { city: string; zones: string[] };
 
@@ -31,8 +32,10 @@ function Stamp({ place, now, who, open, onOpen }: { place: Place; now: Date | nu
     <span className="wc" onPointerEnter={(e) => e.pointerType === 'mouse' && onOpen(true)} onPointerLeave={(e) => e.pointerType === 'mouse' && onOpen(false)}>
       <button
         type="button"
+        data-quiet
         className={`h-stamp wc-stamp${open ? ' open' : ''}`}
-        onPointerUp={(e) => e.pointerType !== 'mouse' && onOpen(!open)}
+        // a tap opens it before the click arrives, so it plays its own unfold
+        onPointerUp={(e) => e.pointerType !== 'mouse' && (sfx(open ? 'close' : 'open'), onOpen(!open))}
         // keyboard (Enter/Space) clicks have no pointer; a mouse already opened it by hovering
         onClick={(e) => e.detail === 0 && onOpen(!open)}
         aria-expanded={open}

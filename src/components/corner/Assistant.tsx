@@ -7,6 +7,7 @@ import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { announce, applyChange, useJellyChats } from '../jelly/bus';
 import SpeakButton from '../jelly/SpeakButton';
 import { shortDate, type Ctx } from './shared';
+import { sfx } from '@/lib/sound';
 
 type Lens = 'designer' | 'manager';
 const LENSES: { id: Lens; label: string }[] = [
@@ -60,6 +61,7 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
       await fn();
       setSaved((s) => ({ ...s, [what]: true }));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
@@ -190,6 +192,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
         const r = await api<{ chat: Chat }>('/api/corner/jelly', 'POST', { question, chatId: chat!.id, projectId: ctx.project.id });
         setJellyChats((l) => applyChange(l, { chat: r.chat }));
         announce({ chat: r.chat });
+        sfx('message');
         setQ('');
         setBusy('');
         return;
@@ -197,8 +200,10 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
       const r = await api<{ chat: Chat }>(base, 'POST', { mode, question, chatId: withJelly ? null : (chat?.id ?? null) });
       setChats((l) => [r.chat, ...l.filter((c) => c.id !== r.chat.id)]);
       setChatId(r.chat.id);
+      sfx('message');
       if (mode === 'question') setQ('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy('');
@@ -208,6 +213,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
   async function rename(c: Chat, title: string) {
     setRenaming('');
     if (!title.trim() || title === c.title) return;
+    sfx('tick');
     try {
       if (c.projectId === JELLY_CHATS) {
         const n = await api<Chat>(`/api/corner/jelly/chats/${c.id}`, 'PATCH', { title });
@@ -218,11 +224,13 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
       const n = await api<Chat>(`${base}/chats/${c.id}`, 'PATCH', { title });
       setChats((l) => l.map((x) => (x.id === c.id ? n : x)));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }
   async function remove(c: Chat) {
     if (!confirm(`Delete “${c.title}”? This conversation can’t be brought back.`)) return;
+    sfx('paper');
     try {
       if (c.projectId === JELLY_CHATS) {
         await api(`/api/corner/jelly/chats/${c.id}`, 'DELETE');
@@ -234,6 +242,7 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
       }
       if (chatId === c.id) setChatId(null);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

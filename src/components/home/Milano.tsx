@@ -175,6 +175,7 @@ function Wishlist({
       setText('');
       setErr('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

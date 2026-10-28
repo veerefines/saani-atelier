@@ -232,6 +232,14 @@ if (typeof window !== 'undefined') {
       if (!e.isTrusted || ticking) return;
       const el = (e.target as Element | null)?.closest?.('button, a[href], [role="button"], [role="tab"], [role="switch"], summary, input[type="checkbox"], input[type="radio"], select');
       if (!el || el.closest('[data-quiet]') || (el as HTMLButtonElement).disabled) return;
+      // anything that opens and closes (dropdowns, menus, details boxes) unfolds and folds back;
+      // this runs before the click is handled, so the state it reads is the one being left
+      const toggles = el.matches('summary') ? (el.parentElement as HTMLDetailsElement | null) : el.hasAttribute('aria-expanded') ? el : null;
+      if (toggles) {
+        const open = toggles instanceof HTMLDetailsElement ? toggles.open : el.getAttribute('aria-expanded') === 'true';
+        sfx(open ? 'close' : 'open'); // its buzz comes with it
+        return;
+      }
       sfx('tap');
       haptic('light');
     },
@@ -282,7 +290,7 @@ function noise(at: number, dur: number, { from = 400, to = 2000, gain = 0.2, q =
 const N = (semi: number) => 523.25 * Math.pow(2, semi / 12); // semitones from C5
 
 /* ---------- the sounds ---------- */
-export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full' | 'kaching' | 'coin' | 'coins' | 'flip' | 'oops';
+export type Sfx = 'tap' | 'page' | 'spin' | 'land' | 'go' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full' | 'kaching' | 'coin' | 'coins' | 'flip' | 'oops' | 'open' | 'close';
 let lastPop = 0;
 let spinPitch = 0;
 /** One tick of the Surprise me wheel; `step` (0, 1, 2…) raises the pitch as it slows down. */
@@ -297,7 +305,7 @@ export function spinTick(step: number) {
   spinPitch = step;
   sfx('spin');
 }
-const BUZZ: Partial<Record<Sfx, Buzz>> = { spin: 'light', land: 'success', go: 'medium', rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success', kaching: 'success', coin: 'light', coins: 'success', flip: 'light', oops: 'medium' };
+const BUZZ: Partial<Record<Sfx, Buzz>> = { spin: 'light', land: 'success', go: 'medium', rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success', kaching: 'success', coin: 'light', coins: 'success', flip: 'light', oops: 'medium', open: 'light', close: 'light', page: 'light', whoosh: 'medium', blip: 'light' };
 export function sfx(name: Sfx) {
   if (BUZZ[name]) haptic(BUZZ[name]);
   if (!ready()) return;
@@ -403,6 +411,18 @@ export function sfx(name: Sfx) {
         noise(t + d, 0.02, { from: 6000, to: 4000, gain: 0.03, q: 6 });
       }
       bell(N(31), t + 0.42, 0.7, 0.08);
+      break;
+    case 'open':
+      // something unfolds (a dropdown, a details box): a soft paper slide and two notes up
+      noise(t, 0.12, { from: 900, to: 2400, gain: 0.035, q: 0.9 });
+      tone(N(14), t + 0.02, 0.12, { type: 'triangle', gain: 0.07 });
+      tone(N(19), t + 0.08, 0.18, { type: 'triangle', gain: 0.07 });
+      break;
+    case 'close':
+      // and folds away again: the same, back down
+      noise(t, 0.1, { from: 2400, to: 900, gain: 0.03, q: 0.9 });
+      tone(N(19), t + 0.02, 0.1, { type: 'triangle', gain: 0.06 });
+      tone(N(12), t + 0.07, 0.16, { type: 'triangle', gain: 0.06 });
       break;
     case 'flip':
       // a coin flipped into the air: a spinning shimmer up, and a ping

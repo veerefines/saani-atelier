@@ -236,6 +236,7 @@ export default function Composer({
         done('Dropped into her jar 🫙');
       }
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
       setStep('');
     }
@@ -247,6 +248,7 @@ export default function Composer({
       if (!(await deleteMine(kind, id))) return;
       setMine((m) => ({ ...m, [kind]: (m[kind] as { id: string }[]).filter((x) => x.id !== id) }));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { JourneyExtra, Occasion, Page, RevealNote } from '@/lib/extras';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 
 type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string; email?: string };
 type ChapterRef = { id: string; title: string };
@@ -123,7 +124,9 @@ function useErr() {
     setErr('');
     try {
       await fn();
+      sfx('tick');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
@@ -487,6 +490,7 @@ function WordField({ f }: { f: Word }) {
         const now = r.value ?? f.original;
         setValue(now);
         setSaved(now);
+        sfx('tick');
         setState('saved');
         setTimeout(() => setState(''), 1500);
       } catch (e) {
@@ -662,6 +666,7 @@ function NoteEditor({ initial }: { initial: RevealNote }) {
           run(async () => {
             await api('/api/admin/note', 'PUT', { greeting, lines: body, signoff });
             setSaved(true);
+            sfx('tick');
             setTimeout(() => setSaved(false), 2500);
           });
         }}

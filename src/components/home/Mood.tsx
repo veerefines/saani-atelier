@@ -36,6 +36,7 @@ export function MoodPicker() {
       jellyEvent('mood');
     } catch (e) {
       setMood(prev);
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

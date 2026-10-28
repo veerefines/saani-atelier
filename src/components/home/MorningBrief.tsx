@@ -80,7 +80,7 @@ export default function MorningBrief() {
 
   return (
     <section className={`mb${open ? ' open' : ''}`} aria-label="Jelly’s morning brief" style={b.season ? { ['--mb-tint' as string]: b.season.tint } : undefined}>
-      <button type="button" className="mb-bar" onClick={() => (sfx(open ? 'paper' : 'page'), setOpen(!open))} aria-expanded={open}>
+      <button type="button" className="mb-bar" onClick={() => setOpen(!open)} aria-expanded={open}>
         <span className="mb-face" aria-hidden="true">
           <img src={b.season ? b.season.jelly : moodSrc('joyful')} alt="" width={44} height={44} />
         </span>
@@ -265,6 +265,7 @@ function AddReminder({ onDone }: { onDone: () => void }) {
       if (Array.isArray(r.gains) && r.gains.length) emit('jelly:gains', r.gains as never);
       onDone();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
   }

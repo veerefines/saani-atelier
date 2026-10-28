@@ -5,7 +5,7 @@ import { MOOD_NAMES, radioPause, radioSkip, useRadio } from '@/lib/radio';
 import { setExternalMusic } from '@/lib/music';
 import { spotifyKind, spotifyUri } from '@/lib/spotify';
 import { api } from '@/lib/upload-client';
-import { isUnlocked, usePrefs } from '@/lib/sound';
+import { isUnlocked, sfx, usePrefs } from '@/lib/sound';
 import type { JellyView } from '@/lib/jelly';
 
 type Station = 'italia' | 'saani';
@@ -144,6 +144,7 @@ export default function RadioChip({ friend = false }: { friend?: boolean }) {
       setEditing(false);
       setMountSpotify(true);
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
   }

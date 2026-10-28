@@ -117,6 +117,7 @@ export default function Bingo({ squares, done: initial, dares = [] }: { squares:
         if (full || after > before) sfx(full ? 'full' : 'line');
       }, 900);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -131,6 +132,7 @@ export default function Bingo({ squares, done: initial, dares = [] }: { squares:
       setDone(next);
       setActive(null);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);

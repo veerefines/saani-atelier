@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 
 type State = 'loading' | 'off' | 'on' | 'busy' | 'denied' | 'install' | 'unsupported' | 'unavailable';
 
@@ -78,6 +79,7 @@ export default function NotifyToggle({
         (await reg.pushManager.getSubscription()) ??
         (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) }));
       await api('/api/push', 'POST', { subscription: sub.toJSON() });
+      sfx('chime');
       setState('on');
     } catch (e) {
       setErr(await explain(e));
@@ -95,8 +97,10 @@ export default function NotifyToggle({
         await api('/api/push', 'DELETE', { endpoint: sub.endpoint }).catch(() => {});
         await sub.unsubscribe();
       }
+      sfx('flip');
       setState('off');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
       setState('on');
     }

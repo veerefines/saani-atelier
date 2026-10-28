@@ -93,6 +93,7 @@ export function ShareMoment({ friends, onSent }: { friends: Friend[]; onSent?: (
       clear();
       setMsg(everyone ? 'Sent to everyone 💗' : `Sent to ${friends.filter((f) => picked.includes(f.id)).map((f) => f.name.split(' ')[0]).join(', ')} 💗`);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy('');
@@ -199,6 +200,7 @@ export function MySentMoments({ initial, friends }: { initial: Moment[]; friends
       await api(`/api/moments/${id}`, 'DELETE');
       setList((l) => l.filter((m) => m.id !== id));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
@@ -234,6 +236,7 @@ function ReactRow({ m, me, onChange }: { m: Moment; me: string; onChange: (m: Mo
     try {
       onChange(await api<Moment>(`/api/moments/${m.id}/react`, 'POST', { emoji }));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };

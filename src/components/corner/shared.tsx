@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Item, NewItem, Project } from '@/lib/corner-model';
 import { uploadFile } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 
 /** What every workspace tab can read and do. */
 export type Ctx = {
@@ -35,6 +36,7 @@ export function useAction() {
       }
       return true;
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
       return false;
     } finally {

@@ -49,17 +49,20 @@ export default function Lookbook({ items: initial }: { items: LookItem[] }) {
       setCaption('');
       setTags('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
   }
 
   function toggleShare(x: LookItem) {
+    sfx(x.shared ? 'flip' : 'chime');
     setItems((xs) => xs.map((y) => (y.id === x.id ? { ...y, shared: !y.shared } : y)));
     api(`/api/lookbook/${x.id}`, 'PATCH', { shared: !x.shared }).catch(() => setItems(initial));
   }
   function remove(x: LookItem) {
     if (!confirm('Remove this from your lookbook?')) return;
+    sfx('paper');
     setItems((xs) => xs.filter((y) => y.id !== x.id));
     api(`/api/lookbook/${x.id}`, 'DELETE').catch(() => setItems(initial));
   }

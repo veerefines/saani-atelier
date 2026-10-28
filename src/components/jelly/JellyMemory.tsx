@@ -34,6 +34,7 @@ export default function JellyMemory() {
       sfx('sparkle');
       checkSoon();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
   }
@@ -45,6 +46,7 @@ export default function JellyMemory() {
       setEdit(null);
       sfx('pop');
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     }
   }

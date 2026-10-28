@@ -356,6 +356,7 @@ function AddSpend({ rate, onAdded, onClose }: { rate: Rate | null; onAdded: () =
       setNote('');
       onAdded();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message || 'Couldn’t save that. Try again?');
     } finally {
       setBusy(false);
@@ -431,6 +432,7 @@ function TellJelly({ onAdded }: { onAdded: () => void }) {
       if (!r.drafts.length) setErr('Jelly couldn’t find an amount in that. Try “pizza 12” or “mamma sent ₹10000”.');
       else (sfx('pop'), setDrafts(r.drafts));
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     } finally {
       setBusy(false);
@@ -448,6 +450,7 @@ function TellJelly({ onAdded }: { onAdded: () => void }) {
       setText('');
       onAdded();
     } catch (x) {
+      sfx('nope');
       setErr((x as Error).message);
     } finally {
       setBusy(false);
@@ -547,6 +550,7 @@ function EditSpend({ x, onClose, onSaved, onDelete }: { x: Expense; onClose: () 
       sfx('coin');
       onSaved();
     } catch (z) {
+      sfx('nope');
       setErr((z as Error).message);
     }
   }
@@ -599,6 +603,7 @@ function BudgetEditor({ b, onClose, onSaved }: { b: Budget; onClose: () => void;
       sfx('coins');
       onSaved();
     } catch (z) {
+      sfx('nope');
       setErr((z as Error).message);
     }
   }

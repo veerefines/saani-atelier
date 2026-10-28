@@ -28,6 +28,7 @@ export default function Tips({ tips: initial, name }: { tips: Wish[]; name: stri
       sfx('sparkle');
       setText('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -37,6 +38,7 @@ export default function Tips({ tips: initial, name }: { tips: Wish[]; name: stri
     try {
       if (await deleteMine('tips', id)) setTips((ts) => ts.filter((t) => t.id !== id));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

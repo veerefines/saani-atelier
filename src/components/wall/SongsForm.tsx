@@ -26,6 +26,7 @@ export default function SongsForm({ songs: initial }: { songs: Song[] }) {
       setUrl('');
       setNote('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -34,6 +35,7 @@ export default function SongsForm({ songs: initial }: { songs: Song[] }) {
     try {
       if (await deleteMine('songs', id)) setSongs((x) => x.filter((s) => s.id !== id));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

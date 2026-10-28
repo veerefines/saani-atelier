@@ -61,6 +61,7 @@ export function NudgeSend() {
       setMore(false);
       setSent((k) => k + 1);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -158,9 +159,11 @@ function InboxItem({ n, onDone, onClear }: { n: Nudge; onDone: (n: Nudge) => voi
     setErr('');
     try {
       onDone(await api<Nudge>(`/api/nudges/${n.id}`, 'POST', body));
+      sfx(body.reply ? 'send' : 'pop');
       setText('');
       setReplying(false);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
@@ -221,6 +224,7 @@ export function LoveBack() {
     setBusy(true);
     try {
       await api('/api/nudges/back', 'POST', { emoji: '💗' });
+      sfx('whoosh');
       setDone('Sent to everyone 💗');
     } catch (e) {
       setDone((e as Error).message);
@@ -245,11 +249,13 @@ export function NudgeInbox() {
   const clear = async (ids: string[] | 'all') => {
     const before = list;
     setErr('');
+    sfx('paper');
     setList((l) => (ids === 'all' ? [] : (l ?? []).filter((x) => !ids.includes(x.id))));
     try {
       await api('/api/nudges/dismiss', 'POST', ids === 'all' ? { all: true } : { ids });
     } catch (e) {
       setList(before);
+      sfx('nope');
       setErr((e as Error).message);
     }
   };

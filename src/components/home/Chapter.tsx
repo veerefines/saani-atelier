@@ -42,17 +42,20 @@ export default function Chapter({ entries: initial, moods }: { entries: DiaryEnt
       setFile(null);
       setShared(false);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
   }
 
   async function toggleShare(d: DiaryEntry) {
+    sfx(d.shared ? 'flip' : 'chime');
     setEntries((x) => x.map((y) => (y.id === d.id ? { ...y, shared: !y.shared } : y)));
     api(`/api/diary/${d.id}`, 'PATCH', { shared: !d.shared }).catch(() => setEntries(initial));
   }
   async function remove(d: DiaryEntry) {
     if (!confirm('Delete this day?')) return;
+    sfx('paper');
     setEntries((x) => x.filter((y) => y.id !== d.id));
     api(`/api/diary/${d.id}`, 'DELETE').catch(() => setEntries(initial));
   }

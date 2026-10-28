@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Dare, JarNote, Letter, Post, Wish } from '@/lib/data';
 import type { Square } from '@/content/home';
 import { SentJar, SentLetters, SentPosts, deleteMine } from './Composer';
+import { sfx } from '@/lib/sound';
 
 type Box = { posts: Post[]; letters: Letter[]; jar: JarNote[]; dares: Dare[]; tips: Wish[] };
 type Kind = keyof Box;
@@ -26,6 +27,7 @@ export default function SentBox({ box: initial, squares }: { box: Box; squares: 
       if (!(await deleteMine(kind, id))) return;
       setBox((b) => ({ ...b, [kind]: (b[kind] as { id: string }[]).filter((x) => x.id !== id) }));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   }

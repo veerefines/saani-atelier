@@ -12,6 +12,7 @@ import Moodboard from './Moodboard';
 import Elements from './Elements';
 import Management from './Management';
 import Assistant from './Assistant';
+import { sfx } from '@/lib/sound';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -56,11 +57,13 @@ export default function Workspace({ initial, initialTab, aiReady }: { initial: {
     },
     removeItem: async (id) => {
       await api(`${base}/items/${id}`, 'DELETE');
+      sfx('paper');
       setItems((l) => l.filter((x) => x.id !== id));
       bump();
     },
     reorder: async (ids) => {
       await api(`${base}/items/reorder`, 'POST', { ids });
+      sfx('tick');
       setItems((l) => l.map((x) => (ids.includes(x.id) ? { ...x, order: ids.indexOf(x.id) } : x)));
       bump();
     },

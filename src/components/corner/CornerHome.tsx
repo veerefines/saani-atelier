@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CATEGORIES, type Category, type Project } from '@/lib/corner-model';
 import { api, mediaUrl } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 
 export const CATEGORY_LOOK: Record<Category, { emoji: string; tint: string }> = {
   'Fashion Collection': { emoji: '👗', tint: '#fbd6e2' },
@@ -50,6 +51,7 @@ function CreateForm({ onDone, onCancel }: { onDone: (p: Project) => void; onCanc
           try {
             onDone(await api<Project>('/api/corner/projects', 'POST', { title, description, category }));
           } catch (x) {
+            sfx('nope');
             setErr((x as Error).message);
             setBusy(false);
           }
@@ -107,6 +109,7 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
     try {
       onChange(await api<Project>(`/api/corner/projects/${p.id}`, 'PATCH', body));
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
@@ -116,6 +119,7 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
     try {
       await fn();
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
@@ -180,6 +184,7 @@ function Card({ p, onChange, onRemove, onCopy }: { p: Project; onChange: (p: Pro
             onClick={() =>
               act(async () => {
                 if (!confirm(`Delete “${p.title}” and everything in it? This can’t be undone.`)) return;
+                sfx('paper');
                 await api(`/api/corner/projects/${p.id}`, 'DELETE');
                 onRemove(p.id);
               })

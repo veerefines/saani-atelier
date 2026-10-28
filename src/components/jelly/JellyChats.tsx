@@ -9,6 +9,7 @@ import { clock12 } from '@/lib/time';
 import { Answer } from '@/components/corner/Assistant';
 import { announce, applyChange, emit, useJellyChats } from './bus';
 import SpeakButton from './SpeakButton';
+import { sfx } from '@/lib/sound';
 
 const STARTERS = ['What should I do today?', 'What am I close to unlocking?', 'Plan me a cosy weekend in Milano', 'Tell me a fun fashion fact'];
 const DAY = 86_400_000;
@@ -68,10 +69,11 @@ export default function JellyChats({ initial, ready }: { initial: Chat[]; ready:
     try {
       await fn();
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
   };
-  const pin = (c: Chat) => run(async () => put(await api<Chat>(`/api/corner/jelly/chats/${c.id}`, 'PATCH', { pinned: !c.pinned })));
+  const pin = (c: Chat) => run(async () => (sfx(c.pinned ? 'flip' : 'pop'), put(await api<Chat>(`/api/corner/jelly/chats/${c.id}`, 'PATCH', { pinned: !c.pinned }))));
   const rename = (c: Chat, title: string) => {
     setRenaming('');
     if (!title.trim() || title === c.title) return;
@@ -79,6 +81,7 @@ export default function JellyChats({ initial, ready }: { initial: Chat[]; ready:
   };
   const remove = (c: Chat) => {
     if (!confirm(`Delete “${c.title}”? This chat can’t be brought back.`)) return;
+    sfx('paper');
     run(async () => {
       await api(`/api/corner/jelly/chats/${c.id}`, 'DELETE');
       setChats((l) => l.filter((x) => x.id !== c.id));
@@ -97,9 +100,11 @@ export default function JellyChats({ initial, ready }: { initial: Chat[]; ready:
       const r = await api<{ chat: Chat; friend: JellyView }>('/api/corner/jelly', 'POST', { question, chatId: chat?.id ?? null, page: '/home/jelly' });
       put(r.chat);
       setSel(r.chat.id);
+      sfx('message');
       emit('jelly:home', r.friend);
       setQ('');
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy('');

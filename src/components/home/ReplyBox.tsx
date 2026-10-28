@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Post, Reply } from '@/lib/data';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
+import { sfx } from '@/lib/sound';
 
 const QUICK = ['🙏', '💗', '🌷', '🪡'];
 
@@ -86,6 +87,7 @@ export default function ReplyBox({ post, onReplied }: { post: Post; onReplied: (
       setRec('idle');
       setOpen(false);
     } catch (e) {
+      sfx('nope');
       setErr((e as Error).message);
     }
     setBusy(false);
