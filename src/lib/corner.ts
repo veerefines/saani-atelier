@@ -308,6 +308,8 @@ export async function saveTurn(projectId: string, chatId: string | null, turn: O
   return { chat, turn: t };
 }
 export const renameChat = (projectId: string, id: string, title: string) => db.update<Chat>(C, id, (c) => (c.projectId === projectId ? { ...c, title } : c));
+/** Any saved chat by its id (Jelly's or a project's). */
+export const getChatAny = (id: string) => (id ? db.get<Chat>(C, id) : Promise.resolve(null));
 export const pinChat = (projectId: string, id: string, pinned: boolean) => db.update<Chat>(C, id, (c) => (c.projectId === projectId ? { ...c, pinned } : c));
 export async function deleteChat(projectId: string, id: string) {
   if (!(await getChat(projectId, id))) return false;

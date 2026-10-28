@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { sfx } from '@/lib/sound';
 import type { Square } from '@/content/home';
 import type { Dare } from '@/lib/data';
 import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
@@ -108,10 +109,12 @@ export default function Bingo({ squares, done: initial, dares = [] }: { squares:
       const after = linesDone(idx);
       setDone(next);
       setActive(null);
+      sfx('stitch');
       const full = Object.keys(next).length === squares.length;
       setTimeout(() => {
         setReward({ sq, line: after > before, full });
         burst(full || after > before);
+        if (full || after > before) sfx(full ? 'full' : 'line');
       }, 900);
     } catch (e) {
       setErr((e as Error).message);

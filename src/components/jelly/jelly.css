@@ -2818,3 +2818,82 @@ small.jh-status {
     font-size: 12px;
   }
 }
+
+/* ---------- Jelly's voice ---------- */
+.jv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 6px 0 0;
+  min-height: 30px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fde4ee, #efe6fc);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.15);
+  color: var(--burgundy);
+  font: 700 12px var(--font-body);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.jv-btn:active {
+  transform: scale(0.94);
+}
+.jv-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+.jv-btn.playing,
+.jv-btn.backup {
+  background: linear-gradient(135deg, #e0618f, var(--berry));
+  color: #fff;
+}
+.jv-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+.jv-wave i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  animation: jv-wave 0.9s ease-in-out infinite;
+}
+.jv-wave i:nth-child(2) { animation-delay: 0.15s; }
+.jv-wave i:nth-child(3) { animation-delay: 0.3s; }
+.jv-wave i:nth-child(4) { animation-delay: 0.45s; }
+.jv-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.jv-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: jp-dot 1.2s ease-in-out infinite;
+}
+.jv-dots i:nth-child(2) { animation-delay: 0.15s; }
+.jv-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes jv-wave {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+.jh-sound {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.jh-sound.off {
+  opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jv-wave i,
+  .jv-dots i {
+    animation: none;
+  }
+}

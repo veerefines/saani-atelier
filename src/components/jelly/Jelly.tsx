@@ -13,6 +13,9 @@ import { useMoodCycle } from './moods';
 import { Answer } from '@/components/corner/Assistant';
 import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
+import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY, SNORE, STILL_LIKE, WAKE, hello } from './lines';
+import SpeakButton from './SpeakButton';
+import { setSound, sfx, useSound, voice } from '@/lib/sound';
 import { announce, applyChange, emit, useJelly, useJellyChats } from './bus';
 import Celebration from './Celebration';
 import './jelly.css';
@@ -63,27 +66,6 @@ const store = {
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
 const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 
-/* ---------- what she says ---------- */
-const PETTED = ['Hehe, that tickles! 💗', 'Blub blub… more please 🫧', 'Mmm, best pats in all of Milano', 'I’m melting… in a good way 🪼', 'You’re my favourite human, you know?', 'Purr… wait, jellyfish don’t purr. Blub!'];
-const DIZZY = ['Okay okay, I’m getting dizzy! 😵‍💫', 'Too many pats! My tentacles are in a knot 😤', 'Hey! Gentle, I’m made of jelly!'];
-const SHY = ['…are you still there? 👀', '*peeks out* Just checking on you 🍃', 'I’ll be right here when you need me'];
-const WAKE = ['Huh?! Oh… I was dreaming of gelato 🍨', '*yawn* …oh, hi Saani! I wasn’t sleeping, promise', 'Mmh? Five more minutes… okay, I’m up!'];
-
-function hello(mood: JellyMood) {
-  switch (mood) {
-    case 'sleepy':
-      return '*yawn* It’s late in Milano… hi Saani 🌙';
-    case 'excited':
-      return 'Buongiorno! ☀️ I’m full of bubbles today!';
-    case 'joyful':
-      return 'Ciao, ciao! So happy you’re here 🫧';
-    case 'calm':
-      return 'Buonasera, Saani 🌸 Cosy studio time?';
-    default:
-      return 'Hi you! Tap me to chat, or rub me for pats 💗';
-  }
-}
-
 /** A "Did you know?" she hasn't seen lately. */
 function nextFact(): Bubble {
   let seen: number[] = [];
@@ -103,15 +85,15 @@ function checkIn(projects: Brief[], mood: JellyMood): Bubble {
   const live = projects.filter((p) => !p.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const hi = mood === 'sleepy' ? 'Psst…' : mood === 'excited' ? 'Buongiorno! ☀️' : mood === 'calm' ? 'Buonasera! 🌙' : 'Ciao, ciao! 🫧';
   const options: Bubble[] = [];
-  if (mood === 'sleepy') options.push({ kind: 'checkin', label: hi, text: 'It’s really late in Milano! 🌙 Even the best designers need their beauty sleep, okay?', ask: 'Give me a tiny wind-down routine for tonight', mood: 'sleepy' });
+  if (mood === 'sleepy') options.push({ kind: 'checkin', label: hi, text: CHECKINS.late, ask: 'Give me a tiny wind-down routine for tonight', mood: 'sleepy' });
   const resting = live.find((p) => daysSince(p.updatedAt) >= 4);
   if (resting) options.push({ kind: 'checkin', label: hi, text: `“${resting.title}” has been floating on its own for ${daysSince(resting.updatedAt)} days. Shall we take a peek together?`, ask: `Help me pick up “${resting.title}” again: where did I leave it?`, mood: 'curious' });
   if (live[0]) options.push({ kind: 'checkin', label: hi, text: `How’s “${live[0].title}” coming along? I’d love to hear! 🪼`, ask: `What’s a good next step for “${live[0].title}”?`, mood: 'wink' });
-  if (live.length >= 2) options.push({ kind: 'checkin', label: hi, text: 'Not sure where to start today? I can look across all your projects and pick one with you.', ask: 'What should I work on today?', mood: 'idea' });
-  if (!live.length) options.push({ kind: 'checkin', label: hi, text: 'Your studio is all empty and sparkly ✨ Want to dream up a first project together?', ask: 'Help me brainstorm a first project', mood: 'excited' });
+  if (live.length >= 2) options.push({ kind: 'checkin', label: hi, text: CHECKINS.start, ask: 'What should I work on today?', mood: 'idea' });
+  if (!live.length) options.push({ kind: 'checkin', label: hi, text: CHECKINS.empty, ask: 'Help me brainstorm a first project', mood: 'excited' });
   options.push(
-    { kind: 'checkin', label: hi, text: 'Have you had some water today? Designers need hydration too 💧', ask: 'Give me a few healthy study-break ideas', mood: 'wink' },
-    { kind: 'checkin', label: 'Just saying', text: 'I’m really proud of you, you know? Moving to Milano to chase this is brave. 💗', ask: 'Give me a little pep talk for today', mood: 'love' },
+    { kind: 'checkin', label: hi, text: CHECKINS.water, ask: 'Give me a few healthy study-break ideas', mood: 'wink' },
+    { kind: 'checkin', label: 'Just saying', text: CHECKINS.proud, ask: 'Give me a little pep talk for today', mood: 'love' },
   );
   return pick(options);
 }
@@ -133,6 +115,7 @@ export default function Jelly() {
   const [reaction, setReaction] = useState<JellyMood | null>(null);
   const [hearts, setHearts] = useState<{ id: number; x: number; c: string }[]>([]);
   const [q, setQ] = useState('');
+  const [soundOn] = useSound();
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const pet = useRef<HTMLButtonElement>(null);
@@ -147,6 +130,7 @@ export default function Jelly() {
   const say = useCallback((text: string, ms = 3400) => {
     clearTimeout(timers.current.line);
     setLine(text);
+    if (!voice(text)) sfx('blip');
     timers.current.line = window.setTimeout(() => setLine(''), ms);
   }, []);
   const feel = useCallback(
@@ -176,6 +160,7 @@ export default function Jelly() {
     api<State>('/api/corner/jelly', 'GET')
       .then((d) => {
         setData(d);
+        if (typeof d.friend.sound === 'boolean') setSound(d.friend.sound, true);
         setChatId(d.chats[0]?.id ?? null);
         if (d.gains?.length) setCheers(d.gains);
         emit('jelly:home', d.friend);
@@ -241,6 +226,7 @@ export default function Jelly() {
       const b = fact ? nextFact() : checkIn(projects.current, baseRef.current);
       lastKind.current = b.kind;
       setBubble(b);
+      if (!voice(b.kind === 'fact' ? `Did you know? ${b.text}` : b.text)) sfx('blip');
       feel(b.mood, 5000);
     },
     [feel],
@@ -253,13 +239,14 @@ export default function Jelly() {
       // the very first time they meet
       at(1200, () => {
         store.set('jelly-last', String(Date.now()));
-        setBubble({ kind: 'hello', label: 'Nice to meet you! 🪼', text: 'I’m Jelly, your new studio friend. Tap me to chat about any project, or rub me (or press and hold) for pats!', ask: 'Tell me about yourself, Jelly!', mood: 'surprised' });
+        setBubble({ kind: 'hello', label: 'Nice to meet you! 🪼', text: MEET, ask: 'Tell me about yourself, Jelly!', mood: 'surprised' });
+        voice(MEET);
         feel('surprised', 4000);
       });
     } else if (away !== undefined && away > 2 * 86_400_000) {
       const days = Math.round(away / 86_400_000);
       at(1200, () => feel('sad', 3200, `You were gone for ${days} days… I missed you! 🥺`));
-      at(4600, () => feel('love', 3000, 'But you’re here now 💗'));
+      at(4600, () => feel('love', 3000, MISSED));
     } else if (away !== undefined && away > 20 * 60_000) {
       at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, hello(baseRef.current)));
     }
@@ -287,7 +274,7 @@ export default function Jelly() {
     let hiddenAt = 0;
     const onVis = () => {
       if (document.hidden) hiddenAt = Date.now();
-      else if (hiddenAt && Date.now() - hiddenAt > 60_000) feel('surprised', 2200, 'You’re back! I kept the bubbles warm 🫧');
+      else if (hiddenAt && Date.now() - hiddenAt > 60_000) feel('surprised', 2200, BACK);
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
@@ -298,7 +285,7 @@ export default function Jelly() {
     let id = 0;
     const reset = () => {
       clearTimeout(id);
-      id = window.setTimeout(() => (baseRef.current === 'sleepy' ? say('zzz… 💤') : feel('shy', 4500, pick(SHY))), IDLE);
+      id = window.setTimeout(() => (baseRef.current === 'sleepy' ? say(SNORE) : feel('shy', 4500, pick(SHY))), IDLE);
     };
     reset();
     const evs = ['pointerdown', 'keydown', 'scroll'] as const;
@@ -328,7 +315,8 @@ export default function Jelly() {
     try {
       const f = await api<Friend>('/api/corner/jelly/pet', 'POST', { n });
       if (f.level > levelRef.current) {
-        feel('love', 4000, `We’re friendship level ${f.level} now! 💗✨`);
+        sfx('harp');
+        feel('love', 4000, LEVEL_UP);
         for (let i = 0; i < 8; i++) setTimeout(() => heart('💗'), i * 90);
       }
       emit('jelly:home', f);
@@ -336,6 +324,7 @@ export default function Jelly() {
   }, [feel, heart]);
   const petOnce = useCallback(() => {
     heart();
+    sfx('pop');
     pending.current++;
     clearTimeout(flushAt.current);
     flushAt.current = window.setTimeout(flush, 1500);
@@ -345,7 +334,7 @@ export default function Jelly() {
     if (recent.current.length > 24) {
       recent.current = [];
       feel('grumpy', 2800, pick(DIZZY));
-      setTimeout(() => feel('shy', 2200, '…but I still like you 🍃'), 2900);
+      setTimeout(() => feel('shy', 2200, STILL_LIKE), 2900);
       return;
     }
     if (baseRef.current === 'sleepy' && !woke.current) {
@@ -365,6 +354,7 @@ export default function Jelly() {
 
   const toggle = () => {
     setBubble(null);
+    sfx('whoosh');
     setOpen((o) => !o);
     if (!open) {
       setView('chat');
@@ -457,19 +447,21 @@ export default function Jelly() {
     if (!data?.ready || busy) return;
     setBusy(question);
     setErr('');
+    sfx('send');
     try {
       const r = await api<{ chat: Chat; turn: Chat['turns'][number]; friend: Friend }>('/api/corner/jelly', 'POST', { question, projectId, chatId, page: path });
+      sfx('message');
       setData((d) => (d ? { ...d, chats: applyChange(d.chats, { chat: r.chat }) } : d));
       emit('jelly:home', r.friend);
       setChatId(r.chat.id);
       announce({ chat: r.chat });
       setQ('');
-      if (r.friend.level > levelRef.current) feel('love', 4000, `We’re friendship level ${r.friend.level} now! 💗✨`);
+      if (r.friend.level > levelRef.current) (sfx('harp'), feel('love', 4000, LEVEL_UP));
       else feel(r.turn.mood ?? 'idea', 4200);
     } catch (e) {
       const m = (e as Error).message;
       setErr(m);
-      if (/try again in/i.test(m)) feel('sleepy', 4500, 'I’m all out of puff… give me a minute? 😮‍💨');
+      if (/try again in/i.test(m)) feel('sleepy', 4500, OUT_OF_PUFF);
       else feel('sad', 3500);
     }
     setBusy('');
@@ -563,6 +555,17 @@ export default function Jelly() {
               )}
             </div>
             <div className="jp-tools">
+              <button type="button" onClick={() => setSound(!soundOn)} aria-pressed={!soundOn} aria-label={soundOn ? 'Turn voices and sounds off' : 'Turn voices and sounds on'} title={soundOn ? 'Sound on' : 'Sound off'}>
+                {soundOn ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 9v6h4l5 4V5L8 9zM17 9l5 5M22 9l-5 5" />
+                  </svg>
+                )}
+              </button>
               <button type="button" onClick={() => setView(view === 'history' ? 'chat' : 'history')} aria-pressed={view === 'history'} aria-label="Past chats" title="Past chats">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4M12 7v5l3 2" />
@@ -680,6 +683,7 @@ export default function Jelly() {
                         <img className="jp-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={36} height={36} loading="lazy" />
                         <div className="jp-bubble">
                           <Answer text={t.a} />
+                          {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                         </div>
                       </div>
                     </div>

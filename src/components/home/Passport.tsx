@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { sfx } from '@/lib/sound';
 import type { Stamp } from '@/lib/extras';
 import { categories, distanceKm, distanceLabel, places, type Place } from '@/content/milano';
 import { api } from '@/lib/upload-client';
@@ -40,6 +41,7 @@ export default function Passport({ stamps: initial }: { stamps: Stamp[] }) {
       const s = await api<Stamp>('/api/stamps', 'POST', manual ? { placeId: p.id, manual: true } : { placeId: p.id, lat: here.at!.lat, lng: here.at!.lng });
       setStamps((x) => [s, ...x.filter((y) => y.placeId !== p.id)]);
       setMsg(`Stamped: ${p.name}!`);
+      sfx('stamp');
       pop();
     } catch (e) {
       setMsg((e as Error).message);

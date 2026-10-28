@@ -6,6 +6,8 @@ import confetti from 'canvas-confetti';
 import type { Gain } from '@/lib/jelly';
 import { ACHIEVEMENTS, backdropById, itemById, itemSrc } from '@/lib/jelly-catalog';
 import { moodSrc } from '@/lib/jelly-mood';
+import { achievement, sfx, voice } from '@/lib/sound';
+import { CHEERS } from './lines';
 
 const SHOW = 7000; // how long each one stays, unless she's hovering it
 const COLORS = ['#f4a6c0', '#cdb4f0', '#f7e3a1', '#bfe6f5', '#ffd1dc', '#ffffff'];
@@ -56,8 +58,14 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
     setLeaving(false);
     left.current = SHOW;
     burst(g.kind === 'achievement');
+    // its own little tune, then Jelly cheers
+    const group = g.kind === 'achievement' ? (ACHIEVEMENTS.find((x) => x.id === g.id)?.group ?? 'Jelly') : 'daily';
+    if (g.kind === 'achievement') achievement(group, g.pearls >= 100);
+    else sfx('clink');
+    const cheer = setTimeout(() => voice(CHEERS[group] ?? CHEERS.Jelly), g.kind === 'achievement' ? 900 : 500);
     // a little buzz on phones that support it
     navigator.vibrate?.(g.kind === 'achievement' ? [30, 40, 60] : 20);
+    return () => clearTimeout(cheer);
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const close = () => {

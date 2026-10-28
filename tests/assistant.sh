@@ -169,6 +169,40 @@ expect "with its brief" "AI-AUDIENCE"
 expect "and its documents" "PDF-TREND-WORDS"
 expect "the earlier question comes along" "JELLY-Q what next?"
 check "unknown chat 404" 404 -b "$SA" -X POST "${J[@]}" -d '{"question":"x","chatId":"ch_nope"}' $B/api/corner/jelly
+# Jelly reads an answer aloud (tap to hear), a piece at a time, each recorded once
+check "back to the chat" 200 -b "$SA" $B/api/corner/jelly
+TURN=$(node -e "const d=JSON.parse(require('fs').readFileSync('$D/body','utf8'));console.log(d.chats.find(c=>c.id==='$JC').turns[0].id)")
+TURN2=$(node -e "const d=JSON.parse(require('fs').readFileSync('$D/body','utf8'));console.log(d.chats.find(c=>c.id==='$JC').turns[1].id)")
+check "hear an answer" 200 -b "$SA" "$B/api/jelly/speak?chat=$JC&turn=$TURN&part=0"
+expect "a piece of audio" '"url":"/api/media/v_'
+expect "and how many pieces" '"parts":[1-9]'
+VURL=$(jget .url)
+cp "$D/tts-last.json" "$D/body"
+expect "in Jelly's voice" '"voice":"hannah"'
+expect "with her warm direction" "warm"
+expect "without the markdown" '\*\*' absent
+TTS1=$(cat "$D/tts-count")
+check "hear it again" 200 -b "$SA" "$B/api/jelly/speak?chat=$JC&turn=$TURN&part=0"
+same "same recording" "$(jget .url)" "$VURL"
+same "not recorded twice" "$(cat "$D/tts-count")" "$TTS1"
+check "the audio plays" 200 -b "$SA" "$B$VURL"
+if grep -qi '^content-type: audio/wav' "$D/headers"; then pass=$((pass+1)); echo "PASS it's a WAV"; else failn=$((failn+1)); echo "FAIL not a WAV"; fi
+node -e "const f='$ROOT/.data/groq-usage.json',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u.tts.requests=95;require('fs').writeFileSync(f,JSON.stringify(u))"
+check "when today's free voice is used up" 200 -b "$SA" "$B/api/jelly/speak?chat=$JC&turn=$TURN2&part=0"
+expect "the backup voice takes over" '"fallback":true'
+check "friend can't hear her 403" 403 -b "$D/ai-fr.jar" "$B/api/jelly/speak?chat=$JC&turn=$TURN&part=0"
+check "unknown chat 404" 404 -b "$SA" "$B/api/jelly/speak?chat=nope&turn=x&part=0"
+# the switch for every voice and sound
+check "sound off" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"sound":false}' $B/api/jelly/settings
+expect "is off" '"sound":false'
+check "remembered" 200 -b "$SA" $B/api/jelly/home
+expect "still off" '"sound":false'
+check "sound on" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"sound":true}' $B/api/jelly/settings
+expect "is on" '"sound":true'
+check "nonsense 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"sound":"loud"}' $B/api/jelly/settings
+check "friend can't change it 403" 403 -b "$D/ai-fr.jar" -X PATCH "${J[@]}" -d '{"sound":false}' $B/api/jelly/settings
+check "the switch is on her desk" 200 -b "$SA" $B/home
+expect "below the cards" "Jelly’s voice &amp; sounds"
 check "her chats are saved" 200 -b "$SA" $B/api/corner/jelly
 expect "with both questions" "JELLY-Q2"
 check "and show in the project's Jelly Got This! tab" 200 -b "$SA" "$B/home/corner/$P?tab=assistant"

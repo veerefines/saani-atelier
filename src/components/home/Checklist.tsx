@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { sfx } from '@/lib/sound';
 import { motion } from 'framer-motion';
 import type { CheckItem } from '@/content/checklist';
 import { api } from '@/lib/upload-client';
@@ -13,6 +14,7 @@ export default function Checklist({ items, done: initial }: { items: CheckItem[]
 
   function toggle(id: string) {
     const next = !done[id];
+    if (next) sfx('tick');
     setDone((d) => {
       const c = { ...d };
       if (next) c[id] = new Date().toISOString();

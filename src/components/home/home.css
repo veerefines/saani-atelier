@@ -5535,3 +5535,95 @@ a.pc-rating:hover {
     max-height: 280px;
   }
 }
+
+/* ---------- the switch for Jelly's voice and every sound, at the bottom of the desk ---------- */
+.sound-switch {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 560px;
+  margin: 28px auto 8px;
+  padding: 12px 14px 12px 12px;
+  border-radius: 26px;
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(255, 225, 236, 0.9), transparent 60%),
+    radial-gradient(120% 120% at 100% 100%, rgba(230, 220, 251, 0.9), transparent 60%),
+    #fffaf6;
+  box-shadow:
+    0 0 0 1.5px #fff inset,
+    0 0 0 1px rgba(205, 180, 240, 0.5),
+    0 18px 34px -24px rgba(107, 30, 58, 0.6);
+}
+.sound-switch img {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  animation: sound-bob 3s ease-in-out infinite alternate;
+}
+.sound-switch > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+.sound-switch b {
+  font: 400 19px var(--font-display);
+  color: var(--burgundy);
+}
+.sound-switch small {
+  font: 500 12.5px / 1.4 var(--font-body);
+  color: #8a6a7b;
+}
+.sound-switch button {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 96px;
+  height: 46px;
+  padding: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #e9dfe6;
+  box-shadow: inset 0 2px 4px rgba(107, 30, 58, 0.15);
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.sound-switch.on button {
+  background: linear-gradient(135deg, #f4a6c0, var(--berry));
+}
+.sound-knob {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 10px -4px rgba(107, 30, 58, 0.6);
+  font-size: 18px;
+  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.sound-switch.on .sound-knob {
+  transform: translateX(50px);
+}
+.sound-label {
+  position: absolute;
+  left: 50px;
+  font: 800 13px var(--font-body);
+  color: #8a6a7b;
+}
+.sound-switch.on .sound-label {
+  left: 16px;
+  color: #fff;
+}
+@keyframes sound-bob {
+  to {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sound-switch img {
+    animation: none;
+  }
+}

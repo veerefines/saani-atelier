@@ -27,6 +27,8 @@ export type JellyState = db.Doc & {
   v?: number;
   /** a fresh start: when this is behind RESET, everything is set back to zero (chats are kept) */
   epoch?: number;
+  /** voices and sounds (on unless she turned them off) */
+  sound?: boolean;
 };
 
 // bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
@@ -68,7 +70,7 @@ const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), 
 export async function jellyState() {
   const s = await db.get<JellyState>(COL, ID);
   // a fresh start keeps when they last saw each other, so Jelly doesn't think they've just met
-  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen };
+  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen, sound: s.sound };
   return migrate(s ?? fresh());
 }
 const save = (s: JellyState) => db.put<JellyState>(COL, s);
@@ -152,6 +154,9 @@ export async function sync(stats: (s: JellyState) => Promise<Stats>) {
   return { state: st, gains };
 }
 
+/** Turn voices and sounds on or off. */
+export const setSound = (on: boolean) => change((s) => ({ ...s, sound: on }));
+
 /** Buy a thing (or a backdrop) for Jelly's home. Returns an error message, or the new state. */
 export async function buy(id: string): Promise<string | JellyState> {
   const item = itemById(id);
@@ -219,6 +224,7 @@ export function view(s: JellyState) {
     chats: s.chats,
     visits: days.length,
     streak: streakOf(days),
+    sound: s.sound !== false,
     ...friendship(s.pets, s.chats),
   };
 }

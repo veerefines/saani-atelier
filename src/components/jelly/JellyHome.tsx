@@ -24,6 +24,8 @@ import {
 import { MOODS, moodHd, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { emit, useJelly } from './bus';
 import { useMoodCycle } from './moods';
+import { HOME_PATS, LOVES, NEW_WATERS, TAPS } from './lines';
+import { sfx, useSound, voice } from '@/lib/sound';
 import JellyChats from './JellyChats';
 import type { Chat } from '@/lib/corner-model';
 import './jelly.css';
@@ -38,8 +40,6 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
-const LOVES = ['Ooh, for me?! 💗', 'It’s perfect there!', 'My home is getting so pretty ✨', 'Grazie, tesoro! 🫧', 'I love it, I love it!'];
-const TAPS = ['That’s one of my favourites!', 'Careful, it’s fragile 🫧', 'Isn’t it the cutest?', 'I polish it every morning ✨'];
 const GROUPS: AchGroup[] = ['Jelly', 'Milano', 'Settling in', 'Bingo', 'Your story', 'Your people', 'My Corner'];
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
@@ -91,6 +91,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
   const [editing, setEditing] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
   const [err, setErr] = useState('');
+  const [soundOn, setSoundOn] = useSound();
   const [note, setNote] = useState('');
 
   const go = (t: Tab) => {
@@ -129,6 +130,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
     if (text) {
       clearTimeout(timers.current.l);
       setLine(text);
+      if (!voice(text)) sfx('blip');
       timers.current.l = window.setTimeout(() => setLine(''), Math.max(ms, 3200));
     }
   }, []);
@@ -139,10 +141,11 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
   );
   const pats = useRef(0);
   const pet = () => {
+    sfx('pop');
     const id = Math.random();
     setHearts((h) => [...h.slice(-12), { id, x: 20 + Math.random() * 60, c: pick(['💗', '💕', '🫧', '✨', '💖']) }]);
     setTimeout(() => setHearts((h) => h.filter((x) => x.id !== id)), 1300);
-    feel('love', Math.random() < 0.3 ? pick(['Home pats are the best 💗', 'Blub blub!', 'Stay a little longer?', 'Mmm, cosy…']) : undefined, 1800);
+    feel('love', Math.random() < 0.3 ? pick(HOME_PATS) : undefined, 1800);
     pats.current++;
     clearTimeout(timers.current.pet);
     timers.current.pet = window.setTimeout(async () => {
@@ -181,6 +184,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
     const p: Placed = { uid: `pl_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, item, x: 25 + Math.random() * 50, y: 55 + Math.random() * 30, s: 1, flip: false };
     update([...placed, p]);
     setSel(p.uid);
+    sfx('thunk');
     feel('joyful', pick(LOVES));
   };
   const change = (uid: string, fn: (p: Placed) => Placed | null) => update(placed.flatMap((p) => (p.uid === uid ? (fn(p) ?? []) : [p])));
@@ -222,6 +226,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
     setNote('');
     try {
       took(await api<Data>('/api/jelly/shop', 'POST', { id }));
+      sfx('sparkle');
       setBought(id);
       setTimeout(() => setBought(''), 900);
       setNote(BACKDROPS.some((b) => b.id === id) ? `${name} is Jelly’s now. Choose it while decorating.` : `${name} is in Jelly’s things. Tap Decorate to place it!`);
@@ -284,6 +289,15 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
               <small>unlocked</small>
             </span>
           </div>
+          <button type="button" className={`jh-meter jh-sound${soundOn ? '' : ' off'}`} onClick={() => setSoundOn(!soundOn)} role="switch" aria-checked={soundOn} title="Jelly’s voice & sounds">
+            <span className="jh-flame" aria-hidden="true">
+              {soundOn ? '🔊' : '🔇'}
+            </span>
+            <span>
+              <b>{soundOn ? 'On' : 'Off'}</b>
+              <small>voice & sounds</small>
+            </span>
+          </button>
           <div className="jh-meter" title="Days in a row">
             <span className="jh-flame" aria-hidden="true">
               🔥
@@ -447,7 +461,8 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
                       onClick={() => {
                         setBackdrop(id);
                         save(placed, id);
-                        feel('wink', 'Ooh, new waters!');
+                        sfx('whoosh');
+                        feel('wink', NEW_WATERS);
                       }}
                       style={{ ['--sky' as string]: b.sky, ['--floor' as string]: b.floor }}
                     >

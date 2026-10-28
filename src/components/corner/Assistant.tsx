@@ -5,6 +5,7 @@ import { api } from '@/lib/upload-client';
 import { hexesIn, inkOn, JELLY_CHATS, STUDIO, type Chat, type ChatTurn, type Mode } from '@/lib/corner-model';
 import { MOODS, moodSrc, timeMood, type JellyMood } from '@/lib/jelly-mood';
 import { announce, applyChange, useJellyChats } from '../jelly/bus';
+import SpeakButton from '../jelly/SpeakButton';
 import { shortDate, type Ctx } from './shared';
 
 type Lens = 'designer' | 'manager';
@@ -68,6 +69,7 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
       <div className="cn-a">
         <img className="cn-a-face" src={moodSrc(t.mood ?? 'studious')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'studious'].feeling}`} width={66} height={66} loading="lazy" />
         <Answer text={t.a} />
+        <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />
         {hexes.length >= 2 && (
           <div className="cn-swatches" aria-label="Colours in this answer">
             {hexes.map((h) => (

@@ -8,6 +8,7 @@ import { MOODS, moodHd, moodSrc, type JellyMood } from '@/lib/jelly-mood';
 import { clock12 } from '@/lib/time';
 import { Answer } from '@/components/corner/Assistant';
 import { announce, applyChange, emit, useJellyChats } from './bus';
+import SpeakButton from './SpeakButton';
 
 const STARTERS = ['What should I do today?', 'What am I close to unlocking?', 'Plan me a cosy weekend in Milano', 'Tell me a fun fashion fact'];
 const DAY = 86_400_000;
@@ -251,6 +252,7 @@ export default function JellyChats({ initial, ready }: { initial: Chat[]; ready:
                 <img className="jp-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={46} height={46} loading="lazy" />
                 <div className="jp-bubble">
                   <Answer text={t.a} />
+                  {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                   <button type="button" className="jx-copy" onClick={() => navigator.clipboard?.writeText(t.a)}>
                     Copy
                   </button>

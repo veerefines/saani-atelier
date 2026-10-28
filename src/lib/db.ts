@@ -130,6 +130,15 @@ export async function readLocalMedia(id: string): Promise<Buffer | null> {
     return null;
   }
 }
+/** Save a file the server made itself (e.g. Jelly's voice), wherever files live. */
+export async function storeMedia(id: string, body: Buffer, contentType: string) {
+  if (usingSupabase) {
+    const { error } = await supabase().storage.from('media').upload(id, body, { contentType, upsert: true });
+    if (error) throw error;
+    return;
+  }
+  await saveLocalMedia(id, new Uint8Array(body).buffer);
+}
 export async function deleteMediaFile(id: string) {
   if (usingSupabase) {
     await supabase().storage.from('media').remove([id]);
