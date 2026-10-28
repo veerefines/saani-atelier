@@ -10,7 +10,7 @@ import { radioOff, radioOn } from './radio';
  * the lookbook, a marimba under the sea for Jelly's home. Themes cross-fade as she moves around.
  */
 
-export type ThemeId = 'desk' | 'italia' | 'love' | 'studio' | 'runway' | 'play' | 'ocean' | 'gift';
+export type ThemeId = 'desk' | 'italia' | 'love' | 'studio' | 'runway' | 'play' | 'ocean' | 'gift' | 'door';
 export const THEME_NAMES: Record<ThemeId, string> = {
   desk: 'Mattina in atelier · soft harp',
   italia: 'Caffè in Brera · mandolin & accordion',
@@ -20,6 +20,7 @@ export const THEME_NAMES: Record<ThemeId, string> = {
   play: 'Giochi in piazza · marimba',
   ocean: 'Sotto il mare · Jelly’s lullaby',
   gift: 'Un regalo per te · music box & harp',
+  door: 'Ti aspetto · a dreamy lullaby',
 };
 
 /** Which tune plays where (null: no music, e.g. where songs play or a book is printed). */
@@ -249,6 +250,12 @@ const GIFT_MELODY = [
   [79, 84, 88], [86, 84, 79], [81, 84, 88], [86, 83, 79], [77, 81, 84], [83, 81, 77], [79, 84, 86], [84, 0, 0],
   [88, 86, 84], [83, 84, 86], [81, 84, 89], [88, 84, 81], [77, 81, 86], [84, 83, 79], [79, 83, 86], [84, 0, 0],
 ];
+// Ti aspetto ("waiting for you"): the very first page. A slow, dreamy lullaby: music box and
+// rhodes over soft pads, with a sprinkle of twinkles, so the door to her gift already feels magic
+const DOOR_MELODY = [
+  [76, 0, 79, 0], [81, 0, 79, 76], [77, 0, 76, 0], [74, 0, 0, 0], [72, 0, 76, 0], [79, 0, 84, 83], [81, 0, 77, 0], [79, 0, 0, 0],
+  [76, 0, 79, 0], [84, 0, 83, 81], [79, 0, 77, 76], [74, 0, 76, 77], [76, 0, 74, 72], [71, 0, 74, 79], [72, 0, 0, 0], [0, 0, 0, 0],
+];
 const LOVE_MELODY = [[76, 79, 84], [83, 79, 74], [84, 81, 76], [77, 81, 84], [79, 76, 72], [74, 79, 83], [81, 77, 72], [72, 0, 0]];
 
 const THEMES: Record<ThemeId, Theme> = {
@@ -290,6 +297,28 @@ const THEMES: Record<ThemeId, Theme> = {
         k.pluck(chord[i % chord.length] + (i > 2 ? 12 : 0), t, 0.06, { bright: 0.5, decay: 0.997 });
       }
       if (bar % 4 === 3 && beat === 2 && sub === 2) k.musicbox(96, t, 0.04); // a little twinkle
+    },
+  },
+  door: {
+    bpm: 66,
+    beats: 4,
+    level: 0.9,
+    bars: [Cmaj7, Am7, Fmaj7, G6, Cmaj7, Em7, Fmaj7, Gsus, Cmaj7, Am7, Dm7, G7, Am7, Em7, Fmaj7, Cadd9],
+    play: ({ t, bar, beat, sub, chord, spb, k }) => {
+      if (sub === 0) {
+        const note = DOOR_MELODY[bar % DOOR_MELODY.length][beat];
+        if (note) {
+          k.musicbox(note + 12, t, 0.09);
+          k.rhodes(note, t, spb * 1.6, 0.05);
+        }
+        if (beat === 0) {
+          k.pad(chord, t, spb * 4.2, 0.026);
+          k.pluck(lowest(chord) - 12, t, 0.12, { bright: 0.3, decay: 0.998 });
+        }
+      }
+      // a slow rippling arpeggio, an octave up, on the off-beats
+      if (sub === 2) k.pluck(chord[(bar + beat) % chord.length] + 12, t, 0.035, { bright: 0.45, decay: 0.997 });
+      if (bar % 2 === 1 && beat === 3 && sub === 2) k.musicbox(chord[chord.length - 1] + 24, t, 0.035); // twinkle
     },
   },
   love: {
@@ -450,8 +479,8 @@ function start() {
   if (!io || !c) return;
   const allowed = p.on && p.music > 0 && !document.hidden && !external ? want : null;
   // Radio Italia plays across the whole desk; the corner tunes are the other choice
-  // (the gift always has its own music box)
-  const radio = p.style === 'radio' && allowed !== 'gift';
+  // (the gift and its door always have their own music)
+  const radio = p.style === 'radio' && allowed !== 'gift' && allowed !== 'door';
   if (radio && allowed) radioOn(allowed === 'italia' ? 'italia' : allowed === 'desk' ? 'desk' : 'other');
   else radioOff();
   const id = radio ? null : allowed;

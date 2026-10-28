@@ -7359,3 +7359,541 @@ a.mb-q:hover {
 .mb-fact b {
   color: var(--burgundy);
 }
+
+/* ---------- the desk's big cards, dressed up (Oct 2026) ---------- */
+/* every card: a soft paper grain, a hand-stitched inner border, and a glow when she hovers */
+.h-tile-link {
+  border-radius: 24px;
+  padding: 18px 16px 16px;
+  isolation: isolate;
+}
+.h-tile-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .4 0 0 0 0 .45 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.h-tile-link::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 18px;
+  border: 1.5px dashed rgba(178, 48, 95, 0.18);
+  pointer-events: none;
+  transition: border-color 0.3s;
+}
+.h-tile-link:hover::after {
+  border-color: rgba(178, 48, 95, 0.36);
+}
+.h-tile-text {
+  position: relative;
+  z-index: 1;
+}
+.h-tile-text h2 {
+  font-size: 32px;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.h-tile-text h2 {
+  position: relative;
+  padding-right: 22px;
+}
+.h-tile-text h2::after {
+  content: '→';
+  position: absolute;
+  bottom: 4px;
+  font: 600 18px var(--font-body);
+  opacity: 0;
+  margin-left: 6px;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+}
+.h-tile-link:hover .h-tile-text h2::after {
+  opacity: 0.7;
+  transform: none;
+}
+
+/* memories: a cork board with fairy lights */
+.t-love .h-tile-link {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.45), transparent 55%),
+    radial-gradient(rgba(140, 90, 50, 0.12) 1px, transparent 1.5px) 0 0 / 9px 9px,
+    linear-gradient(160deg, #efd6b5, #d9b38a);
+}
+.t-lights {
+  position: absolute;
+  top: 6px;
+  left: 4%;
+  width: 92%;
+  height: 22px;
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+}
+.t-lights .bulb {
+  filter: drop-shadow(0 0 2px currentColor);
+  animation: bulb 2.4s ease-in-out infinite;
+}
+@keyframes bulb {
+  50% {
+    opacity: 0.55;
+  }
+}
+.t-love-board {
+  margin-top: 14px;
+}
+.t-mini.polaroid {
+  border-radius: 3px;
+}
+
+/* letters: an airmail border, a stamp, hearts drifting off */
+.t-letters .h-tile-link {
+  background:
+    radial-gradient(circle at 80% 15%, rgba(205, 180, 240, 0.35), transparent 55%),
+    linear-gradient(170deg, #fffaf6, #f8ecf6);
+}
+.t-airmail {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 5px;
+  background: repeating-linear-gradient(-45deg, #f4a6c0 0 10px, transparent 10px 20px, #b9a4e8 20px 30px, transparent 30px 40px);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0.55;
+}
+.t-letters .h-tile-link::after {
+  inset: 11px;
+}
+.t-envelopes {
+  height: 140px;
+}
+.env-stamp {
+  position: absolute;
+  top: 8%;
+  right: 6%;
+  width: 16%;
+  aspect-ratio: 0.85;
+  background: linear-gradient(140deg, #ffd0dc, #cdb4f0);
+  outline: 2px dotted #fff;
+  outline-offset: -3px;
+  rotate: 6deg;
+}
+.t-heartfloat {
+  position: absolute;
+  color: #e2588c;
+  font-size: 16px;
+  opacity: 0;
+  animation: heart-drift 4s ease-in-out infinite;
+}
+.t-heartfloat.h1 {
+  left: 70%;
+  top: 30%;
+}
+.t-heartfloat.h2 {
+  left: 24%;
+  top: 40%;
+  animation-delay: 2s;
+  color: #b9a4e8;
+}
+@keyframes heart-drift {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.6);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.1) rotate(12deg);
+  }
+}
+
+/* the jar: bigger, glowing, hearts floating up out of it */
+.t-jar .h-tile-link {
+  background:
+    radial-gradient(rgba(127, 183, 176, 0.16) 2px, transparent 2.5px) 0 0 / 18px 18px,
+    linear-gradient(170deg, #e5f5ef, #fffaf6 80%);
+}
+.t-jar-stage {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  margin-bottom: 8px;
+}
+.t-jar-glow {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 230, 0.75), transparent 65%);
+  animation: jar-glow 3.6s ease-in-out infinite;
+}
+@keyframes jar-glow {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+.t-jar-svg {
+  position: relative;
+  width: min(78%, 190px);
+  margin: 0;
+  filter: drop-shadow(0 14px 16px rgba(80, 120, 110, 0.25));
+}
+.t-jar-float {
+  position: absolute;
+  top: 18%;
+  color: #f27ca2;
+  font-size: 15px;
+  opacity: 0;
+  animation: jar-float 4.5s ease-in-out infinite;
+}
+.t-jar-float.f1 {
+  left: 42%;
+}
+.t-jar-float.f2 {
+  left: 56%;
+  animation-delay: 1.5s;
+  color: #cdb4f0;
+}
+.t-jar-float.f3 {
+  left: 49%;
+  animation-delay: 3s;
+  color: #f2c84b;
+}
+@keyframes jar-float {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -50px) scale(1.1) rotate(20deg);
+  }
+}
+.t-jar-tag {
+  position: absolute;
+  right: 10%;
+  bottom: 18%;
+  padding: 4px 10px;
+  border-radius: 6px 12px 12px 6px;
+  background: #fff7d6;
+  box-shadow: 0 6px 10px -6px rgba(107, 30, 58, 0.45);
+  font: 600 16px var(--font-hand);
+  color: var(--burgundy);
+  rotate: 8deg;
+}
+.t-jar-tag::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: rgba(107, 30, 58, 0.25);
+}
+
+/* bingo: a gingham picnic board with each square's little picture */
+.t-bingo .h-tile-link {
+  background:
+    linear-gradient(90deg, rgba(244, 166, 192, 0.14) 50%, transparent 0) 0 0 / 22px 22px,
+    linear-gradient(rgba(244, 166, 192, 0.14) 50%, transparent 0) 0 0 / 22px 22px,
+    linear-gradient(170deg, #fff6f8, #fbe8ef);
+}
+.t-bingo-grid {
+  gap: 5px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 1.5px rgba(178, 48, 95, 0.18),
+    0 14px 22px -16px rgba(107, 30, 58, 0.55);
+}
+.t-bingo-grid span {
+  border-radius: 8px;
+  background: linear-gradient(150deg, #fff3f6, #fbe1ea);
+  box-shadow: inset 0 -2px 0 rgba(178, 48, 95, 0.08);
+  font-size: clamp(11px, 2.4vw, 17px);
+  animation: square-in 0.4s var(--d, 0s) both;
+}
+.t-bingo-grid span i {
+  font-style: normal;
+  opacity: 0.55;
+  filter: saturate(0.7);
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
+}
+.h-tile-link:hover .t-bingo-grid span i {
+  opacity: 0.9;
+  transform: scale(1.12);
+}
+.t-bingo-grid span.done {
+  background: linear-gradient(150deg, #ffd6e2, #f4a6c0);
+}
+.t-bingo-grid span.done i {
+  opacity: 1;
+  filter: none;
+}
+@keyframes square-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+.t-progress {
+  display: block;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 99px;
+  background: rgba(178, 48, 95, 0.12);
+  overflow: hidden;
+}
+.t-progress span {
+  display: block;
+  height: 100%;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f4a6c0, var(--berry));
+}
+
+/* Milano: a postcard over a pastel skyline */
+.t-milano .h-tile-link {
+  background:
+    radial-gradient(circle at 85% 70%, rgba(255, 217, 168, 0.55), transparent 55%),
+    linear-gradient(175deg, #dff0fb 0%, #fdf1e4 55%, #fbe3c8 100%);
+}
+.t-postcard {
+  z-index: 1;
+  height: 132px;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, transparent 58%, rgba(107, 30, 58, 0.12) 58.3%, transparent 58.6%),
+    #fffaf1;
+}
+.t-waves {
+  position: absolute;
+  top: 26px;
+  right: 58px;
+  width: 54px;
+  height: 18px;
+  background: repeating-radial-gradient(circle at 0 100%, transparent 0 4px, rgba(107, 30, 58, 0.25) 4px 5px);
+  -webkit-mask: linear-gradient(90deg, #000 60%, transparent);
+  mask: linear-gradient(90deg, #000 60%, transparent);
+  rotate: -8deg;
+}
+.t-ciao {
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  font: italic 400 15px var(--font-whisper);
+  color: #8a6a7b;
+}
+.t-day {
+  font-size: 30px;
+  bottom: 24px;
+  color: var(--burgundy);
+}
+.t-skyline {
+  display: block;
+  width: calc(100% + 32px);
+  margin: auto -16px 8px;
+  height: auto;
+  min-height: 60px;
+  opacity: 0.95;
+}
+.t-milano .h-tile-text {
+  margin-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-lights .bulb,
+  .t-heartfloat,
+  .t-jar-float,
+  .t-jar-glow,
+  .t-bingo-grid span {
+    animation: none;
+  }
+  .t-heartfloat,
+  .t-jar-float {
+    display: none;
+  }
+}
+
+/* ---------- more corners, dressed up: each with its own little illustrated treasure ---------- */
+.corners-title {
+  position: relative;
+  font-size: 30px;
+}
+.corners-title::before,
+.corners-title::after {
+  content: '✦';
+  margin: 0 10px;
+  font-size: 14px;
+  color: var(--rose);
+  vertical-align: middle;
+}
+.corners-grid {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+.corner {
+  position: relative;
+  isolation: isolate;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  height: 100%;
+  padding: 14px 14px 16px;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--tint) 85%, #fff) 0%, transparent 60%),
+    linear-gradient(170deg, #fffaf6, color-mix(in srgb, var(--tint) 35%, #fffaf6));
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 16px 26px -20px rgba(107, 30, 58, 0.6),
+    0 2px 6px rgba(107, 30, 58, 0.05);
+  transition:
+    transform 0.3s cubic-bezier(0.3, 0.7, 0.2, 1.4),
+    box-shadow 0.3s;
+}
+.corner::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  z-index: -1;
+  border-radius: 19px;
+  border: 1.5px dashed color-mix(in srgb, var(--tint) 60%, rgba(178, 48, 95, 0.35));
+  opacity: 0.7;
+  pointer-events: none;
+}
+.corner:hover {
+  transform: translateY(-4px) rotate(-0.6deg);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    0 24px 34px -20px rgba(107, 30, 58, 0.6);
+}
+.corner:active {
+  transform: scale(0.97);
+}
+.corner-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, #fff 0 18%, transparent 46%),
+    radial-gradient(circle, color-mix(in srgb, var(--tint) 90%, #fff), var(--tint));
+  box-shadow:
+    inset 0 -6px 12px rgba(107, 30, 58, 0.08),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.8),
+    0 10px 16px -10px rgba(107, 30, 58, 0.45);
+}
+.corner-art img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 5px rgba(107, 30, 58, 0.25));
+  transition: transform 0.4s cubic-bezier(0.3, 0.7, 0.2, 1.6);
+}
+.corner:hover .corner-art img {
+  transform: scale(1.12) rotate(-6deg);
+}
+.corner-text {
+  display: grid;
+  gap: 2px;
+}
+.corner b {
+  font-size: 24px;
+  line-height: 1.05;
+}
+.corner small {
+  font: 500 12.5px / 1.35 var(--font-body);
+}
+.corner-bar {
+  display: block;
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 99px;
+  background: rgba(107, 30, 58, 0.1);
+  overflow: hidden;
+}
+.corner-bar span {
+  display: block;
+  height: 100%;
+  min-width: 5px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tint) 40%, #f4a6c0), var(--berry));
+}
+.corner-go {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 8px -4px rgba(107, 30, 58, 0.4);
+  font: 700 14px var(--font-body);
+  color: var(--berry);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+}
+.corner:hover .corner-go,
+.corner:focus-visible .corner-go {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .corner-go {
+    opacity: 0.8;
+    transform: none;
+  }
+}
+@media (max-width: 420px) {
+  .corners-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .corner-art {
+    width: 60px;
+    height: 60px;
+  }
+  .corner-art img {
+    width: 46px;
+    height: 46px;
+  }
+  .corner b {
+    font-size: 21px;
+  }
+}

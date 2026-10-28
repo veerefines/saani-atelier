@@ -5,6 +5,7 @@ import { motion, type Variants } from 'framer-motion';
 import { dayInfo, hourIn, useNow } from './Clock';
 import { mediaUrl } from '@/lib/upload-client';
 import { site } from '@/content/site';
+import { bingo as BINGO } from '@/content/home';
 import NotifyToggle from './NotifyToggle';
 import TodayCard from './TodayCard';
 import MorningBrief from './MorningBrief';
@@ -62,6 +63,51 @@ export function Tile({
         {children}
       </Link>
     </motion.div>
+  );
+}
+
+/** A string of fairy lights across the top of the memories board. */
+function FairyLights() {
+  const bulbs = [6, 15, 24, 33, 42, 51, 60, 69, 78, 87, 95];
+  const colors = ['#ffd27a', '#ffb3c8', '#cdb4f0', '#bfe6f5', '#ffe8a3'];
+  return (
+    <svg className="t-lights" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 2 Q 25 12 50 6 T 100 3" fill="none" stroke="rgba(90, 60, 40, 0.45)" strokeWidth="0.5" />
+      {bulbs.map((x, i) => {
+        // on the wire: the two curves of the path above (x stands in for the curve's t)
+        const t = x < 50 ? x / 50 : (x - 50) / 50;
+        const y = x < 50 ? (1 - t) ** 2 * 2 + 2 * (1 - t) * t * 12 + t * t * 6 : (1 - t) ** 2 * 6 + t * t * 3;
+        return <ellipse key={x} className="bulb" cx={x} cy={y + 1.6} rx="1.1" ry="1.6" fill={colors[i % colors.length]} style={{ animationDelay: `${(i % 4) * 0.45}s` }} />;
+      })}
+    </svg>
+  );
+}
+
+/** Milano's skyline in pastel: the Duomo's spires, the Galleria and a little tram. */
+function Skyline() {
+  return (
+    <svg className="t-skyline" viewBox="0 0 200 60" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <circle cx="168" cy="16" r="9" fill="#ffd9a8" opacity="0.8" />
+      <path d="M0 60 V44 h14 v-6 h10 v6 h12 V40 h16 v20z" fill="#f2c9b8" />
+      <g fill="#e9b7c6">
+        <path d="M56 60 V34 h44 v26z" />
+        {[58, 64, 70, 76, 82, 88, 94].map((x) => (
+          <path key={x} d={`M${x} 34 l2 -12 l2 12z`} />
+        ))}
+        <path d="M76 34 l2 -26 l2 26z" />
+        <circle cx="78" cy="7" r="1.6" fill="#f2c84b" />
+      </g>
+      <path d="M100 60 V38 q14 -14 28 0 v22z" fill="#d9c3ea" />
+      <path d="M106 60 V46 q8 -8 16 0 v14z" fill="#f6eefc" />
+      <path d="M128 60 V42 h22 v18z M150 60 V48 h50 v12z" fill="#f2c9b8" />
+      <g>
+        <rect x="140" y="50" width="30" height="8" rx="2" fill="#f2c84b" />
+        <rect x="143" y="52" width="5" height="3" rx="0.6" fill="#fff8e6" />
+        <rect x="151" y="52" width="5" height="3" rx="0.6" fill="#fff8e6" />
+        <rect x="159" y="52" width="5" height="3" rx="0.6" fill="#fff8e6" />
+        <path d="M155 50 v-5 l-3 -3" stroke="#8a6a4a" strokeWidth="0.8" fill="none" />
+      </g>
+    </svg>
   );
 }
 
@@ -168,7 +214,7 @@ export default function Dashboard({
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Your desk">
         {/* wall of love */}
         <Tile href="/home/love" i={0} className="t-love" tilt={-1.2} label={`Yaadon ka Samandar, ${counts.newPosts} new`}>
-          <img className="h-tape" src="/reveal/washi.webp" alt="" />
+          <FairyLights />
           {counts.newPosts > 0 && <Badge>{counts.newPosts} new</Badge>}
           <div className="t-love-board" aria-hidden="true">
             {preview.length === 0 && (
@@ -208,12 +254,16 @@ export default function Dashboard({
         {/* open when */}
         <Tile href="/home/letters" i={1} className="t-letters" tilt={1.5} label="Likhe Jo Khat Tujhe letters">
           {counts.ready > 0 && <Badge>{counts.ready} to open</Badge>}
+          <span className="t-airmail" aria-hidden="true" />
           <div className="t-envelopes" aria-hidden="true">
             <span className="env e2" />
             <span className="env e1" />
             <span className="env e0">
               <span className="wax" />
+              <span className="env-stamp" />
             </span>
+            <span className="t-heartfloat h1">♡</span>
+            <span className="t-heartfloat h2">♡</span>
           </div>
           <div className="h-tile-text">
             <h2 className="hand">Likhe Jo Khat Tujhe!</h2>
@@ -223,7 +273,14 @@ export default function Dashboard({
 
         {/* message jar */}
         <Tile href="/home/jar" i={2} className="t-jar" tilt={-2} label="Khushiyon ka Pitara">
-          <JarArt />
+          <div className="t-jar-stage" aria-hidden="true">
+            <span className="t-jar-glow" />
+            <JarArt />
+            <span className="t-jar-float f1">♥</span>
+            <span className="t-jar-float f2">♥</span>
+            <span className="t-jar-float f3">✦</span>
+            <span className="t-jar-tag">{counts.jar ? `${counts.jar} notes` : 'notes'}</span>
+          </div>
           <div className="h-tile-text">
             <h2 className="hand">Khushiyon ka Pitara!</h2>
             <p className="whisper">for whatever you’re feeling</p>
@@ -234,8 +291,8 @@ export default function Dashboard({
         <Tile href="/home/bingo" i={3} className="t-bingo" tilt={1} label={`Milano bingo, ${counts.bingoDone} of ${counts.bingoTotal} done`}>
           <div className="t-bingo-grid" aria-hidden="true">
             {bingoDone.map((d, k) => (
-              <span key={k} className={d ? 'done' : ''}>
-                {d ? '🌷' : ''}
+              <span key={k} className={d ? 'done' : ''} style={{ ['--d' as string]: `${(k % 5) * 0.06 + Math.floor(k / 5) * 0.06}s` }}>
+                <i>{d ? '🌷' : (BINGO[k]?.icon ?? '')}</i>
               </span>
             ))}
           </div>
@@ -244,6 +301,9 @@ export default function Dashboard({
             <p className="whisper">
               {counts.bingoDone} of {counts.bingoTotal} done
             </p>
+            <span className="t-progress" aria-hidden="true">
+              <span style={{ width: `${(counts.bingoDone / Math.max(1, counts.bingoTotal)) * 100}%` }} />
+            </span>
           </div>
         </Tile>
 
@@ -254,11 +314,14 @@ export default function Dashboard({
               <img src="/reveal/carn-white-1.webp" alt="" />
             </span>
             <span className="t-postmark">MILANO</span>
+            <span className="t-waves" />
+            <span className="t-ciao">Ciao from</span>
             <span className="hand t-day" suppressHydrationWarning>
-              {day.before ? `${day.n}` : day.n ? `Day ${day.n}` : ''}
+              {day.before ? `${day.n} days to go` : day.n ? `Day ${day.n}` : ''}
             </span>
             <span className="t-lines" />
           </div>
+          <Skyline />
           <div className="h-tile-text">
             <h2 className="hand">Milano Mei Milo!</h2>
             <p className="whisper">clocks, days and your wishlist</p>

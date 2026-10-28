@@ -499,3 +499,59 @@ input:focus-visible {
   cursor: pointer;
   backdrop-filter: blur(6px);
 }
+
+/* the music switch on the gift's first page */
+.scene-music {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(205, 180, 240, 0.5),
+    0 12px 24px -14px rgba(107, 30, 58, 0.55);
+  font: 700 18px var(--font-body);
+  color: var(--berry);
+  cursor: pointer;
+}
+.scene-music-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.scene-music-bars i {
+  width: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rose);
+}
+.scene-music.on .scene-music-bars i {
+  animation: scene-bars 1.1s ease-in-out infinite;
+}
+.scene-music.on .scene-music-bars i:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.scene-music.on .scene-music-bars i:nth-child(3) {
+  animation-delay: 0.5s;
+}
+@keyframes scene-bars {
+  50% {
+    height: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-music.on .scene-music-bars i {
+    animation: none;
+    height: 10px;
+  }
+}

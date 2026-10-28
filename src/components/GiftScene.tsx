@@ -1,7 +1,7 @@
 'use client';
 
 import { playTheme } from '@/lib/music';
-import { sfx } from '@/lib/sound';
+import { sfx, tryAutoplay, usePrefs } from '@/lib/sound';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion';
@@ -88,7 +88,13 @@ export default function GiftScene({
   // a sweet music box for her gift, from her first tap (browsers need one before any sound);
   // little sounds as the bouquet blooms and the note appears
   useEffect(() => {
-    if (stage === 'locked') return;
+    if (stage === 'locked') {
+      // the very first page: a dreamy lullaby while she types her code (it starts with her first
+      // tap or key, as browsers ask; sometimes straight away if the browser allows it)
+      tryAutoplay();
+      playTheme('door');
+      return;
+    }
     playTheme('gift');
     if (stage === 'open') sfx('sparkle');
     if (stage === 'thread') sfx('whoosh');
@@ -184,6 +190,8 @@ export default function GiftScene({
           </button>
         )}
 
+        <MusicNote />
+
         <AnimatePresence>
           {stage === 'thread' && threadPts && (
             <ThreadOverlay key="thread" from={threadPts.from} to={threadPts.to} onDone={() => setStage('note')} />
@@ -191,5 +199,28 @@ export default function GiftScene({
         </AnimatePresence>
       </main>
     </MotionConfig>
+  );
+}
+
+/** A little music switch in the corner: tapping it is also the tap that lets the music start. */
+function MusicNote() {
+  const [p, set] = usePrefs();
+  const on = p.on && p.music > 0;
+  return (
+    <button
+      type="button"
+      className={`scene-music${on ? ' on' : ''}`}
+      onClick={() => set(on ? { on: false } : { on: true, music: p.music > 0 ? p.music : 0.45 })}
+      aria-pressed={on}
+      aria-label={on ? 'Turn the music off' : 'Turn the music on'}
+      data-quiet
+    >
+      <span aria-hidden="true">{on ? '♪' : '♪̸'}</span>
+      <span className="scene-music-bars" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+    </button>
   );
 }
