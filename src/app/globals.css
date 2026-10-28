@@ -584,3 +584,51 @@ input:focus-visible {
   background: #fde4ee;
   font-size: 14px;
 }
+
+/* ===================== the dropdown caret =====================
+   One look for everything that opens and closes (first used by "good time to call"): a small
+   white circle with a soft berry ring and a solid ▾, which turns over when it's open. */
+.dd-caret {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(178, 48, 95, 0.3);
+  background: #fff;
+  color: var(--berry);
+  font-size: 14px;
+  line-height: 1;
+  transition:
+    transform 0.25s ease,
+    background 0.2s;
+}
+.dd-caret.sm {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+[aria-expanded='true'] > .dd-caret,
+details[open] > summary > .dd-caret {
+  transform: rotate(180deg);
+}
+button:hover > .dd-caret,
+button:focus-visible > .dd-caret,
+summary:hover > .dd-caret,
+summary:focus-visible > .dd-caret {
+  background: #fde3ea;
+}
+/* a <details> heading with the caret instead of the browser's triangle */
+summary.dd-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+}
+summary.dd-summary::-webkit-details-marker {
+  display: none;
+}
+summary.dd-summary > .dd-caret {
+  margin-left: auto;
+}

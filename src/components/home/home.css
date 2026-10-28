@@ -4233,25 +4233,7 @@ a.pc-rating:hover {
   background: #6fbf8f;
 }
 .call-caret {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 30px;
-  height: 30px;
   margin-left: auto;
-  border-radius: 50%;
-  border: 1.5px solid rgba(178, 48, 95, 0.3);
-  background: #fff;
-  color: var(--berry);
-  font-size: 14px;
-  transition: transform 0.25s ease;
-}
-.today-call.open .call-caret {
-  transform: rotate(180deg);
-}
-.call-toggle:hover .call-caret,
-.call-toggle:focus-visible .call-caret {
-  background: #fde3ea;
 }
 #call-details {
   animation: call-open 0.25s ease;
@@ -7684,14 +7666,6 @@ body:has(.cn-ask) .radio {
   font: 600 12.5px var(--font-body);
   color: #7d6b74;
 }
-.mb-chev {
-  font-size: 20px;
-  color: var(--berry);
-  transition: transform 0.3s;
-}
-.mb.open .mb-chev {
-  transform: rotate(180deg);
-}
 .mb-body {
   overflow: hidden;
 }
@@ -10190,4 +10164,19 @@ a.mb-q:hover {
   .cal3-hero-art {
     animation: none;
   }
+}
+
+/* dropdown menus wear the platform's caret (see .dd-caret in globals.css) instead of the browser's arrow */
+.h-select,
+.mb-form select,
+.mt select,
+.soldi select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='13.25' fill='%23fff' stroke='%23b2305f' stroke-opacity='.3' stroke-width='1.5'/%3E%3Cpath d='M10.5 12.5h9L15 18z' fill='%23b2305f'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 26px 26px;
+  cursor: pointer;
 }

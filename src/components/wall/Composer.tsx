@@ -465,7 +465,12 @@ export default function Composer({
 
         {(tab === 'message' || tab === 'voice' || tab === 'video') && (
           <details className="w-later" open={Boolean(deliver)}>
-            <summary>🎁 Make it a surprise for a later day</summary>
+            <summary className="dd-summary">
+              🎁 Make it a surprise for a later day
+              <span className="dd-caret sm" aria-hidden="true">
+                ▾
+              </span>
+            </summary>
             {occasions.length > 0 && (
               <>
                 <p className="w-label">Deliver it on a special day</p>

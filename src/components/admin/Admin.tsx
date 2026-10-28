@@ -461,7 +461,12 @@ function Words({ title, fields }: { title: string; fields: Word[] }) {
   if (!fields.length) return null;
   return (
     <details className="atl-words">
-      <summary>✎ Edit the words in {title}</summary>
+      <summary className="dd-summary">
+        ✎ Edit the words in {title}
+        <span className="dd-caret sm" aria-hidden="true">
+          ▾
+        </span>
+      </summary>
       {fields.map((f) => (
         <WordField key={f.key} f={f} />
       ))}

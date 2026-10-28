@@ -151,7 +151,7 @@ export default function CallPlanner({ firstName }: { firstName: string }) {
             })}
           </span>
         )}
-        <span className="call-caret" aria-hidden="true">
+        <span className="dd-caret call-caret" aria-hidden="true">
           ▾
         </span>
       </button>

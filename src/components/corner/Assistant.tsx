@@ -95,7 +95,12 @@ function Turn({ t, chat, ctx, last, busy, onAsk }: { t: ChatTurn; chat: Chat; ct
         </div>
         {err && <p className="h-err">{err}</p>}
         <details className="cn-used">
-          <summary>What it read{t.notRead.length ? ` · ${t.notRead.length} not read` : ''}</summary>
+          <summary className="dd-summary">
+            What it read{t.notRead.length ? ` · ${t.notRead.length} not read` : ''}
+            <span className="dd-caret sm" aria-hidden="true">
+              ▾
+            </span>
+          </summary>
           <b>Read:</b> {t.read.join(', ')}
           {t.notRead.length > 0 && (
             <>
@@ -343,7 +348,12 @@ export default function Assistant({ ctx, ready, chats, setChats, jellyChats, set
         {err && <p className="h-err">{err}</p>}
         {chat && (
           <details className="cn-ai-more">
-            <summary>More from the studio</summary>
+            <summary className="dd-summary">
+              More from the studio
+              <span className="dd-caret sm" aria-hidden="true">
+                ▾
+              </span>
+            </summary>
             {studio(true)}
           </details>
         )}

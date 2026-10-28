@@ -84,7 +84,9 @@ export default function SoundSettings({ friend = false }: { friend?: boolean }) 
       </div>
 
       <button type="button" className="ss-more" onClick={() => setOpen(!open)} aria-expanded={open}>
-        ⚙️ {open ? 'Hide settings' : 'Settings: volume for each sound'} <span aria-hidden="true">{open ? '▴' : '▾'}</span>
+        ⚙️ {open ? 'Hide settings' : 'Settings: volume for each sound'} <span className="dd-caret sm" aria-hidden="true">
+          ▾
+        </span>
       </button>
 
       {open && (

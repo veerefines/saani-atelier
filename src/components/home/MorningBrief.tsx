@@ -93,8 +93,8 @@ export default function MorningBrief() {
             {b.streak > 1 ? ` · 🔥 ${b.streak}` : ''}
           </small>
         </span>
-        <span className="mb-chev" aria-hidden="true">
-          ⌄
+        <span className="dd-caret" aria-hidden="true">
+          ▾
         </span>
       </button>
 
