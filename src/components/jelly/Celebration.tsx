@@ -63,8 +63,6 @@ export default function Celebration({ queue, onDone, atHome }: { queue: Gain[]; 
     if (g.kind === 'achievement') achievement(group, g.pearls >= 100);
     else sfx('clink');
     const cheer = setTimeout(() => voice(CHEERS[group] ?? CHEERS.Jelly), g.kind === 'achievement' ? 900 : 500);
-    // a little buzz on phones that support it
-    navigator.vibrate?.(g.kind === 'achievement' ? [30, 40, 60] : 20);
     return () => clearTimeout(cheer);
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 

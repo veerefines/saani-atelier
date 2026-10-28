@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useState } from 'react';
 import { MOODS, type MoodId, type MoodState } from '@/content/mood';
 import { api } from '@/lib/upload-client';
@@ -26,6 +27,7 @@ export function MoodPicker() {
 
   async function pick(id: MoodId, withNote = note) {
     setErr('');
+    sfx('chime');
     const prev = mood;
     setMood({ mood: id, note: withNote, at: new Date().toISOString(), day: '' });
     try {

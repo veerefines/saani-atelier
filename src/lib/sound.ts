@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { cleanPrefs, DEFAULT_PREFS, type AudioPrefs } from './audio-prefs';
 import manifest from '@/components/jelly/voice-manifest.json';
 import { lineKey, speechText } from '@/components/jelly/lines';
 
@@ -14,17 +15,23 @@ import { lineKey, speechText } from '@/components/jelly/lines';
  */
 
 const VOICES = manifest as Record<string, string>;
-const STORE = 'jelly-sound';
-const EVENT = 'jelly:sound';
+const STORE = 'jelly-audio';
+const EVENT = 'jelly:audio';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null; // sound effects
 let voiceGain: GainNode | null = null; // Jelly
+let musicGain: GainNode | null = null; // background music
 let unlocked = false;
-let on = true;
+let ducked = false;
+let prefs: AudioPrefs = { ...DEFAULT_PREFS };
 try {
-  on = typeof window === 'undefined' || localStorage.getItem(STORE) !== 'off';
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(STORE);
+    prefs = saved ? cleanPrefs(JSON.parse(saved)) : { ...DEFAULT_PREFS, on: localStorage.getItem('jelly-sound') !== 'off' };
+  }
 } catch {}
+const unlockers: (() => void)[] = [];
 
 function setup() {
   if (ctx || typeof window === 'undefined') return ctx;
@@ -32,12 +39,22 @@ function setup() {
   if (!AC) return null;
   ctx = new AC();
   master = ctx.createGain();
-  master.gain.value = 0.5;
-  master.connect(ctx.destination);
   voiceGain = ctx.createGain();
-  voiceGain.gain.value = 1;
+  musicGain = ctx.createGain();
+  master.connect(ctx.destination);
   voiceGain.connect(ctx.destination);
+  musicGain.connect(ctx.destination);
+  levels(true);
   return ctx;
+}
+/** Set every channel to its volume (lower while Jelly talks, silent when sound is off). */
+function levels(now = false) {
+  if (!ctx || !master || !voiceGain || !musicGain) return;
+  const on = prefs.on ? 1 : 0;
+  const at = (g: GainNode, v: number) => (now ? (g.gain.value = v) : g.gain.setTargetAtTime(v, ctx!.currentTime, 0.08));
+  at(master, on * prefs.sfx * 0.7 * (ducked ? 0.4 : 1));
+  at(voiceGain, on * prefs.voice);
+  at(musicGain, on * prefs.music * 0.55 * (ducked ? 0.35 : 1) * (mediaPlaying ? 0 : 1));
 }
 
 if (typeof window !== 'undefined') {
@@ -49,36 +66,142 @@ if (typeof window !== 'undefined') {
   const unlock = () => {
     const c = setup();
     if (c && c.state === 'suspended') c.resume();
-    unlocked = true;
+    if (!unlocked) {
+      unlocked = true;
+      unlockers.splice(0).forEach((f) => f());
+    }
   };
   window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
   window.addEventListener('keydown', unlock, { capture: true });
 }
 
-const ready = () => on && unlocked && setup() !== null && ctx!.state !== 'closed';
+const ready = () => prefs.on && unlocked && setup() !== null && ctx!.state !== 'closed';
 
-/* ---------- the switch ---------- */
-export const soundOn = () => on;
-export function setSound(next: boolean, fromServer = false) {
-  if (next === on) return;
-  on = next;
-  try {
-    localStorage.setItem(STORE, next ? 'on' : 'off');
-  } catch {}
-  if (!next) stopVoice();
-  window.dispatchEvent(new CustomEvent(EVENT, { detail: next }));
-  if (!fromServer) fetch('/api/jelly/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sound: next }) }).catch(() => {});
+/** For the music: the shared audio context and the music channel, once sound is allowed. */
+export function musicOut(): { ctx: AudioContext; out: GainNode } | null {
+  return unlocked && setup() ? { ctx: ctx!, out: musicGain! } : null;
 }
-/** [is sound on, turn it on or off], kept in step everywhere on the page. */
-export function useSound(): [boolean, (v: boolean) => void] {
-  const [v, setV] = useState(true);
+/** Run once the browser allows sound (after her first tap), or now if it already does. */
+export function whenUnlocked(f: () => void) {
+  if (unlocked) f();
+  else unlockers.push(f);
+}
+
+/* ---------- settings ---------- */
+export const audioPrefs = () => prefs;
+export const soundOn = () => prefs.on;
+let saveAt = 0;
+export function setPrefs(patch: Partial<AudioPrefs>, fromServer = false) {
+  const next = cleanPrefs({ ...prefs, ...patch });
+  if (JSON.stringify(next) === JSON.stringify(prefs)) return;
+  prefs = next;
+  try {
+    localStorage.setItem(STORE, JSON.stringify(prefs));
+  } catch {}
+  if (!prefs.on || prefs.voice === 0) stopVoice();
+  levels();
+  applyMedia();
+  window.dispatchEvent(new CustomEvent(EVENT, { detail: prefs }));
+  if (!fromServer) {
+    clearTimeout(saveAt);
+    saveAt = window.setTimeout(() => {
+      fetch('/api/jelly/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ audio: prefs }) }).catch(() => {});
+    }, 500);
+  }
+}
+export const setSound = (on: boolean, fromServer = false) => setPrefs({ on }, fromServer);
+/** [settings, change them], kept in step everywhere on the page. */
+export function usePrefs(): [AudioPrefs, (p: Partial<AudioPrefs>) => void] {
+  const [v, setV] = useState<AudioPrefs>(DEFAULT_PREFS);
   useEffect(() => {
-    setV(on);
-    const h = (e: Event) => setV((e as CustomEvent<boolean>).detail);
+    setV(prefs);
+    const h = (e: Event) => setV((e as CustomEvent<AudioPrefs>).detail);
     window.addEventListener(EVENT, h);
     return () => window.removeEventListener(EVENT, h);
   }, []);
-  return [v, setSound];
+  return [v, setPrefs];
+}
+/** [is sound on, turn it on or off]. */
+export function useSound(): [boolean, (v: boolean) => void] {
+  const [p, set] = usePrefs();
+  return [p.on, (on) => set({ on })];
+}
+
+/* ---------- buzzes ---------- */
+export type Buzz = 'light' | 'medium' | 'heavy' | 'success';
+const PATTERNS: Record<Buzz, number | number[]> = { light: 8, medium: 18, heavy: 35, success: [14, 50, 22, 50, 40] };
+let tick: HTMLLabelElement | null = null;
+/**
+ * A little buzz. Android buzzes with the vibration API; iPhone Safari has none, but since iOS 18 it
+ * gives a haptic tick when a "switch" checkbox is toggled, so we toggle a hidden one.
+ */
+export function haptic(kind: Buzz = 'light') {
+  if (!prefs.on || !prefs.haptics || typeof window === 'undefined') return;
+  if (typeof navigator.vibrate === 'function') {
+    navigator.vibrate(PATTERNS[kind]);
+    return;
+  }
+  if (!tick) {
+    const id = 'jelly-haptic';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = id;
+    input.setAttribute('switch', '');
+    tick = document.createElement('label');
+    tick.htmlFor = id;
+    for (const el of [input, tick]) {
+      el.setAttribute('aria-hidden', 'true');
+      el.tabIndex = -1;
+      Object.assign(el.style, { position: 'fixed', left: '-100px', top: '0', width: '1px', height: '1px', opacity: '0', pointerEvents: 'none' });
+      document.body.appendChild(el);
+    }
+  }
+  const n = kind === 'success' ? 3 : kind === 'heavy' ? 2 : 1;
+  for (let i = 0; i < n; i++) setTimeout(() => tick?.click(), i * 90);
+}
+
+/* ---------- voice notes and videos from her people ---------- */
+let mediaPlaying = 0;
+function applyMedia() {
+  if (typeof document === 'undefined') return;
+  document.querySelectorAll('audio, video').forEach((el) => {
+    const m = el as HTMLMediaElement;
+    if (m.muted && m.autoplay) return; // silent previews stay silent
+    m.volume = prefs.on ? prefs.notes : 0;
+  });
+}
+if (typeof window !== 'undefined') {
+  // every voice note and video follows her volume, and the music hushes while one plays
+  document.addEventListener(
+    'play',
+    (e) => {
+      const m = e.target as HTMLMediaElement;
+      if (!(m instanceof HTMLMediaElement) || (m.muted && m.autoplay)) return;
+      m.volume = prefs.on ? prefs.notes : 0;
+      mediaPlaying++;
+      levels();
+      const done = () => {
+        mediaPlaying = Math.max(0, mediaPlaying - 1);
+        levels();
+        m.removeEventListener('pause', done);
+        m.removeEventListener('ended', done);
+      };
+      m.addEventListener('pause', done);
+      m.addEventListener('ended', done);
+    },
+    true,
+  );
+  // a soft tap and a tiny buzz for buttons and links everywhere (things with their own sounds opt out)
+  document.addEventListener(
+    'click',
+    (e) => {
+      const el = (e.target as Element | null)?.closest?.('button, a[href], [role="button"], [role="tab"], [role="switch"], summary, input[type="checkbox"], input[type="radio"], select');
+      if (!el || el.closest('[data-quiet]') || (el as HTMLButtonElement).disabled) return;
+      sfx('tap');
+      haptic('light');
+    },
+    true,
+  );
 }
 
 /* ---------- little synth helpers ---------- */
@@ -124,9 +247,11 @@ function noise(at: number, dur: number, { from = 400, to = 2000, gain = 0.2, q =
 const N = (semi: number) => 523.25 * Math.pow(2, semi / 12); // semitones from C5
 
 /* ---------- the sounds ---------- */
-export type Sfx = 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full';
+export type Sfx = 'tap' | 'page' | 'rattle' | 'paper' | 'nope' | 'chime' | 'pop' | 'blip' | 'whoosh' | 'message' | 'send' | 'sparkle' | 'thunk' | 'clink' | 'harp' | 'stamp' | 'tick' | 'stitch' | 'line' | 'full';
 let lastPop = 0;
+const BUZZ: Partial<Record<Sfx, Buzz>> = { rattle: 'heavy', paper: 'medium', nope: 'medium', chime: 'light', pop: 'light', send: 'light', message: 'light', sparkle: 'medium', thunk: 'medium', stamp: 'heavy', tick: 'medium', stitch: 'medium', clink: 'success', harp: 'success', line: 'success', full: 'success' };
 export function sfx(name: Sfx) {
+  if (BUZZ[name]) haptic(BUZZ[name]);
   if (!ready()) return;
   const t = ctx!.currentTime + 0.01;
   switch (name) {
@@ -136,6 +261,36 @@ export function sfx(name: Sfx) {
       tone(520 + Math.random() * 120, t, 0.1, { to: 1100, gain: 0.22 });
       break;
     }
+    case 'tap':
+      if (t - lastPop < 0.05) return;
+      lastPop = t;
+      tone(1400 + Math.random() * 200, t, 0.035, { gain: 0.05, to: 1900 });
+      break;
+    case 'page':
+      noise(t, 0.28, { from: 2200, to: 500, gain: 0.05, q: 0.8 });
+      tone(N(19), t + 0.05, 0.25, { gain: 0.035 });
+      break;
+    case 'rattle':
+      // folded notes shaken in a glass jar
+      for (let i = 0; i < 9; i++) {
+        const d = i * 0.07 + Math.random() * 0.03;
+        noise(t + d, 0.05, { from: 3200 + Math.random() * 1500, to: 2400, gain: 0.07, q: 3 });
+        if (i % 3 === 0) bell(N(31 + (i % 2) * 5), t + d, 0.25, 0.03);
+      }
+      break;
+    case 'paper':
+      // an envelope opening and a letter unfolding
+      noise(t, 0.18, { from: 4000, to: 1500, gain: 0.07, q: 0.6 });
+      noise(t + 0.2, 0.3, { from: 2500, to: 900, gain: 0.06, q: 0.6 });
+      [12, 16, 19].forEach((s2, i) => tone(N(s2), t + 0.35 + i * 0.08, 0.6, { gain: 0.06 }));
+      break;
+    case 'nope':
+      tone(260, t, 0.12, { to: 200, gain: 0.12, type: 'triangle' });
+      tone(220, t + 0.1, 0.14, { to: 170, gain: 0.1, type: 'triangle' });
+      break;
+    case 'chime':
+      [19, 24, 28].forEach((s2, i) => bell(N(s2), t + i * 0.07, 0.8, 0.09));
+      break;
     case 'blip':
       tone(880, t, 0.07, { to: 1400, gain: 0.12 });
       tone(1250, t + 0.07, 0.08, { to: 1800, gain: 0.1 });
@@ -199,6 +354,7 @@ const TUNES: Record<string, (t: number) => void> = {
   },
 };
 export function achievement(group: string, big = false) {
+  haptic('success');
   if (!ready()) return;
   const t = ctx!.currentTime + 0.02;
   (TUNES[group] ?? TUNES.Jelly)(t);
@@ -221,9 +377,10 @@ function load(url: string) {
     );
   return buffers.get(url)!;
 }
-/** While Jelly talks, the sound effects step back. */
+/** While Jelly talks, the sound effects and music step back. */
 function duck(yes: boolean) {
-  if (master && ctx) master.gain.setTargetAtTime(yes ? 0.2 : 0.5, ctx.currentTime, 0.08);
+  ducked = yes;
+  levels();
 }
 export function stopVoice() {
   token++;
@@ -254,10 +411,10 @@ export const hasVoice = (text: string) => Boolean(VOICES[lineKey(text)]);
 /** Jelly says one of her everyday lines (if it's recorded). Returns whether she spoke. */
 export function voice(text: string): boolean {
   const file = VOICES[lineKey(text)];
-  if (!file || !ready()) return false;
+  if (!file || !ready() || prefs.voice === 0) return false;
   stopVoice();
   const my = token;
-  load(`/corner/voice/${file}`).then((b) => b && my === token && on && playBuffer(b));
+  load(`/corner/voice/${file}`).then((b) => b && my === token && prefs.on && prefs.voice > 0 && playBuffer(b));
   return true;
 }
 
@@ -275,6 +432,7 @@ function sayBackup(text: string, done: () => void) {
   if (v) u.voice = v;
   u.rate = 0.98;
   u.pitch = 1.08; // a touch brighter, never squeaky
+  u.volume = prefs.voice;
   u.onend = done;
   u.onerror = done;
   duck(true);
@@ -288,7 +446,7 @@ export type Speaking = 'loading' | 'playing' | 'backup' | 'idle';
  */
 export async function speakAnswer(chatId: string, turnId: string, text: string, onState: (s: Speaking) => void) {
   setup();
-  if (!on) return;
+  if (!prefs.on || prefs.voice === 0) return;
   stopVoice();
   const my = token;
   const done = () => my === token && (duck(false), onState('idle'));

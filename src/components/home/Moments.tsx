@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MOMENT_REACTIONS, type Moment, type MomentKind } from '@/content/moments';
@@ -87,6 +88,7 @@ export function ShareMoment({ friends, onSent }: { friends: Friend[]; onSent?: (
       const mediaId = await uploadFile(blob, (p) => setBusy(`Uploading ${p}%`));
       setBusy('Sending…');
       const m = await api<Moment>('/api/moments', 'POST', { kind, mediaId, caption, to: everyone ? 'all' : picked });
+      sfx('whoosh');
       onSent?.(m);
       clear();
       setMsg(everyone ? 'Sent to everyone 💗' : `Sent to ${friends.filter((f) => picked.includes(f.id)).map((f) => f.name.split(' ')[0]).join(', ')} 💗`);
@@ -228,6 +230,7 @@ function ReactRow({ m, me, onChange }: { m: Moment; me: string; onChange: (m: Mo
   const [err, setErr] = useState('');
   const react = async (emoji: string) => {
     setErr('');
+    sfx('pop');
     try {
       onChange(await api<Moment>(`/api/moments/${m.id}/react`, 'POST', { emoji }));
     } catch (e) {

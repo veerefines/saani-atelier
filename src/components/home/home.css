@@ -5536,12 +5536,11 @@ a.pc-rating:hover {
   }
 }
 
-/* ---------- the switch for Jelly's voice and every sound, at the bottom of the desk ---------- */
+/* ---------- Sound & feel: one switch and a settings panel, at the bottom of the desk ---------- */
 .sound-switch {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  max-width: 560px;
+  display: grid;
+  gap: 10px;
+  max-width: 600px;
   margin: 28px auto 8px;
   padding: 12px 14px 12px 12px;
   border-radius: 26px;
@@ -5554,28 +5553,33 @@ a.pc-rating:hover {
     0 0 0 1px rgba(205, 180, 240, 0.5),
     0 18px 34px -24px rgba(107, 30, 58, 0.6);
 }
-.sound-switch img {
+.ss-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ss-head img {
   flex: none;
   width: 64px;
   height: 64px;
   object-fit: contain;
   animation: sound-bob 3s ease-in-out infinite alternate;
 }
-.sound-switch > div {
+.ss-head > div {
   display: grid;
   flex: 1;
   min-width: 0;
   gap: 2px;
 }
-.sound-switch b {
-  font: 400 19px var(--font-display);
+.ss-head b {
+  font: 400 20px var(--font-display);
   color: var(--burgundy);
 }
-.sound-switch small {
+.ss-head small {
   font: 500 12.5px / 1.4 var(--font-body);
   color: #8a6a7b;
 }
-.sound-switch button {
+.ss-head > button {
   position: relative;
   display: flex;
   flex: none;
@@ -5590,7 +5594,7 @@ a.pc-rating:hover {
   cursor: pointer;
   transition: background 0.3s;
 }
-.sound-switch.on button {
+.sound-switch.on .ss-head > button {
   background: linear-gradient(135deg, #f4a6c0, var(--berry));
 }
 .sound-knob {
@@ -5617,13 +5621,217 @@ a.pc-rating:hover {
   left: 16px;
   color: #fff;
 }
+.ss-more {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.14);
+  color: var(--burgundy);
+  font: 700 13px var(--font-body);
+  cursor: pointer;
+}
+.ss-panel {
+  display: grid;
+  gap: 4px;
+  padding: 6px 4px 4px;
+  animation: ss-in 0.3s ease-out;
+}
+.ss-panel.muted .ss-row,
+.ss-panel.muted .ss-tunes {
+  opacity: 0.5;
+}
+.ss-note {
+  margin: 0 6px 6px;
+  font: 600 12.5px var(--font-body);
+  color: var(--berry);
+}
+.ss-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+}
+.ss-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 19px;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.1);
+}
+.ss-text {
+  display: grid;
+  min-width: 0;
+}
+.ss-text b {
+  font: 700 14px var(--font-body);
+  color: var(--burgundy);
+}
+.ss-text small {
+  overflow: hidden;
+  font: 500 11.5px var(--font-body);
+  color: #8a6a7b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ss-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ss-slider input {
+  --v: 50%;
+  width: clamp(110px, 28vw, 180px);
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.ss-slider input::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #f4a6c0, var(--berry) var(--v), #eadde4 var(--v));
+}
+.ss-slider input::-moz-range-track {
+  height: 8px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #f4a6c0, var(--berry) var(--v), #eadde4 var(--v));
+}
+.ss-slider input::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -8px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--berry), 0 4px 8px -2px rgba(107, 30, 58, 0.5);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ss-slider input::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--berry), 0 4px 8px -2px rgba(107, 30, 58, 0.5);
+}
+.ss-slider output {
+  width: 38px;
+  font: 800 12px var(--font-body);
+  color: var(--burgundy);
+  text-align: right;
+}
+.ss-tunes {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 6px 58px;
+  padding: 0;
+  list-style: none;
+}
+.ss-tunes li {
+  font: 500 11.5px / 1.4 var(--font-body);
+  color: #8a6a7b;
+}
+.ss-tunes li b {
+  color: var(--burgundy);
+}
+.ss-tunes li.on {
+  color: var(--berry);
+}
+.ss-tunes li.on::before {
+  content: '♪ ';
+}
+.ss-toggle {
+  position: relative;
+  width: 54px;
+  height: 32px;
+  border: 0;
+  border-radius: 99px;
+  background: #e9dfe6;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.ss-toggle > span:first-child {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 6px -2px rgba(107, 30, 58, 0.5);
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.ss-toggle.on {
+  background: linear-gradient(135deg, #f4a6c0, var(--berry));
+}
+.ss-toggle.on > span:first-child {
+  transform: translateX(22px);
+}
+.ss-reset {
+  justify-self: center;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: #8a6a7b;
+  font: 600 12px var(--font-body);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.ss-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@keyframes ss-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
 @keyframes sound-bob {
   to {
     transform: translateY(-4px) rotate(3deg);
   }
 }
+@media (max-width: 480px) {
+  .ss-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+  .ss-slider,
+  .ss-row > .ss-toggle {
+    grid-column: 1 / -1;
+  }
+  .ss-slider input {
+    flex: 1;
+    width: auto;
+  }
+  .ss-row > .ss-toggle {
+    justify-self: end;
+  }
+  .ss-tunes {
+    margin-left: 8px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .sound-switch img {
+  .ss-head img {
     animation: none;
   }
 }

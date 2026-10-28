@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Letter } from '@/lib/data';
@@ -24,10 +25,12 @@ export default function Letters({ letters: initial }: { letters: Letter[] }) {
 
   async function choose(l: Letter) {
     if (locked(l)) {
+      sfx('nope');
       setNudge(l.id);
       setTimeout(() => setNudge(null), 600);
       return;
     }
+    sfx('paper');
     setOpen(l);
     if (!l.openedAt) {
       try {

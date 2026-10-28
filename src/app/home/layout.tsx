@@ -8,6 +8,7 @@ import '@/components/home/home.css';
 import '@/components/wall/wall.css';
 import '@/components/corner/corner.css';
 import Jelly from '@/components/jelly/Jelly';
+import MusicPlayer from '@/components/home/MusicPlayer';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,7 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
       {children}
       {/* Jelly floats on every page of her desk (the gift and the journey are their own pages, without her) */}
       <Jelly />
+      <MusicPlayer />
     </div>
   );
 }

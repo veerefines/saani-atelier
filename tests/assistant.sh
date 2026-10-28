@@ -202,7 +202,16 @@ expect "is on" '"sound":true'
 check "nonsense 400" 400 -b "$SA" -X PATCH "${J[@]}" -d '{"sound":"loud"}' $B/api/jelly/settings
 check "friend can't change it 403" 403 -b "$D/ai-fr.jar" -X PATCH "${J[@]}" -d '{"sound":false}' $B/api/jelly/settings
 check "the switch is on her desk" 200 -b "$SA" $B/home
-expect "below the cards" "Jelly’s voice &amp; sounds"
+expect "below the cards" "Sound &amp; feel"
+check "turn the music down and the buzzes off" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"music":0.2,"haptics":false}}' $B/api/jelly/settings
+expect "music at 20%" '"music":0.2'
+expect "no buzzes" '"haptics":false'
+expect "everything else as it was" '"voice":0.9'
+check "volumes stay between 0 and 100%" 200 -b "$SA" -X PATCH "${J[@]}" -d '{"audio":{"sfx":5,"voice":-1}}' $B/api/jelly/settings
+expect "loudest is 100%" '"sfx":1'
+expect "quietest is off" '"voice":0'
+check "remembered for every device" 200 -b "$SA" $B/api/jelly/home
+expect "still 20%" '"music":0.2'
 check "her chats are saved" 200 -b "$SA" $B/api/corner/jelly
 expect "with both questions" "JELLY-Q2"
 check "and show in the project's Jelly Got This! tab" 200 -b "$SA" "$B/home/corner/$P?tab=assistant"

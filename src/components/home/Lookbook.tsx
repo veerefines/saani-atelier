@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useRef, useState } from 'react';
 import type { LookItem } from '@/lib/extras';
 import { api, uploadFile } from '@/lib/upload-client';
@@ -42,6 +43,7 @@ export default function Lookbook({ items: initial }: { items: LookItem[] }) {
       }
       const x = await api<LookItem>('/api/lookbook', 'POST', { ...body, caption, tags, shared });
       setItems((xs) => [x, ...xs]);
+      sfx('sparkle');
       setFile(null);
       setLink('');
       setCaption('');

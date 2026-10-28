@@ -1,4 +1,5 @@
 import * as db from './db';
+import { cleanPrefs, DEFAULT_PREFS, type AudioPrefs } from './audio-prefs';
 import { milanDay, addDays } from './extras';
 import { friendship } from './jelly-mood';
 import { ACHIEVEMENTS, BACKDROPS, goalOf, itemById, MAX_PLACED, type Placed, type Stats } from './jelly-catalog';
@@ -27,8 +28,9 @@ export type JellyState = db.Doc & {
   v?: number;
   /** a fresh start: when this is behind RESET, everything is set back to zero (chats are kept) */
   epoch?: number;
-  /** voices and sounds (on unless she turned them off) */
+  /** voices and sounds (on unless she turned them off); `audio` has the details */
   sound?: boolean;
+  audio?: AudioPrefs;
 };
 
 // bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
@@ -70,7 +72,7 @@ const fresh = (): JellyState => ({ id: ID, createdAt: new Date().toISOString(), 
 export async function jellyState() {
   const s = await db.get<JellyState>(COL, ID);
   // a fresh start keeps when they last saw each other, so Jelly doesn't think they've just met
-  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen, sound: s.sound };
+  if (s && (s.epoch ?? 0) < RESET) return { ...fresh(), lastSeen: s.lastSeen, sound: s.sound, audio: s.audio };
   return migrate(s ?? fresh());
 }
 const save = (s: JellyState) => db.put<JellyState>(COL, s);
@@ -154,8 +156,14 @@ export async function sync(stats: (s: JellyState) => Promise<Stats>) {
   return { state: st, gains };
 }
 
-/** Turn voices and sounds on or off. */
-export const setSound = (on: boolean) => change((s) => ({ ...s, sound: on }));
+/** Her sound settings (with the old on/off switch folded in). */
+export const prefsOf = (s: JellyState): AudioPrefs => cleanPrefs(s.audio, { ...DEFAULT_PREFS, on: s.sound !== false });
+/** Change some of her sound settings. */
+export const setPrefs = (patch: Partial<AudioPrefs>) =>
+  change((s) => {
+    const audio = cleanPrefs(patch, prefsOf(s));
+    return { ...s, audio, sound: audio.on };
+  });
 
 /** Buy a thing (or a backdrop) for Jelly's home. Returns an error message, or the new state. */
 export async function buy(id: string): Promise<string | JellyState> {
@@ -224,7 +232,8 @@ export function view(s: JellyState) {
     chats: s.chats,
     visits: days.length,
     streak: streakOf(days),
-    sound: s.sound !== false,
+    sound: prefsOf(s).on,
+    audio: prefsOf(s),
     ...friendship(s.pets, s.chats),
   };
 }

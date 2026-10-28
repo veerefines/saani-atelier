@@ -14,7 +14,7 @@ import { ShareMoment, type Friend } from './Moments';
 import Memory from './Memory';
 import AtelierMark from './AtelierMark';
 import Corners, { type CornerCounts } from './Corners';
-import SoundSwitch from './SoundSwitch';
+import SoundSettings from './SoundSettings';
 import OccasionBanner from './OccasionBanner';
 
 type Preview = { id: string; kind: string; text: string; mediaId?: string; authorName: string };
@@ -282,7 +282,7 @@ export default function Dashboard({
 
       <Memory />
       <Corners counts={corners} />
-      <SoundSwitch />
+      <SoundSettings />
 
       <NotifyToggle />
 

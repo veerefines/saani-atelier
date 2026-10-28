@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import type { JarNote, Mood } from '@/lib/data';
@@ -35,12 +36,13 @@ export default function Jar({ counts }: { counts: Record<string, number> }) {
   async function shake() {
     if (!mood || busy) return;
     setBusy(true);
+    sfx('rattle');
     setNote(null);
     setEmpty(false);
     const anim = jar.start({ rotate: [0, -12, 10, -8, 6, -3, 0], y: [0, -6, 0, -4, 0], transition: { duration: 0.9 } });
     try {
       const [{ note }] = await Promise.all([api<{ note: JarNote | null }>('/api/jar/draw', 'POST', { mood }), anim]);
-      if (note) setNote(note);
+      if (note) (setNote(note), sfx('chime'));
       else setEmpty(true);
     } catch {
       setEmpty(true);

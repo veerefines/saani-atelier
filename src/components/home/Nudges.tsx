@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NUDGE_EMOJI, REACT_EMOJI, type Nudge } from '@/content/nudges';
@@ -54,6 +55,7 @@ export function NudgeSend() {
     setErr('');
     try {
       const n = await api<Nudge>('/api/nudges', 'POST', { emoji, text });
+      sfx('whoosh');
       setList((l) => [n, ...(l ?? [])]);
       setText('');
       setMore(false);

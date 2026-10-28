@@ -525,7 +525,7 @@ export default function Jelly() {
               <i />
               <i />
             </span>
-            <button type="button" className={`jp-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Tap to pet me!">
+            <button type="button" data-quiet className={`jp-avatar mood-${mood}`} onClick={petOnce} aria-label="Pet Jelly" title="Tap to pet me!">
               <img key={mood} src={moodSrc(mood)} alt="" width={60} height={60} />
               <span className="jelly-hearts" aria-hidden="true">
                 {hearts.map((h) => (
@@ -744,6 +744,7 @@ export default function Jelly() {
       <button
         ref={pet}
         type="button"
+        data-quiet
         className={`jelly-pet mood-${mood}${shown && !open ? ' chatty' : ''}${atHome ? ' away' : ''}`}
         onPointerDown={onDown}
         onPointerMove={onMove}

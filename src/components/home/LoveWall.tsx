@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Post } from '@/lib/data';
@@ -124,6 +125,7 @@ export default function LoveWall({ posts: initial, seenBefore, trackSeen = true 
   const [viewing, setViewing] = useState<number | null>(null);
 
   async function react(id: string, emoji: string) {
+    sfx('pop');
     setPosts((ps) =>
       ps.map((p) =>
         p.id === id ? { ...p, reactions: p.reactions.includes(emoji) ? p.reactions.filter((e) => e !== emoji) : [...p.reactions, emoji] } : p,

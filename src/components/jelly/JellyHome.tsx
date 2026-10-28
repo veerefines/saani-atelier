@@ -250,7 +250,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
     <div className="jh">
       {/* who she is, and how they're doing */}
       <header className="jh-hero">
-        <button type="button" className={`jh-me mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
+        <button type="button" data-quiet className={`jh-me mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
           <img key={mood} src={moodHd(mood)} alt="" width={96} height={96} />
         </button>
         <div className="jh-hello">
@@ -346,6 +346,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
                 <button
                   key={p.uid}
                   type="button"
+                  data-quiet
                   className={`jh-thing${sel === p.uid && editing ? ' on' : ''}${it.kind === 'friends' ? ' swim' : ''}`}
                   style={{ left: `${p.x}%`, top: `${p.y}%`, zIndex: 20 + Math.round(p.y), ['--w' as string]: it.w * p.s, ['--f' as string]: p.flip ? -1 : 1, ['--d' as string]: `${(p.uid.charCodeAt(p.uid.length - 1) % 7) * -0.6}s` }}
                   onPointerDown={(e) => onDown(e, p)}
@@ -360,7 +361,7 @@ export default function JellyHome({ initial, initialTab, chats, ready }: { initi
               );
             })}
 
-            <button type="button" className={`jh-jelly mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
+            <button type="button" data-quiet className={`jh-jelly mood-${mood}`} onClick={pet} aria-label="Pet Jelly">
               <span className="jelly-hearts" aria-hidden="true">
                 {hearts.map((h) => (
                   <i key={h.id} style={{ left: `${h.x}%` }}>

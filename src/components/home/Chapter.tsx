@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { DiaryEntry } from '@/lib/extras';
@@ -34,6 +35,7 @@ export default function Chapter({ entries: initial, moods }: { entries: DiaryEnt
     setBusy(true);
     try {
       const mediaId = file ? await uploadFile(file) : undefined;
+      sfx('page');
       const d = await api<DiaryEntry>('/api/diary', 'POST', { text, mood, mediaId, shared, day: todayMilan() });
       setEntries((x) => [d, ...x]);
       setText('');

@@ -1,5 +1,6 @@
 'use client';
 
+import { sfx } from '@/lib/sound';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
@@ -169,6 +170,7 @@ function Wishlist({
     try {
       const w = await api<Wish>('/api/wishes', 'POST', { text });
       setWishes((ws) => [w, ...ws]);
+      sfx('sparkle');
       setText('');
       setErr('');
     } catch (e) {
@@ -176,6 +178,7 @@ function Wishlist({
     }
   }
   async function toggle(id: string) {
+    if (!wishes.find((w) => w.id === id)?.done) sfx('tick');
     setWishes((ws) => ws.map((w) => (w.id === id ? { ...w, done: !w.done } : w)));
     api(`/api/wishes/${id}`, 'POST').catch(() => {});
   }
