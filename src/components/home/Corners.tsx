@@ -11,7 +11,7 @@ export default function Corners({ counts: c }: { counts: CornerCounts }) {
   const corners: { href: string; art: string; title: string; sub: string; tint: string; p?: number }[] = [
     { href: '/home/corner', art: art('quill'), title: 'My Corner', sub: 'your projects & ideas', tint: '#f3e3d3' },
     { href: '/home/jelly', art: '/corner/jelly/joyful.webp', title: 'Jelly’s Corner', sub: `🫧 ${c.pearls} pearls · friends Lv ${c.jellyLevel}`, tint: '#ece3fb' },
-    { href: '/home/calendar', art: art('hourglass'), title: 'Calendario', sub: 'events, festivals & meetups', tint: '#fde3ea' },
+    { href: '/home/calendar', art: '/corner/home/items/calendar.svg', title: 'Calendario', sub: 'events, festivals & meetups', tint: '#fde3ea' },
     { href: '/home/meetups', art: art('vintage-camera'), title: 'Meetups', sub: 'video calls with your people', tint: '#d3e9f6' },
     { href: '/home/money', art: art('treasure-chest'), title: 'Soldi', sub: c.moneyLeft !== null ? (c.moneyLeft >= 0 ? `€${Math.round(c.moneyLeft)} left this month` : `€${Math.round(-c.moneyLeft)} over this month`) : c.moneySpent ? `€${Math.round(c.moneySpent)} this month` : 'spends, budget & ₹ rate', tint: '#dff1e4' },
     { href: '/home/moments', art: art('instax'), title: 'Moments', sub: c.moments ? `${c.moments} shared` : 'send your people a peek', tint: '#fde3ea' },
