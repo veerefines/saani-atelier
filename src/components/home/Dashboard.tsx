@@ -235,7 +235,10 @@ export default function Dashboard({
                   <i />
                 </span>
               ) : p.kind === 'video' ? (
-                <span key={p.id} className={`t-mini film n${k}`}>▶</span>
+                <span key={p.id} className={`t-mini film n${k}`}>
+                  {p.mediaId && <video src={`${mediaUrl(p.mediaId)}#t=0.1`} muted playsInline preload="metadata" tabIndex={-1} />}
+                  <b>▶</b>
+                </span>
               ) : (
                 <span key={p.id} className={`t-mini note n${k}`}>
                   {p.text.slice(0, 40) || '♡'}
