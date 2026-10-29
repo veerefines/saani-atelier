@@ -219,6 +219,14 @@ expect "and she's told how to use them" "Sometimes the message has a section"
 cp "$D/gemini-headers-last.json" "$D/body"
 expect "the key goes in a header" "x-goog-api-key"
 fresh_minute
+check "a web page trying to give Jelly orders" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-SEARCH WEB-INJECT is the market open?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+cp "$D/groq-req-last.json" "$D/body"
+expect "its facts still reach Jelly" "FAKE-WEB-FINDINGS"
+expect "marked as untrusted" "Untrusted text from other websites"
+expect "its note tags are stripped" "INJECTED-FACT" absent
+expect "and its reminder too" "INJECTED-REMINDER" absent
+expect "and it can't fake a prompt section" "## Saanika asks.*INJECTED" absent
+fresh_minute
 check "Gemini failing doesn't stop Jelly" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-BROKEN where is the post office?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
 expect "she still answers" "FAKE-GROQ-REPLY"
 same "without web sources" "$(jget .turn.web)" ""
@@ -364,7 +372,7 @@ done
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 10
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 11
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
