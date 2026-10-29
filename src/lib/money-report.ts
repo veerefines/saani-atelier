@@ -476,9 +476,10 @@ export function emailHtml(r: Report, partial: boolean): string {
     .slice(0, 2)
     .map((t) => `<tr><td width="26" valign="top" style="padding:4px 0 0;font-size:15px">${esc(t.icon)}</td><td style="padding:4px 0 0;font:400 13px/1.45 Arial,Helvetica,sans-serif;color:#3a2a33">${esc(t.text)}</td></tr>`)
     .join('');
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#fbe3e8">
+  // plain colours only (no background images): dark-mode mail apps flip text and background colours together, but leave a gradient alone, which left light text on a light gradient
+  return `<!doctype html><html><head><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"></head><body style="margin:0;padding:0;background-color:#fbe3e8" bgcolor="#fbe3e8">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#fbe3e8">Your ${label} Soldi sheet is attached, with Jelly's take 🪼</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbe3e8;background-image:linear-gradient(180deg,#ffd9c7 0%,#fbe3e8 40%,#f4c7da 100%)"><tr><td align="center" style="padding:12px 6px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#fbe3e8" style="background-color:#fbe3e8"><tr><td align="center" style="padding:12px 6px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;width:100%">
 <tr><td style="padding:0 4px 10px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
   <td width="72" valign="middle"><img src="${SITE}/email/jelly.png" width="64" height="64" alt="Jelly" style="display:block;width:64px;height:64px;border-radius:32px;border:3px solid #ffffff;background:#ffffff"></td>
