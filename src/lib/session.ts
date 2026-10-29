@@ -46,3 +46,17 @@ export function sessionCookieOptions() {
     maxAge: MAX_AGE,
   };
 }
+
+/** A signed "stop these emails" link for one person, so an email can carry its own unsubscribe. */
+export async function signUnsub(id: string): Promise<string> {
+  return new SignJWT({ purpose: 'unsub' }).setProtectedHeader({ alg: 'HS256' }).setSubject(id).setIssuedAt().setExpirationTime('400d').sign(secret());
+}
+export async function readUnsub(token?: string | null): Promise<string | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return payload.purpose === 'unsub' && payload.sub ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}

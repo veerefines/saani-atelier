@@ -209,7 +209,7 @@ function Friends({ initial, me }: { initial: Friend[]; me: string }) {
   );
 }
 
-/** A friend's email, so Google can send them meetup invites. */
+/** A friend's email: for Meet invites, and for Jelly's updates about Saani. */
 function EmailBox({ f, onSaved }: { f: Friend; onSaved: (email: string) => void }) {
   const [v, setV] = useState(f.email ?? '');
   const [state, setState] = useState<'' | 'saving' | 'saved' | 'bad'>('');
@@ -233,9 +233,9 @@ function EmailBox({ f, onSaved }: { f: Friend; onSaved: (email: string) => void 
       onChange={(e) => (setV(e.target.value), setState(''))}
       onBlur={save}
       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), save())}
-      placeholder={state === 'saved' ? 'Saved ✓' : 'email for Meet invites'}
+      placeholder={state === 'saved' ? 'Saved ✓' : 'email (Meet invites, Jelly’s updates)'}
       aria-label={`${f.name}’s email, for meetup invites`}
-      title={state === 'saved' ? 'Saved' : state === 'bad' ? 'That doesn’t look like an email' : 'Used for Google Meet invites'}
+      title={state === 'saved' ? 'Saved' : state === 'bad' ? 'That doesn’t look like an email' : 'Used for Google Meet invites and Jelly’s emails about Saani'}
     />
   );
 }

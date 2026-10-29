@@ -7,6 +7,8 @@ import { friendship, timeMood } from '@/lib/jelly-mood';
 import { addReminder, zoneOr } from '@/lib/reminders';
 import { remember } from '@/lib/jelly-memory';
 import type { TurnNote } from '@/lib/corner-model';
+import { after } from 'next/server';
+import { achievementMail } from '@/lib/jelly-mail';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
 /** Is Jelly awake, how she feels, her chats, the projects she checks in about, how long Saani was away, and today's pearls and achievements. */
@@ -16,6 +18,8 @@ export async function GET() {
   const before = await seen();
   const { home, gains } = await checkIn();
   const projects = (await listProjects()).map((p) => ({ id: p.id, title: p.title, updatedAt: p.updatedAt, archived: p.archived }));
+  // something big just unlocked? her friends hear about it (once, and only for the big ones)
+  if (gains.some((g) => g.kind === 'achievement')) after(() => achievementMail().catch(() => 0));
   return json({
     ready: assistantReady(),
     mood: timeMood(),

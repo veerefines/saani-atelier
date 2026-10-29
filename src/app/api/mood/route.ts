@@ -2,6 +2,7 @@ import { after } from 'next/server';
 import { getMood, markMoodAlerted, setMood } from '@/lib/extras';
 import { MOODS } from '@/content/mood';
 import { notifyFriends } from '@/lib/push';
+import { lowMail } from '@/lib/jelly-mail';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
 /** Her mood today, for her desk and her people's. */
@@ -23,7 +24,11 @@ export async function POST(req: Request) {
   const saved = await setMood(m.id, text);
   if (m.low && saved.alerted !== saved.day) {
     await markMoodAlerted(saved.day);
-    after(() => notifyFriends({ title: `${m.emoji} Saanika’s feeling ${m.label} today`, body: 'A little nudge, a voice note or a song would help.', url: '/wall#nudges' }));
+    after(async () => {
+      await notifyFriends({ title: `${m.emoji} Saanika’s feeling ${m.label} today`, body: 'A little nudge, a voice note or a song would help.', url: '/wall#nudges' });
+      // and, only if she switched it on, an email too
+      await lowMail().catch(() => 0);
+    });
   }
   return json(saved);
 }

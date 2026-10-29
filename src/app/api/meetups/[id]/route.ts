@@ -1,6 +1,7 @@
 import { cancelMeet, friendEmails, updateMeet, GoogleNotLinked } from '@/lib/google';
 import { getMeetup, saveMeetup } from '@/lib/meetups';
 import { notifyPerson } from '@/lib/push';
+import { meetupMail } from '@/lib/jelly-mail';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -22,6 +23,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
   const next = await saveMeetup({ ...m, start, rsvp: {}, nudged: false });
   await Promise.all(m.friendIds.map((f) => notifyPerson(f, { title: `💻 “${m.title}” moved`, body: 'There’s a new time. Tap to say if you can make it.', url: '/wall' })));
+  await meetupMail('moved', next).catch(() => 0);
   return json(next);
 }
 
@@ -38,5 +40,6 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   }
   await saveMeetup({ ...m, cancelled: true });
   if (!m.cancelled) await Promise.all(m.friendIds.map((f) => notifyPerson(f, { title: `💻 “${m.title}” is off`, body: 'Saanika cancelled this call. Another time! 💗', url: '/wall' })));
+  if (!m.cancelled) await meetupMail('cancelled', { ...m, cancelled: true }).catch(() => 0);
   return json({ ok: true });
 }

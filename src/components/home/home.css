@@ -10444,3 +10444,84 @@ a.mb-q:hover {
   background: rgba(244, 166, 192, 0.35);
   cursor: pointer;
 }
+
+/* ---------- Jelly's emails (her switches) ---------- */
+.mailprefs {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.12);
+}
+.mailprefs h2 {
+  margin: 0;
+  font-size: 26px;
+  color: var(--burgundy);
+}
+.mailprefs-sub {
+  margin: 0;
+  font: 500 13.5px/1.45 var(--font-body);
+  color: #5a3f4c;
+}
+.mailprefs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.mailprefs-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.14);
+  cursor: pointer;
+}
+.mailprefs-text {
+  display: grid;
+  gap: 2px;
+}
+.mailprefs-text b {
+  font: 650 15px var(--font-body);
+  color: var(--ink);
+}
+.mailprefs-text small {
+  font: 500 12.5px/1.4 var(--font-body);
+  color: #7a5c69;
+}
+.mailprefs-switch {
+  flex: none;
+  position: relative;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: #e5d4db;
+  transition: background 0.2s ease;
+}
+.mailprefs-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(30, 27, 36, 0.25);
+  transition: transform 0.2s ease;
+}
+.mailprefs-row[aria-checked='true'] .mailprefs-switch {
+  background: var(--berry);
+}
+.mailprefs-row[aria-checked='true'] .mailprefs-switch::after {
+  transform: translateX(18px);
+}

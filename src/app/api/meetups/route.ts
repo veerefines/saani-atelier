@@ -3,6 +3,7 @@ import { listMeetups, newMeetupId, saveMeetup, upcoming } from '@/lib/meetups';
 import { getInvites } from '@/lib/invites';
 import { people } from '@/lib/zones';
 import { notifyPerson } from '@/lib/push';
+import { meetupMail } from '@/lib/jelly-mail';
 import { requireSession, isResponse, json, fail } from '@/lib/api';
 
 const first = (n: string) => n.split(' ')[0];
@@ -52,6 +53,8 @@ export async function POST(req: Request) {
     const m = await saveMeetup({ id, createdAt: new Date().toISOString(), title, start, minutes, friendIds, meetLink: g.meetLink, googleEventId: g.eventId, rsvp: {} });
     const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(start));
     await Promise.all(friendIds.map((f) => notifyPerson(f, { title: `💻 ${first(s.name)} invited you to a call`, body: `“${title}” · ${when} Milano time. Tap to say if you’re coming.`, url: '/wall' })));
+    // and Jelly's own email with the details and the link, whatever Google sends
+    await meetupMail('new', m).catch(() => 0);
     return json({ meetup: m, noEmail: friendIds.filter((f) => !emails[f]).map((f) => invites.find((i) => i.id === f)?.name ?? f) }, 201);
   } catch (e) {
     if (e instanceof GoogleNotLinked) return fail('Google needs connecting again.', 409);

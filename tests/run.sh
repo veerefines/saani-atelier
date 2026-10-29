@@ -85,6 +85,7 @@ run "endpoints, part 5" bash tests/endpoints-5.sh
 run "endpoints, part 6" bash tests/endpoints-6.sh
 run "endpoints, part 7" bash tests/endpoints-7.sh
 run "monthly Soldi sheet (fake Resend)" bash tests/report.sh
+run "Jelly's emails (fake Resend)" bash tests/jelly-mail.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Groq server
