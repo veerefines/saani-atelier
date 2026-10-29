@@ -132,6 +132,51 @@ waitsent 5
 expect "asks for an amount" "couldn" present "$D/wa-out-last.json"
 same "nothing saved" "$(count)" "$BEFORE"
 
+echo "--- Jelly's WhatsApp menu"
+tap() { # id from kind(button_reply|list_reply) choice
+  local body; body=$(node -e "console.log(JSON.stringify({object:'whatsapp_business_account',entry:[{changes:[{field:'messages',value:{messaging_product:'whatsapp',messages:[{id:process.argv[1],from:process.argv[2],type:'interactive',interactive:{type:process.argv[3],[process.argv[3]]:{id:process.argv[4],title:process.argv[4]}}}]}}]}]}))" "$1" "$2" "$3" "$4")
+  curl -s -o /dev/null -w '%{http_code}' -m 30 -X POST "${J[@]}" -H "X-Hub-Signature-256: $(sign "$body")" -d "$body" $B/api/whatsapp
+}
+out() { node -e "const m=require('$D/wa-out-last.json');console.log(eval(process.argv[1]))" "$1"; }
+N=$(sent)
+wa wamid.M1 "$OWNER" 'menu' > /dev/null
+waitsent $((N+1))
+same "the menu is a list" "$(out m.interactive.type)" "list"
+same "with ten things to tap" "$(out 'm.interactive.action.sections[0].rows.length')" "10"
+same "every title fits WhatsApp's 24" "$(out "m.interactive.action.sections[0].rows.every(r=>[...r.title].length<=24&&r.description.length<=72)")" "true"
+# a cap so the budget has something to show
+check "a cafe cap" 200 -b "$SA" -X PUT "${J[@]}" -d '{"monthly":500,"caps":{"cafe":20}}' $B/api/expenses/budget
+same "a tap on Budget" "$(tap wamid.M2 "$OWNER" list_reply budget)" "200"
+waitsent $((N+2))
+expect "the budget" "Budget" present "$D/wa-out-last.json"
+expect "its caps" "Caps" present "$D/wa-out-last.json"
+same "with buttons under it" "$(out m.interactive.type)" "button"
+wa wamid.M3 "$OWNER" 'aperitivo 9' > /dev/null
+waitsent $((N+3))
+same "a logged spend offers three buttons" "$(out m.interactive.action.buttons.length)" "3"
+same "undo among them" "$(out "m.interactive.action.buttons.some(b=>b.reply.id==='undo')")" "true"
+AFTER=$(count)
+tap wamid.M4 "$OWNER" button_reply undo > /dev/null
+waitsent $((N+4))
+expect "a tap on Undo takes it back" "Taken back" present "$D/wa-out-last.json"
+same "gone" "$(count)" "$((AFTER-1))"
+I=5
+for row in spends summary today week cats last tips how; do
+  tap wamid.M$I "$OWNER" list_reply $row > /dev/null
+  waitsent $((N+I))
+  same "the $row row answers" "$(sent)" "$((N+I))"
+  I=$((I+1))
+done
+expect "Jelly's tips" "Jelly’s take" present "$D/wa-out-$((N+11)).json"
+expect "the spends list" "🧾" present "$D/wa-out-$((N+5)).json"
+expect "where it went" "Where it went" present "$D/wa-out-$((N+9)).json"
+expect "how to log" "esselunga" present "$D/wa-out-last.json"
+INS=$(curl -s -b "$SA" "$B/api/expenses/insights?month=$MONTH" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).headline))")
+same "tips match Soldi's own take" "$(node -e "console.log(require('$D/wa-out-$((N+11)).json').interactive.body.text.split('\n')[1])")" "$INS"
+same "a stranger's tap" "$(tap wamid.M20 "441234567890" list_reply budget)" "200"
+sleep 2
+same "is ignored" "$(sent)" "$((N+12))"
+
 echo
 echo "passed=$pass failed=$failn"
 [ $failn -eq 0 ]

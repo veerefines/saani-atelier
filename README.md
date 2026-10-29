@@ -146,7 +146,10 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
 - **Jelly's take** (`src/lib/money-insights.ts`, `/api/expenses/insights`):
   - three charts: a pie of where the money went, bars comparing each category with last month by the same day, and money in against money out
   - 3–4 tips from Jelly, worked out from the month's numbers. They're cached until something changes, so Groq is asked rarely. Without Groq, rule-based tips stand in.
-- **WhatsApp.** Saanika can text spends to a WhatsApp number. Jelly logs them and replies; she can also send *summary*, *today*, *undo* and *help*. To switch it on:
+- **WhatsApp.** Saanika can text spends to a WhatsApp number. Jelly logs them and replies with buttons (Summary, Undo, Menu).
+  - *menu* (or *hi*, *help*) opens a list to tap: Budget (with each cap), This month's spends, Summary, Today, This week, By category, Last month, Jelly's tips (the same take as the Soldi screen), How to log and Undo. Each can also be typed.
+  - `scripts/whatsapp-profile.mts` sets the number's picture and "about" line. The free test number's name can't be changed; a real number with an approved display name can say "Jelly".
+  - To switch it on:
   1. At developers.facebook.com, create an app (type Business) and add the **WhatsApp** product. Meta gives you a test number. For a permanent token, create a System User in Business Settings with the `whatsapp_business_messaging` permission.
   2. Under WhatsApp → Configuration, set the callback URL to `https://saani-atelier.vercel.app/api/whatsapp`, choose any verify token, and subscribe to the **messages** field.
   3. Add these in Vercel, then redeploy:

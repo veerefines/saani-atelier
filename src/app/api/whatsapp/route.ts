@@ -1,5 +1,5 @@
 import { after } from 'next/server';
-import { firstTime, handleText, isOwner, messagesIn, sendText, signedByMeta, tail, whatsappReady } from '@/lib/whatsapp';
+import { firstTime, handleText, isOwner, messagesIn, sendReply, signedByMeta, tail, whatsappReady, type Reply } from '@/lib/whatsapp';
 
 /** Meta checks the webhook once, when it's set up: echo the challenge if the token matches. */
 export async function GET(req: Request) {
@@ -27,11 +27,11 @@ export async function POST(req: Request) {
   after(async () => {
     for (const m of mine) {
       if (!(await firstTime(m.id))) continue;
-      const reply = await handleText(m.text).catch((e: Error) => {
+      const reply = await handleText(m.text, undefined, m.tap).catch((e: Error): Reply => {
         console.error(`[whatsapp] couldn't handle a message: ${e.message}`);
-        return 'Jelly got a little tangled 🫧 Try that again in a moment?';
+        return { text: 'Jelly got a little tangled 🫧 Try that again in a moment?' };
       });
-      await sendText(m.from, reply);
+      await sendReply(m.from, reply);
     }
   });
   return new Response('ok');
