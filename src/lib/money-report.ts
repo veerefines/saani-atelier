@@ -255,6 +255,60 @@ export async function renderWorkbook(r: Report): Promise<Buffer> {
 }
 
 /* ---------- the email ---------- */
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const SITE = 'https://saani.space';
+
+/** The email as inline-styled HTML (tables, because mail apps ignore most CSS), in the site's blush and berry. */
+export function emailHtml(r: Report, partial: boolean): string {
+  const s = r.f.summary;
+  const label = monthLabel(r.month);
+  const tiles: [string, string, string][] = [
+    ['🛍️', 'Spent', eur(s.spent)],
+    s.left === null ? ['🎯', 'Budget', 'not set yet'] : s.left >= 0 ? ['🎯', 'Left of budget', eur(s.left)] : ['🎯', 'Over budget by', eur(-s.left)],
+    ['💌', 'Money in', eur(s.inEur)],
+    r.f.projected !== null ? ['🔮', 'Month end at', `~${eur(r.f.projected)}`] : ['🧾', 'Spends', String(s.count)],
+  ];
+  const tile = ([icon, name, value]: [string, string, string]) =>
+    `<td width="50%" style="padding:6px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #f3d4de"><tr><td style="padding:14px 14px 12px"><div style="font-size:20px;line-height:24px">${icon}</div><div style="font:600 12px Arial,Helvetica,sans-serif;color:#9a7b88;text-transform:uppercase;letter-spacing:.06em;margin-top:6px">${name}</div><div style="font:700 22px Georgia,'Times New Roman',serif;color:#6b1e3a;margin-top:2px">${esc(value)}</div></td></tr></table></td>`;
+  const top = s.byCat.filter((c) => c.eur > 0).slice(0, 4);
+  const bars = top
+    .map((c) => {
+      const pct = Math.max(4, Math.round((c.eur / Math.max(s.spent, 1)) * 100));
+      return `<tr><td style="padding:7px 0 0;font:600 13px Arial,Helvetica,sans-serif;color:#3a2a33">${c.icon} ${esc(c.label)}</td><td align="right" style="padding:7px 0 0;font:700 13px Arial,Helvetica,sans-serif;color:#6b1e3a">${esc(eur(c.eur))}</td></tr><tr><td colspan="2" style="padding:4px 0 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="${pct}%" height="8" style="background:${c.color};border-radius:8px;font-size:0;line-height:0">&nbsp;</td><td style="background:#f6e6ec;border-radius:8px;font-size:0;line-height:0">&nbsp;</td></tr></table></td></tr>`;
+    })
+    .join('');
+  const tips = r.take.tips
+    .slice(0, 3)
+    .map((t) => `<tr><td width="30" valign="top" style="padding:6px 0;font-size:18px">${esc(t.icon)}</td><td style="padding:6px 0;font:400 14px/1.5 Arial,Helvetica,sans-serif;color:#3a2a33">${esc(t.text)}</td></tr>`)
+    .join('');
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#fbe3e8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#fbe3e8">Your ${label} Soldi sheet is attached, with Jelly's take 🪼</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbe3e8;background-image:linear-gradient(180deg,#ffd9c7 0%,#fbe3e8 38%,#f4c7da 100%)"><tr><td align="center" style="padding:28px 12px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
+<tr><td align="center" style="padding:0 0 14px">
+  <img src="${SITE}/email/jelly.png" width="96" height="96" alt="Jelly" style="display:block;width:96px;height:96px;border-radius:48px;border:4px solid #ffffff;background:#ffffff;box-shadow:0 8px 22px rgba(107,30,58,.18)">
+</td></tr>
+<tr><td align="center" style="padding:0 0 4px;font:italic 400 20px Georgia,'Times New Roman',serif;color:#6b1e3a">ciao, it's Jelly 🪼</td></tr>
+<tr><td align="center" style="padding:0 0 18px;font:400 30px/1.15 Georgia,'Times New Roman',serif;color:#6b1e3a"><b>Saani's Soldi sheet</b></td></tr>
+<tr><td align="center" style="padding:0 0 18px"><span style="display:inline-block;padding:7px 18px;border-radius:999px;background:#b2305f;color:#ffffff;font:700 13px Arial,Helvetica,sans-serif;letter-spacing:.04em">${label}${partial ? ' · so far' : ''}</span></td></tr>
+<tr><td style="background:#fff8f3;border-radius:26px;border:1px solid #f3d4de;padding:22px 20px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:0 6px 12px;font:italic 400 17px/1.5 Georgia,'Times New Roman',serif;color:#3a2a33">Here's how the month went, cara. The whole workbook is attached.</td></tr>
+    <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${tile(tiles[0])}${tile(tiles[1])}</tr><tr>${tile(tiles[2])}${tile(tiles[3])}</tr></table></td></tr>
+    ${top.length ? `<tr><td style="padding:16px 6px 0"><div style="font:700 12px Arial,Helvetica,sans-serif;color:#9a7b88;text-transform:uppercase;letter-spacing:.08em">Where it went</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${bars}</table></td></tr>` : ''}
+    <tr><td style="padding:20px 6px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbe3e8;border-radius:18px"><tr><td style="padding:16px 16px 12px">
+      <div style="font:700 12px Arial,Helvetica,sans-serif;color:#b2305f;text-transform:uppercase;letter-spacing:.08em">Jelly's take</div>
+      <div style="font:italic 400 18px/1.45 Georgia,'Times New Roman',serif;color:#6b1e3a;margin:6px 0 8px">${esc(r.take.headline)}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${tips}</table>
+    </td></tr></table></td></tr>
+    <tr><td align="center" style="padding:22px 6px 4px"><a href="${SITE}/home/money" style="display:inline-block;padding:14px 30px;border-radius:999px;background:#b2305f;color:#ffffff;font:700 15px Arial,Helvetica,sans-serif;text-decoration:none">Open Soldi 💗</a></td></tr>
+  </table>
+</td></tr>
+<tr><td align="center" style="padding:18px 20px 0;font:400 12.5px/1.6 Arial,Helvetica,sans-serif;color:#8a6a77">📎 <b>Soldi-${r.month}.xlsx</b> has every spend, your budget by category, money in and my take.<br>Sent with love by Jelly, from Saani's Atelier 🫧</td></tr>
+</table>
+</td></tr></table></body></html>`;
+}
+
 function body(r: Report, partial: boolean) {
   const s = r.f.summary;
   const label = monthLabel(r.month);
@@ -263,15 +317,7 @@ function body(r: Report, partial: boolean) {
     ...(s.inEur ? [`Money in: ${eur(s.inEur)}.`] : []),
   ];
   const text = `Ciao! Jelly here 🪼\n\nHere is Saani’s Soldi sheet for ${label}${partial ? ' (so far)' : ''}.\n\n${lines.join('\n')}\n\n“${r.take.headline}”\n\nThe full workbook is attached: every spend, the budget by category, money in and my take.\n\nJelly 🫧\n`;
-  const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:auto;padding:24px;background:#fff8f3;color:#1e1b24;border-radius:16px">
-<h2 style="margin:0 0 4px;color:#6b1e3a">Saani’s Soldi sheet 🪼</h2>
-<p style="margin:0 0 16px;color:#7a5c69">${label}${partial ? ' · the month so far' : ''}</p>
-<p style="margin:0 0 8px">Ciao! Jelly here.</p>
-${lines.map((l) => `<p style="margin:0 0 6px">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>`).join('')}
-<p style="margin:16px 0;padding:12px 14px;background:#fbe3e8;border-radius:12px;color:#6b1e3a;font-style:italic">${r.take.headline.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>
-<p style="margin:0 0 6px">The full workbook is attached: every spend, the budget by category, money in and my take.</p>
-<p style="margin:16px 0 0;color:#7a5c69">Jelly 🫧</p></div>`;
-  return { subject: `Jelly’s Soldi sheet for ${label}${partial ? ' (so far)' : ''} 🪼`, text, html };
+  return { subject: `Jelly’s Soldi sheet for ${label}${partial ? ' (so far)' : ''} 🪼`, text, html: emailHtml(r, partial) };
 }
 
 export type Sent = { sent: string[]; failed: string[] };
