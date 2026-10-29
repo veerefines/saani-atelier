@@ -230,6 +230,14 @@ fresh_minute
 check "notes on a turn with web text" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-SEARCH REMIND-AND-REMEMBER about the market\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
 same "none become reminders or memories" "$(jget .turn.notes)" ""
 fresh_minute
+check "Groq down: Gemini answers instead" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"GROQ-DOWN tell me about Milano\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+expect "the answer is Gemini's" "FAKE-GEMINI-ANSWER"
+expect "marked as Gemini's" '"via":"gemini"'
+expect "with the follow-ups" '"suggestions":\["G-ONE?"'
+cp "$D/gemini-req-last.json" "$D/body"
+expect "Gemini got Jelly's own prompt" "You are Jelly"
+expect "and the chat so far" '"role":"model"'
+fresh_minute
 check "Gemini failing doesn't stop Jelly" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-BROKEN where is the post office?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
 expect "she still answers" "FAKE-GROQ-REPLY"
 same "without web sources" "$(jget .turn.web)" ""
@@ -375,7 +383,7 @@ done
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 12
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 13
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant

@@ -89,7 +89,7 @@ FAKE=$!
 # and a fake Gemini (Google Search grounding) for Jelly's web lookups
 node tests/fake-gemini.js 4614 "$TEST_TMP" &
 FAKE2=$!
-GEMINI_API_KEY=test-key-not-real GEMINI_BASE_URL=http://localhost:4614 GROQ_API_KEY=test-key-not-real GROQ_BASE_URL=http://localhost:4610/openai/v1 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
+GEMINI_RPM=200 GEMINI_API_KEY=test-key-not-real GEMINI_BASE_URL=http://localhost:4614 GROQ_API_KEY=test-key-not-real GROQ_BASE_URL=http://localhost:4610/openai/v1 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server-ai.log" 2>&1 &
 SERVER=$!
 for i in $(seq 1 60); do curl -s -o /dev/null "$BASE_URL/" && break; sleep 1; done
 run "assistant (fake Groq)" bash tests/assistant.sh

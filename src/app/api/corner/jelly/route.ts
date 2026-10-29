@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       const f = await remember(t, 'jelly', chat?.id);
       if (f) notes.push({ kind: 'remember', id: f.id, text: f.text });
     }
-    const saved = await saveTurn(JELLY_CHATS, chat?.id ?? null, { mode: 'question', q: question, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions, mood: r.mood, ...(notes.length ? { notes } : {}), ...(r.web ? { web: r.web } : {}) });
+    const saved = await saveTurn(JELLY_CHATS, chat?.id ?? null, { mode: 'question', q: question, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions, mood: r.mood, ...(notes.length ? { notes } : {}), ...(r.web ? { web: r.web } : {}), ...(r.via ? { via: r.via } : {}) });
     return json({ ...saved, friend: view(await addChat()) });
   } catch (e) {
     if (e instanceof AssistantBusy) {

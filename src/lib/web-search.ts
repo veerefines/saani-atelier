@@ -19,7 +19,7 @@ const MODEL = () => process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const BASE = () => (process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com').replace(/\/$/, '');
 
 /** Stay well inside Gemini's free allowance: a few a minute, a couple of hundred a day. */
-const PER_MINUTE = 8;
+const PER_MINUTE = Number(process.env.GEMINI_RPM) || 8;
 const PER_DAY = 200;
 const TIMEOUT_MS = 8_000;
 
@@ -92,6 +92,38 @@ export async function webLookup(question: string, recent: { q: string; a: string
     });
     if (!res.ok) return null;
     return readReply((await res.json()) as GeminiReply);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A whole answer from Gemini, for when Groq's free minute is used up (or Groq is down): the same system
+ * prompt, the chat so far, and Google Search switched on only if `search` says so. null when Gemini can't
+ * help either (no key, over its allowance, error), so the caller can fall back to its own error.
+ */
+export async function geminiAnswer(opts: { system: string; text: string; prior: { role: 'user' | 'assistant'; content: string }[]; search?: boolean }): Promise<{ text: string; web: Pick<WebFindings, 'sources' | 'queries'> | null } | null> {
+  if (!webReady()) return null;
+  try {
+    if (!(await allowed())) return null;
+    const res = await fetch(`${BASE()}/v1beta/models/${process.env.GEMINI_CHAT_MODEL || MODEL()}:generateContent`, {
+      method: 'POST',
+      headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY as string, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: opts.system }] },
+        contents: [...opts.prior.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })), { role: 'user', parts: [{ text: opts.text }] }],
+        ...(opts.search ? { tools: [{ google_search: {} }] } : {}),
+        generationConfig: { temperature: 0.6, maxOutputTokens: 900, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as GeminiReply;
+    const c = data.candidates?.[0];
+    const text = (c?.content?.parts ?? []).map((p) => p.text ?? '').join('').trim();
+    if (!text) return null;
+    const found = opts.search ? readReply({ candidates: [{ ...c, content: { parts: [{ text: 'x' }] } }] }) : null;
+    return { text, web: found ? { sources: found.sources, queries: found.queries } : null };
   } catch {
     return null;
   }

@@ -37,6 +37,13 @@ http
       fs.writeFileSync(path.join(dir, 'groq-headers-last.json'), JSON.stringify(req.headers));
       fs.writeFileSync(path.join(dir, 'groq-count'), String(n));
       const limits = { 'x-ratelimit-limit-requests': '1000', 'x-ratelimit-remaining-requests': '990', 'x-ratelimit-reset-requests': '1m26s', 'x-ratelimit-limit-tokens': '8000', 'x-ratelimit-remaining-tokens': '7000', 'x-ratelimit-reset-tokens': '7.5s' };
+      // only the newest message counts, so a later turn in the same chat isn't caught by an earlier one
+      const lastUser = (() => { try { const m = JSON.parse(body).messages.filter((x) => x.role === 'user').pop(); return JSON.stringify(m ? m.content : ''); } catch { return body; } })();
+      if (lastUser.includes('GROQ-DOWN')) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: { message: 'Groq is down' } }));
+        return;
+      }
       if (body.includes('SLOW-DOWN')) {
         res.writeHead(429, { 'Content-Type': 'application/json', 'retry-after': '42', ...limits });
         res.end(JSON.stringify({ error: { message: 'Rate limit reached', type: 'tokens', code: 'rate_limit_exceeded' } }));

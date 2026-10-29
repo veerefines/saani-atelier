@@ -768,7 +768,7 @@ export default function Jelly() {
                         <div className="jp-bubble">
                           <Answer text={t.a} />
                           {t.notes && <TurnNotes notes={t.notes} />}
-                          {t.web && <WebSources web={t.web} />}
+                          {(t.web || t.via) && <WebSources web={t.web} via={t.via} />}
                           {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                         </div>
                       </div>

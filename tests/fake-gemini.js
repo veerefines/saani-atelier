@@ -27,6 +27,12 @@ http
         res.end(JSON.stringify({ error: { message: 'boom' } }));
         return;
       }
+      // a whole chat answer (the fallback when Groq is busy), not just the look-up
+      if (body.includes('You are Jelly')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: '[mood: joyful]\nFAKE-GEMINI-ANSWER from Gemini\n\n## Try next\n- G-ONE?\n- G-TWO?\n- G-THREE?' }] } }] }));
+        return;
+      }
       const searched = body.includes('WEB-SEARCH');
       const candidate = searched
         ? {

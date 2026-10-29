@@ -2,7 +2,7 @@ import { getMedia } from './data';
 import { readLocalMedia, signedDownload, usingSupabase } from './db';
 import { costingSummary, listItems, listProjects, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
 import { AssistantBusy, FREE, busy, reserve, reserveWaiting, seconds, settle, type Budget } from './groq-limits';
-import { webLookup, type WebFindings } from './web-search';
+import { geminiAnswer, webLookup, webReady, type WebFindings } from './web-search';
 import { isMood, MOODS, timeMood, type JellyMood } from './jelly-mood';
 
 /**
@@ -123,7 +123,7 @@ async function documents(items: Item[], room: number, read: string[], notRead: s
     .join('');
 }
 
-export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; tags?: Tags; web?: Pick<WebFindings, 'sources' | 'queries'> };
+export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; tags?: Tags; web?: Pick<WebFindings, 'sources' | 'queries'>; via?: 'gemini' };
 
 /** Jelly's notes to the site, on their own lines: reminders to set and things to remember. */
 export type Tags = { remind: { day: string; time: string; text: string; repeat: string }[]; remember: string[] };
@@ -194,7 +194,11 @@ async function callGroq(system: string, text: string, parts: Part[], estimate: n
   if (res.status === 429) throw busy(Math.ceil(seconds(res.headers.get('retry-after')) || 60));
   if (res.status === 401) throw new AssistantKeyRejected();
   if (!res.ok) throw new Error(`Groq ${res.status}: ${data.error?.message ?? 'request failed'}`);
-  const answer = (data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  return finishAnswer((data.choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim());
+}
+
+/** A raw answer, from any model, with the notes and the "Try next" questions split off. */
+function finishAnswer(answer: string) {
   const taken = takeTags(answer);
   return { ...splitSuggestions(taken.text), tags: taken.tags };
 }
@@ -400,6 +404,7 @@ export async function askJelly(question: string, history: { q: string; a: string
   const all = `${world ? `${world}\n\n` : ''}# My Corner, her studio (it's ${when} in Milano)\n## Every project at a glance${glanceText || '\nNo projects yet.'}`;
 
   // the chat so far goes along as real messages, newest last; the oldest go first if it won't fit
+  let searchedWeb: Pick<WebFindings, 'sources' | 'queries'> | null = null;
   let prior = history.slice(-JELLY_TURNS).flatMap((h) => [
     { role: 'user' as const, content: h.q.slice(0, 600) },
     { role: 'assistant' as const, content: h.a.slice(0, TURN_CHARS) },
@@ -419,7 +424,20 @@ export async function askJelly(question: string, history: { q: string; a: string
   const text = `${all}${full}${notes}${webText}\n\n## Saanika asks\n${question}`;
   while (prior.length && tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS + 300 > FREE.requestTokens) prior = prior.slice(2);
   if (web) read.push('a Google search');
-  const { text: raw, suggestions, tags } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS, { prior, answerTokens: JELLY_ANSWER_TOKENS, wait: true });
+  // Groq (her usual voice) first; when its free minute is used up or it's down, Gemini answers instead of
+  // making her wait, with Google Search switched on when this question didn't get a lookup yet
+  let reply: ReturnType<typeof finishAnswer>;
+  let via: 'gemini' | undefined;
+  try {
+    reply = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS, { prior, answerTokens: JELLY_ANSWER_TOKENS, wait: !webReady() });
+  } catch (e) {
+    const g = webReady() ? await geminiAnswer({ system: JELLY_SYSTEM, text, prior, search: !web && !focus }) : null;
+    if (!g) throw e;
+    reply = finishAnswer(g.text);
+    via = 'gemini';
+    if (g.web && !web) searchedWeb = g.web;
+  }
+  const { text: raw, suggestions, tags } = reply;
   const { mood, text: body } = moodTag(raw, now);
   // on a turn with web text, nothing the web said may become a note: no memories, and a reminder only
   // when she asked for one and most of its words are hers (the repeat only if she said daily or weekly)
@@ -429,8 +447,8 @@ export async function askJelly(question: string, history: { q: string; a: string
     return w.length > 0 && w.filter((x) => words.has(x)).length / w.length >= 0.6;
   };
   const repeatOk = (r: string) => r === 'none' || new RegExp(`\\b${r}\\b`, 'i').test(question);
-  const safeTags: Tags = web
+  const safeTags: Tags = web || searchedWeb
     ? { remember: [], remind: /\bremind/i.test(question) ? tags.remind.filter((t) => hers(t.text)).map((t) => (repeatOk(t.repeat) ? t : { ...t, repeat: 'none' })).slice(0, 1) : [] }
     : tags;
-  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags: safeTags, ...(web ? { web: { sources: web.sources, queries: web.queries } } : {}) };
+  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags: safeTags, ...(web ? { web: { sources: web.sources, queries: web.queries } } : searchedWeb ? { web: searchedWeb } : {}), ...(via ? { via } : {}) };
 }

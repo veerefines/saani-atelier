@@ -258,7 +258,7 @@ export default function JellyChats({ initial, ready }: { initial: Chat[]; ready:
                 <img className="jp-face" src={moodSrc(t.mood ?? 'idea')} alt="" title={`Jelly felt ${MOODS[t.mood ?? 'idea'].feeling}`} width={46} height={46} loading="lazy" />
                 <div className="jp-bubble">
                   <Answer text={t.a} />
-                  {t.web && <WebSources web={t.web} />}
+                  {(t.web || t.via) && <WebSources web={t.web} via={t.via} />}
                   {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                   <button type="button" className="jx-copy" onClick={() => navigator.clipboard?.writeText(t.a)}>
                     Copy
