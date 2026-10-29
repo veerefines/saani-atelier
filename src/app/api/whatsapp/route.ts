@@ -1,5 +1,5 @@
 import { after } from 'next/server';
-import { firstTime, handleText, isOwner, messagesIn, sendText, signedByMeta, whatsappReady } from '@/lib/whatsapp';
+import { firstTime, handleText, isOwner, messagesIn, sendText, signedByMeta, tail, whatsappReady } from '@/lib/whatsapp';
 
 /** Meta checks the webhook once, when it's set up: echo the challenge if the token matches. */
 export async function GET(req: Request) {
@@ -21,11 +21,16 @@ export async function POST(req: Request) {
     return new Response('ok');
   }
   // only her number; status updates, photos and strangers are ignored
-  const mine = messagesIn(body).filter((m) => isOwner(m.from));
+  const all = messagesIn(body);
+  const mine = all.filter((m) => isOwner(m.from));
+  for (const m of all) if (!mine.includes(m)) console.warn(`[whatsapp] ignored a message from ${tail(m.from)}: not WHATSAPP_OWNER (…${(process.env.WHATSAPP_OWNER ?? '').replace(/\D/g, '').slice(-4)})`);
   after(async () => {
     for (const m of mine) {
       if (!(await firstTime(m.id))) continue;
-      const reply = await handleText(m.text).catch(() => 'Jelly got a little tangled 🫧 Try that again in a moment?');
+      const reply = await handleText(m.text).catch((e: Error) => {
+        console.error(`[whatsapp] couldn't handle a message: ${e.message}`);
+        return 'Jelly got a little tangled 🫧 Try that again in a moment?';
+      });
       await sendText(m.from, reply);
     }
   });

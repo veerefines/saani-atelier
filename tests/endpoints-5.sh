@@ -100,7 +100,8 @@ case "$Q1" in
   *) echo "(easy quest is $Q1, which needs the assistant: skipped)" ;;
 esac
 if [[ "$Q1" != chat1 ]]; then
-  check "check in" 200 -b "$SA" -X POST $B/api/jelly/check
+  # an event checks in by itself, so its reward comes back on that same reply; pats need a check-in
+  [[ "$Q1" == pat10 ]] && check "check in" 200 -b "$SA" -X POST $B/api/jelly/check
   expect "quest gain" '"kind":"quest"'
   same "5 pearls for it" "$(jget ".gains.find(g=>g.kind==='quest').pearls")" "5"
   same "and the first-quest achievement" "$(jget ".gains.some(g=>g.id==='quest-1')")" "true"

@@ -26,13 +26,20 @@ export function signedByMeta(raw: string, header: string | null) {
   return want.length === got.length && timingSafeEqual(want, got);
 }
 
+/** The last few digits only, so the logs can tell numbers apart without holding them. */
+export const tail = (n: string) => `…${digits(n).slice(-4)}`;
+
 export async function sendText(to: string, body: string) {
-  await fetch(`${GRAPH()}/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+  const r = await fetch(`${GRAPH()}/${process.env.WHATSAPP_PHONE_ID}/messages`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN?.trim()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ messaging_product: 'whatsapp', to: digits(to), type: 'text', text: { body: body.slice(0, 4000), preview_url: false } }),
     signal: AbortSignal.timeout(15_000),
-  }).catch(() => {});
+  }).catch((e: Error) => {
+    console.error(`[whatsapp] reply to ${tail(to)} didn't go: ${e.message}`);
+    return null;
+  });
+  if (r && !r.ok) console.error(`[whatsapp] Meta refused the reply to ${tail(to)} (${r.status}): ${(await r.text().catch(() => '')).slice(0, 400)}`);
 }
 
 /** Meta retries deliveries; this remembers each message id for a while. True the first time only. */
