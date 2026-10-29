@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import * as db from './db';
 import { isEmail } from './google';
 import { mailReady, sendMail } from './mail';
-import { categoryOf, eur, kindOf, milanDay, monthOf, shiftMonth, type Expense } from './money';
+import { categoryOf, daysIn, eur, kindOf, milanDay, monthOf, shiftMonth, type Expense } from './money';
 import { getBudget, listExpenses } from './money-store';
 import { jellyTake } from './money-take';
 
@@ -62,195 +62,389 @@ export type Report = Awaited<ReturnType<typeof buildReport>>;
 /* ---------- the workbook ---------- */
 const BERRY = 'FFB2305F';
 const BURGUNDY = 'FF6B1E3A';
+const ROSE = 'FFF4A6C0';
 const BLUSH = 'FFFBE3E8';
 const PAPER = 'FFFFF8F3';
+const INK = 'FF3A2A33';
+const MUTED = 'FF8A6A77';
+const LINE = 'FFF0D3DD';
 const EUR_FMT = '"€"#,##0.00';
 const INR_FMT = '"₹"#,##0';
+const FONT = 'Calibri';
 
-function head(ws: ExcelJS.Worksheet, row: number, labels: string[]) {
-  const r = ws.getRow(row);
-  labels.forEach((l, i) => {
-    const c = r.getCell(i + 1);
-    c.value = l;
-    c.font = { bold: true, color: { argb: 'FFFFFFFF' }, name: 'Calibri' };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BERRY } };
-    c.alignment = { vertical: 'middle', horizontal: i === 0 ? 'left' : 'center', wrapText: true };
-  });
-  r.height = 24;
-}
-const title = (ws: ExcelJS.Worksheet, text: string, span: number) => {
-  ws.mergeCells(1, 1, 1, span);
-  const c = ws.getCell(1, 1);
-  c.value = text;
-  c.font = { size: 18, bold: true, color: { argb: BURGUNDY }, name: 'Calibri' };
-  c.alignment = { vertical: 'middle' };
-  ws.getRow(1).height = 32;
+const fill = (argb: string): ExcelJS.Fill => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+/** A colour mixed with white, for soft cell backgrounds ("#2fa97c" -> a pale green). */
+const tint = (hex: string, amount = 0.82) => {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  return `FF${[(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => mix(c).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
 };
-const widths = (ws: ExcelJS.Worksheet, w: number[]) => w.forEach((n, i) => (ws.getColumn(i + 1).width = n));
-const totalRow = (row: ExcelJS.Row) =>
-  row.eachCell((c) => {
-    c.font = { bold: true, color: { argb: BURGUNDY } };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BLUSH } };
-    c.border = { top: { style: 'thin', color: { argb: BERRY } } };
+const colName = (n: number) => String.fromCharCode(64 + n);
+const thin = { style: 'thin' as const, color: { argb: LINE } };
+const box = { top: thin, bottom: thin, left: thin, right: thin };
+
+/** The coloured banner across the top of every tab. */
+function banner(ws: ExcelJS.Worksheet, span: number, title: string, sub: string) {
+  for (let r = 1; r <= 3; r++) for (let c = 1; c <= span; c++) ws.getCell(r, c).fill = fill(BURGUNDY);
+  ws.mergeCells(1, 1, 1, span);
+  ws.mergeCells(2, 1, 2, span);
+  ws.mergeCells(3, 1, 3, span);
+  const t = ws.getCell(1, 1);
+  t.value = title;
+  t.font = { name: FONT, size: 22, bold: true, color: { argb: 'FFFFFFFF' } };
+  t.alignment = { vertical: 'middle', indent: 1 };
+  const s = ws.getCell(2, 1);
+  s.value = sub;
+  s.font = { name: FONT, size: 12, color: { argb: ROSE } };
+  s.alignment = { vertical: 'middle', indent: 1 };
+  const j = ws.getCell(3, 1);
+  j.value = 'Prepared by Jelly 🪼 for Saani’s Atelier';
+  j.font = { name: FONT, size: 9, italic: true, color: { argb: 'FFE9C4D2' } };
+  j.alignment = { vertical: 'middle', indent: 1 };
+  ws.getRow(1).height = 36;
+  ws.getRow(2).height = 20;
+  ws.getRow(3).height = 16;
+  for (let c = 1; c <= span; c++) ws.getCell(4, c).fill = fill(BERRY);
+  ws.getRow(4).height = 4;
+}
+
+function tableHead(ws: ExcelJS.Worksheet, row: number, labels: string[], align: ('left' | 'center' | 'right')[] = []) {
+  labels.forEach((l, i) => {
+    const c = ws.getCell(row, i + 1);
+    c.value = l;
+    c.font = { name: FONT, bold: true, size: 10.5, color: { argb: 'FFFFFFFF' } };
+    c.fill = fill(BERRY);
+    c.alignment = { vertical: 'middle', horizontal: align[i] ?? (i === 0 ? 'left' : 'center'), wrapText: true, indent: i === 0 ? 1 : 0 };
+    c.border = { bottom: { style: 'medium', color: { argb: BURGUNDY } } };
   });
-const sheetOf = (ws: ExcelJS.Worksheet) => {
-  ws.properties.defaultRowHeight = 18;
-  ws.views = [{ state: 'frozen', ySplit: 3, showGridLines: false }];
+  ws.getRow(row).height = 26;
+}
+/** Zebra, hairlines and a comfortable row height for one body row. */
+function bodyRow(ws: ExcelJS.Worksheet, row: number, cols: number, i: number) {
+  for (let c = 1; c <= cols; c++) {
+    const cell = ws.getCell(row, c);
+    cell.border = box;
+    cell.font = { name: FONT, size: 10.5, color: { argb: INK }, ...(cell.font ?? {}) };
+    if (i % 2) cell.fill = fill(PAPER);
+    cell.alignment = { vertical: 'middle', ...(cell.alignment ?? {}) };
+  }
+  ws.getRow(row).height = 20;
+}
+function totalRow(ws: ExcelJS.Worksheet, row: number, cols: number) {
+  for (let c = 1; c <= cols; c++) {
+    const cell = ws.getCell(row, c);
+    cell.font = { name: FONT, bold: true, size: 11, color: { argb: BURGUNDY } };
+    cell.fill = fill(BLUSH);
+    cell.border = { top: { style: 'medium', color: { argb: BERRY } }, bottom: { style: 'double', color: { argb: BERRY } } };
+    cell.alignment = { vertical: 'middle', ...(cell.alignment ?? {}) };
+  }
+  ws.getRow(row).height = 24;
+}
+const widths = (ws: ExcelJS.Worksheet, w: number[]) => w.forEach((n, i) => (ws.getColumn(i + 1).width = n));
+function setup(ws: ExcelJS.Worksheet, freezeRow = 0, landscape = true) {
+  ws.views = [{ state: freezeRow ? 'frozen' : 'normal', ySplit: freezeRow, showGridLines: false, zoomScale: 110 } as ExcelJS.WorksheetView];
+  ws.pageSetup = { orientation: landscape ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9, margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.6, header: 0.3, footer: 0.3 } };
+  ws.headerFooter = { oddFooter: '&L&"Calibri,Italic"&9Saani’s Soldi · made by Jelly&R&"Calibri"&9Page &P of &N' };
+}
+const bar = (color: string) => ({ type: 'dataBar', gradient: false, showValue: true, minLength: 0, maxLength: 100, cfvo: [{ type: 'num', value: 0 }, { type: 'max' }], color: { argb: color } }) as unknown as ExcelJS.ConditionalFormattingRule;
+const section = (ws: ExcelJS.Worksheet, row: number, span: number, text: string) => {
+  ws.mergeCells(row, 1, row, span);
+  const c = ws.getCell(row, 1);
+  c.value = text.toUpperCase();
+  c.font = { name: FONT, size: 11, bold: true, color: { argb: BERRY } };
+  c.alignment = { vertical: 'bottom', indent: 1 };
+  for (let k = 1; k <= span; k++) ws.getCell(row, k).border = { bottom: { style: 'medium', color: { argb: ROSE } } };
+  ws.getRow(row).height = 26;
 };
 
 export async function renderWorkbook(r: Report): Promise<Buffer> {
   const s = r.f.summary;
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Jelly 🪼';
+  wb.company = 'Saani’s Atelier';
+  wb.title = `Saani’s Soldi · ${monthLabel(r.month)}`;
+  wb.subject = 'Monthly spending, budget and Jelly’s take';
   wb.created = new Date();
   const label = monthLabel(r.month);
+  const sub = `${label}${r.f.current ? ' · the month so far' : ''}`;
+  const nCat = s.byCat.length;
+  const spendLast = 4 + Math.max(r.spends.length, 1); // last data row on Spends (rows start at 5)
+  const SP = (col: string) => `Spends!$${col}$5:$${col}$${spendLast}`;
 
-  /* Summary */
+  /* ===== Summary (dashboard) ===== */
   const sm = wb.addWorksheet('Summary', { properties: { tabColor: { argb: BERRY } } });
-  title(sm, `Saani’s Soldi · ${label}`, 3);
-  sm.getCell('A2').value = `Prepared by Jelly 🪼 on ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' })}${r.f.current ? ' (the month so far)' : ''}`;
-  sm.getCell('A2').font = { italic: true, color: { argb: 'FF7A5C69' } };
-  const rows: [string, ExcelJS.CellValue, string?][] = [
-    ['Spent (€)', s.spent, EUR_FMT],
-    ['Spent (₹)', s.spentInr, INR_FMT],
-    ['Number of spends', s.count],
-    ['Monthly budget (€)', s.budget || '—', s.budget ? EUR_FMT : undefined],
-    ['Left of the budget (€)', s.left ?? '—', s.left === null ? undefined : EUR_FMT],
-    ['Budget pace so far (€)', s.pace ?? '—', s.pace === null ? undefined : EUR_FMT],
-    ['On track?', s.onTrack === null ? '—' : s.onTrack ? 'Yes' : 'A little ahead of pace'],
-    ['Money in (€)', s.inEur, EUR_FMT],
-    ['Net: in minus spent (€)', s.net, EUR_FMT],
-    ['Same time last month (€)', r.f.beforeTotal || '—', r.f.beforeTotal ? EUR_FMT : undefined],
-    ['Projected month end (€)', r.f.projected ?? '—', r.f.projected === null ? undefined : EUR_FMT],
-    ['Biggest single spend', r.f.biggest ? `${eur(r.f.biggest.eur)} · ${r.f.biggest.what}` : '—'],
+  widths(sm, Array(12).fill(11.5));
+  banner(sm, 12, 'Saani’s Soldi', sub);
+  setup(sm);
+  const cards: { label: string; value: ExcelJS.CellValue; fmt?: string; note: string; color: string }[] = [
+    { label: 'SPENT', value: s.spent, fmt: EUR_FMT, note: `${s.count} ${s.count === 1 ? 'spend' : 'spends'} · ₹${Math.round(s.spentInr).toLocaleString('en-IN')}`, color: BERRY },
+    { label: s.left !== null && s.left < 0 ? 'OVER BUDGET BY' : 'LEFT OF BUDGET', value: s.left === null ? 'no budget' : Math.abs(s.left), fmt: s.left === null ? undefined : EUR_FMT, note: s.budget ? `of a ${eur(s.budget)} budget` : 'set one in Soldi', color: 'FF2FA97C' },
+    { label: 'MONEY IN', value: s.inEur, fmt: EUR_FMT, note: `${s.inCount} ${s.inCount === 1 ? 'entry' : 'entries'}`, color: 'FF3A7FD0' },
+    { label: 'IN MINUS SPENT', value: s.net, fmt: EUR_FMT, note: r.f.projected !== null ? `month end ~${eur(r.f.projected)}` : r.f.beforeTotal ? `last month: ${eur(r.f.beforeTotal)}` : ' ', color: 'FFE6A21A' },
   ];
-  rows.forEach(([k, v, fmt], i) => {
-    const row = sm.getRow(4 + i);
-    row.getCell(1).value = k;
-    row.getCell(1).font = { bold: true, color: { argb: BURGUNDY } };
-    row.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BLUSH } };
-    const c = row.getCell(2);
-    c.value = v;
-    if (fmt) c.numFmt = fmt;
-    c.alignment = { horizontal: 'right' };
+  sm.getRow(5).height = 10;
+  cards.forEach((c, k) => {
+    const c0 = 1 + k * 3;
+    const c1 = c0 + 2;
+    for (let rr = 6; rr <= 9; rr++) for (let cc = c0; cc <= c1; cc++) sm.getCell(rr, cc).fill = fill('FFFFFFFF');
+    sm.mergeCells(6, c0, 6, c1);
+    sm.mergeCells(7, c0, 8, c1);
+    sm.mergeCells(9, c0, 9, c1);
+    const l = sm.getCell(6, c0);
+    l.value = c.label;
+    l.font = { name: FONT, size: 9, bold: true, color: { argb: MUTED } };
+    l.alignment = { horizontal: 'left', vertical: 'bottom', indent: 1 };
+    const v = sm.getCell(7, c0);
+    v.value = c.value;
+    if (c.fmt) v.numFmt = c.fmt;
+    v.font = { name: FONT, size: 22, bold: true, color: { argb: BURGUNDY } };
+    v.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+    const n = sm.getCell(9, c0);
+    n.value = c.note;
+    n.font = { name: FONT, size: 9, italic: true, color: { argb: MUTED } };
+    n.alignment = { horizontal: 'left', vertical: 'top', indent: 1 };
+    for (let cc = c0; cc <= c1; cc++) {
+      sm.getCell(6, cc).border = { top: { style: 'thick', color: { argb: c.color } } };
+      sm.getCell(9, cc).border = { bottom: thin };
+    }
+    for (let rr = 6; rr <= 9; rr++) {
+      const left = sm.getCell(rr, c0);
+      left.border = { ...left.border, left: thin };
+      const right = sm.getCell(rr, c1);
+      right.border = { ...right.border, right: thin };
+    }
   });
-  const jr = 4 + rows.length + 1;
-  sm.mergeCells(jr, 1, jr, 3);
-  sm.getCell(jr, 1).value = `Jelly says: ${r.take.headline}`;
-  sm.getCell(jr, 1).font = { italic: true, size: 13, color: { argb: BURGUNDY } };
-  sm.getCell(jr, 1).alignment = { wrapText: true, vertical: 'top' };
-  sm.getRow(jr).height = 48;
-  widths(sm, [30, 28, 16]);
-  sm.views = [{ showGridLines: false }];
+  sm.getRow(6).height = 22;
+  sm.getRow(7).height = 20;
+  sm.getRow(8).height = 20;
+  sm.getRow(9).height = 20;
 
-  /* Spends */
-  const sp = wb.addWorksheet('Spends', { properties: { tabColor: { argb: 'FFF4A6C0' } } });
-  title(sp, `Every spend · ${label}`, 9);
-  sp.getCell('A2').value = 'Newest at the bottom. € and ₹ are worked out at the rate on the day it was logged.';
-  sp.getCell('A2').font = { italic: true, color: { argb: 'FF7A5C69' } };
-  head(sp, 3, ['Date', 'Category', 'Note', 'Amount', 'Currency', '€', '₹', 'Rate (₹ per €1)', 'Logged via']);
+  // budget progress, worked out live from the By category tab
+  const tot = 5 + nCat; // total row on By category
+  sm.getRow(10).height = 12;
+  section(sm, 11, 12, 'Budget');
+  sm.mergeCells(12, 1, 12, 3);
+  sm.getCell(12, 1).value = s.budget ? `${eur(s.spent)} of ${eur(s.budget)} used` : 'No monthly budget set yet';
+  sm.getCell(12, 1).font = { name: FONT, size: 11, bold: true, color: { argb: INK } };
+  sm.getCell(12, 1).alignment = { vertical: 'middle', indent: 1 };
+  sm.mergeCells(12, 4, 12, 12);
+  const pct = s.budget ? Math.min(1, s.spent / s.budget) : 0;
+  const cells = 36;
+  sm.getCell(12, 4).value = {
+    formula: `IF('By category'!C${tot}>0,REPT("█",ROUND(MIN(1,'By category'!B${tot}/'By category'!C${tot})*${cells},0))&REPT("░",${cells}-ROUND(MIN(1,'By category'!B${tot}/'By category'!C${tot})*${cells},0))&"  "&TEXT('By category'!B${tot}/'By category'!C${tot},"0%"),"")`,
+    result: s.budget ? `${'█'.repeat(Math.round(pct * cells))}${'░'.repeat(cells - Math.round(pct * cells))}  ${Math.round((s.spent / s.budget) * 100)}%` : '',
+  };
+  sm.getCell(12, 4).font = { name: FONT, size: 12, color: { argb: s.budget && s.spent > s.budget ? 'FFC8364F' : BERRY } };
+  sm.getCell(12, 4).alignment = { vertical: 'middle', horizontal: 'left' };
+  sm.getRow(12).height = 26;
+
+  // where it went: the top categories, with bars
+  sm.getRow(13).height = 12;
+  section(sm, 14, 12, 'Where it went');
+  const top = s.byCat.filter((c) => c.eur > 0).slice(0, 6);
+  top.forEach((c, i) => {
+    const row = 15 + i;
+    const src = 5 + s.byCat.findIndex((x) => x.id === c.id);
+    sm.mergeCells(row, 1, row, 4);
+    sm.getCell(row, 1).value = { formula: `'By category'!A${src}`, result: c.label };
+    sm.getCell(row, 1).alignment = { vertical: 'middle', indent: 1 };
+    sm.mergeCells(row, 5, row, 6);
+    sm.getCell(row, 5).value = { formula: `'By category'!B${src}`, result: c.eur };
+    sm.getCell(row, 5).numFmt = EUR_FMT;
+    sm.getCell(row, 5).alignment = { horizontal: 'right', vertical: 'middle' };
+    sm.getCell(row, 7).value = { formula: `'By category'!G${src}`, result: s.spent ? c.eur / s.spent : 0 };
+    sm.getCell(row, 7).numFmt = '0%';
+    sm.getCell(row, 7).alignment = { horizontal: 'center', vertical: 'middle' };
+    sm.mergeCells(row, 8, row, 12);
+    sm.getCell(row, 8).value = { formula: `REPT("█",ROUND(G${row}*40,0))`, result: '█'.repeat(Math.round((s.spent ? c.eur / s.spent : 0) * 40)) };
+    sm.getCell(row, 8).font = { name: FONT, size: 11, color: { argb: `FF${c.color.slice(1).toUpperCase()}` } };
+    sm.getCell(row, 8).alignment = { vertical: 'middle', horizontal: 'left' };
+    for (const cc of [1, 5, 7]) sm.getCell(row, cc).font = { name: FONT, size: 10.5, color: { argb: INK }, bold: cc === 5 };
+    sm.getRow(row).height = 20;
+  });
+  if (!top.length) {
+    sm.mergeCells(15, 1, 15, 12);
+    sm.getCell(15, 1).value = 'Nothing spent yet this month.';
+    sm.getCell(15, 1).font = { name: FONT, italic: true, color: { argb: MUTED } };
+    sm.getCell(15, 1).alignment = { indent: 1 };
+  }
+
+  // Jelly's take
+  const jr = 15 + Math.max(top.length, 1) + 1;
+  section(sm, jr, 12, 'Jelly’s take');
+  sm.mergeCells(jr + 1, 1, jr + 1, 12);
+  sm.getCell(jr + 1, 1).value = `“${r.take.headline}”`;
+  sm.getCell(jr + 1, 1).font = { name: 'Georgia', size: 13, italic: true, color: { argb: BURGUNDY } };
+  sm.getCell(jr + 1, 1).alignment = { wrapText: true, vertical: 'middle', indent: 1 };
+  for (let cc = 1; cc <= 12; cc++) sm.getCell(jr + 1, cc).fill = fill(BLUSH);
+  sm.getRow(jr + 1).height = 38;
+  r.take.tips.slice(0, 4).forEach((t, i) => {
+    const row = jr + 2 + i;
+    sm.mergeCells(row, 1, row, 12);
+    sm.getCell(row, 1).value = `${t.icon}  ${t.text}`;
+    sm.getCell(row, 1).font = { name: FONT, size: 11, color: { argb: INK } };
+    sm.getCell(row, 1).alignment = { wrapText: true, vertical: 'middle', indent: 1 };
+    sm.getRow(row).height = Math.max(22, Math.ceil(t.text.length / 105) * 17 + 6);
+  });
+  const tail = jr + 2 + Math.min(r.take.tips.length, 4) + 1;
+  sm.mergeCells(tail, 1, tail, 12);
+  sm.getCell(tail, 1).value = `${r.take.via === 'jelly' ? 'Written by Jelly' : 'Quick tips (Jelly was resting)'} · other tabs: Spends, By category, Daily, Money in`;
+  sm.getCell(tail, 1).font = { name: FONT, size: 9, italic: true, color: { argb: MUTED } };
+  sm.getCell(tail, 1).alignment = { indent: 1 };
+
+  /* ===== Spends ===== */
+  const sp = wb.addWorksheet('Spends', { properties: { tabColor: { argb: ROSE } } });
+  widths(sp, [14, 7, 20, 34, 12, 8, 12, 12, 13, 11]);
+  banner(sp, 10, 'Every spend', `${sub} · newest at the bottom`);
+  tableHead(sp, 4, ['Date', 'Day', 'Category', 'Note', 'Amount', 'Cur.', '€', '₹', 'Rate (₹/€)', 'Logged via'], ['left', 'center', 'left', 'left', 'right', 'center', 'right', 'right', 'right', 'center']);
   r.spends.forEach((x: Expense, i) => {
-    const row = sp.getRow(4 + i);
+    const row = 5 + i;
     const c = categoryOf(x.category, 'out');
-    row.values = [new Date(`${x.day}T12:00:00Z`), c.label, x.note || '', x.amount, x.currency, x.eur, x.inr, x.rate, x.source === 'whatsapp' ? 'WhatsApp' : x.source === 'jelly' ? 'Jelly' : 'by hand'];
-    row.getCell(1).numFmt = 'dd mmm yyyy';
-    row.getCell(4).numFmt = '#,##0.00';
-    row.getCell(6).numFmt = EUR_FMT;
-    row.getCell(7).numFmt = INR_FMT;
-    row.getCell(8).numFmt = '0.00';
-    if (i % 2) row.eachCell((cell) => (cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PAPER } }));
+    sp.getCell(row, 1).value = new Date(`${x.day}T12:00:00Z`);
+    sp.getCell(row, 2).value = { formula: `TEXT(A${row},"ddd")`, result: new Date(`${x.day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) };
+    sp.getCell(row, 3).value = c.label;
+    sp.getCell(row, 4).value = x.note || '';
+    sp.getCell(row, 5).value = x.amount;
+    sp.getCell(row, 6).value = x.currency;
+    sp.getCell(row, 7).value = x.eur;
+    sp.getCell(row, 8).value = x.inr;
+    sp.getCell(row, 9).value = x.rate;
+    sp.getCell(row, 10).value = x.source === 'whatsapp' ? 'WhatsApp' : x.source === 'jelly' ? 'Jelly' : 'by hand';
+    bodyRow(sp, row, 10, i);
+    sp.getCell(row, 1).numFmt = 'dd mmm yyyy';
+    sp.getCell(row, 5).numFmt = '#,##0.00';
+    sp.getCell(row, 7).numFmt = EUR_FMT;
+    sp.getCell(row, 8).numFmt = INR_FMT;
+    sp.getCell(row, 9).numFmt = '0.00';
+    for (const cc of [2, 6, 10]) sp.getCell(row, cc).alignment = { horizontal: 'center', vertical: 'middle' };
+    sp.getCell(row, 3).fill = fill(tint(c.color));
+    sp.getCell(row, 3).font = { name: FONT, size: 10.5, bold: true, color: { argb: INK } };
+    sp.getCell(row, 7).font = { name: FONT, size: 10.5, bold: true, color: { argb: BURGUNDY } };
   });
-  const last = 3 + r.spends.length;
-  const tr = sp.getRow(last + 1);
-  tr.getCell(1).value = 'Total';
-  tr.getCell(6).value = { formula: `SUM(F4:F${Math.max(last, 4)})`, result: s.spent };
-  tr.getCell(6).numFmt = EUR_FMT;
-  tr.getCell(7).value = { formula: `SUM(G4:G${Math.max(last, 4)})`, result: s.spentInr };
-  tr.getCell(7).numFmt = INR_FMT;
-  totalRow(tr);
-  if (r.spends.length) sp.autoFilter = { from: 'A3', to: `I${last}` };
-  widths(sp, [14, 20, 34, 12, 10, 12, 12, 16, 12]);
-  sheetOf(sp);
+  const tr = 5 + r.spends.length;
+  sp.getCell(tr, 1).value = 'Total';
+  sp.getCell(tr, 7).value = { formula: `SUM(G5:G${Math.max(tr - 1, 5)})`, result: s.spent };
+  sp.getCell(tr, 7).numFmt = EUR_FMT;
+  sp.getCell(tr, 8).value = { formula: `SUM(H5:H${Math.max(tr - 1, 5)})`, result: s.spentInr };
+  sp.getCell(tr, 8).numFmt = INR_FMT;
+  totalRow(sp, tr, 10);
+  if (r.spends.length) {
+    sp.autoFilter = { from: 'A4', to: `J${tr - 1}` };
+    sp.addConditionalFormatting({ ref: `G5:G${tr - 1}`, rules: [bar('FFF4A6C0')] });
+  }
+  setup(sp, 4);
 
-  /* By category */
+  /* ===== By category ===== */
   const bc = wb.addWorksheet('By category', { properties: { tabColor: { argb: 'FFCDB4F0' } } });
-  title(bc, `Budget by category · ${label}`, 6);
-  bc.getCell('A2').value = 'Spent is added up live from the Spends tab; change a cap and the rest follows.';
-  bc.getCell('A2').font = { italic: true, color: { argb: 'FF7A5C69' } };
-  head(bc, 3, ['Category', 'Spent (€)', 'Monthly cap (€)', '% of cap used', 'Left of cap (€)', 'Share of spending']);
-  const cats = s.byCat;
-  const lastSpend = Math.max(last, 4);
-  cats.forEach((c, i) => {
-    const n = 4 + i;
-    const row = bc.getRow(n);
-    row.getCell(1).value = c.label;
-    row.getCell(2).value = { formula: `SUMIFS(Spends!$F$4:$F$${lastSpend},Spends!$B$4:$B$${lastSpend},A${n})`, result: c.eur };
-    row.getCell(3).value = c.cap ?? null;
-    row.getCell(4).value = { formula: `IF(ISNUMBER(C${n}),B${n}/C${n},"")`, result: c.cap ? round2(c.eur / c.cap) : '' };
-    row.getCell(5).value = { formula: `IF(ISNUMBER(C${n}),C${n}-B${n},"")`, result: c.cap ? round2(c.cap - c.eur) : '' };
-    row.getCell(6).value = { formula: `IF(${'$B$' + (4 + cats.length)}=0,0,B${n}/${'$B$' + (4 + cats.length)})`, result: s.spent ? round2(c.eur / s.spent) : 0 };
-    [2, 3, 5].forEach((k) => (row.getCell(k).numFmt = EUR_FMT));
-    [4, 6].forEach((k) => (row.getCell(k).numFmt = '0%'));
+  widths(bc, [26, 14, 15, 13, 15, 16, 13]);
+  banner(bc, 7, 'Budget by category', `${sub} · spent adds up live from the Spends tab, so change a cap and the rest follows`);
+  tableHead(bc, 4, ['Category', 'Spent (€)', 'Monthly cap (€)', '% of cap', 'Left of cap (€)', 'Status', 'Share of spending'], ['left', 'right', 'right', 'center', 'right', 'center', 'center']);
+  s.byCat.forEach((c, i) => {
+    const n = 5 + i;
+    bc.getCell(n, 1).value = `${c.icon}  ${c.label}`;
+    bc.getCell(n, 2).value = { formula: `SUMIFS(${SP('G')},${SP('C')},"${c.label}")`, result: c.eur };
+    bc.getCell(n, 3).value = c.cap ?? null;
+    bc.getCell(n, 4).value = { formula: `IF(ISNUMBER(C${n}),B${n}/C${n},"")`, result: c.cap ? round2(c.eur / c.cap) : '' };
+    bc.getCell(n, 5).value = { formula: `IF(ISNUMBER(C${n}),C${n}-B${n},"")`, result: c.cap ? round2(c.cap - c.eur) : '' };
+    bc.getCell(n, 6).value = { formula: `IF(ISNUMBER(C${n}),IF(B${n}>C${n},"⚠ Over cap",IF(B${n}>=0.8*C${n},"◔ Near cap","✓ Within cap")),"no cap set")`, result: !c.cap ? 'no cap set' : c.eur > c.cap ? '⚠ Over cap' : c.eur >= 0.8 * c.cap ? '◔ Near cap' : '✓ Within cap' };
+    bc.getCell(n, 7).value = { formula: `IF($B$${tot}=0,0,B${n}/$B$${tot})`, result: s.spent ? c.eur / s.spent : 0 };
+    bodyRow(bc, n, 7, i);
+    [2, 3, 5].forEach((k) => (bc.getCell(n, k).numFmt = EUR_FMT));
+    bc.getCell(n, 4).numFmt = '0%';
+    bc.getCell(n, 7).numFmt = '0%';
+    bc.getCell(n, 4).alignment = { horizontal: 'center', vertical: 'middle' };
+    bc.getCell(n, 6).alignment = { horizontal: 'center', vertical: 'middle' };
+    bc.getCell(n, 1).fill = fill(tint(c.color));
+    bc.getCell(n, 1).font = { name: FONT, size: 10.5, bold: true, color: { argb: INK } };
   });
-  const bt = bc.getRow(4 + cats.length);
-  bt.getCell(1).value = 'Total';
-  bt.getCell(2).value = { formula: `SUM(B4:B${Math.max(3 + cats.length, 4)})`, result: s.spent };
-  bt.getCell(2).numFmt = EUR_FMT;
-  bt.getCell(3).value = s.budget || null;
-  bt.getCell(3).numFmt = EUR_FMT;
-  totalRow(bt);
-  if (cats.length)
-    bc.addConditionalFormatting({
-      ref: `A4:F${3 + cats.length}`,
-      rules: [{ type: 'expression', priority: 1, formulae: ['AND(ISNUMBER($D4),$D4>1)'], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFAD1D8' } } } }],
-    });
-  widths(bc, [24, 14, 16, 16, 16, 18]);
-  sheetOf(bc);
+  bc.getCell(tot, 1).value = 'Total';
+  bc.getCell(tot, 2).value = { formula: `SUM(B5:B${Math.max(tot - 1, 5)})`, result: s.spent };
+  bc.getCell(tot, 2).numFmt = EUR_FMT;
+  bc.getCell(tot, 3).value = s.budget || null;
+  bc.getCell(tot, 3).numFmt = EUR_FMT;
+  bc.getCell(tot, 5).value = { formula: `IF(ISNUMBER(C${tot}),C${tot}-B${tot},"")`, result: s.budget ? round2(s.budget - s.spent) : '' };
+  bc.getCell(tot, 5).numFmt = EUR_FMT;
+  totalRow(bc, tot, 7);
+  if (nCat) {
+    bc.addConditionalFormatting({ ref: `B5:B${tot - 1}`, rules: [bar('FFF4A6C0')] });
+    bc.addConditionalFormatting({ ref: `G5:G${tot - 1}`, rules: [bar('FFCDB4F0')] });
+    bc.addConditionalFormatting({ ref: `D5:F${tot - 1}`, rules: [{ type: 'expression', priority: 1, formulae: ['AND(ISNUMBER($D5),$D5>1)'], style: { font: { bold: true, color: { argb: 'FFC8364F' } }, fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFAD1D8' } } } }] });
+  }
+  setup(bc, 4);
 
-  /* Money in */
+  /* ===== Daily ===== */
+  const dy = wb.addWorksheet('Daily', { properties: { tabColor: { argb: 'FFF7E3A1' } } });
+  widths(dy, [14, 8, 14, 18, 17, 24]);
+  banner(dy, 6, 'Day by day', `${sub} · running total against an even pace through your budget`);
+  tableHead(dy, 4, ['Date', 'Day', 'Spent (€)', 'Running total (€)', 'Budget pace (€)', 'Ahead (+) / under (−)'], ['left', 'center', 'right', 'right', 'right', 'right']);
+  const days = daysIn(r.month);
+  const upTo = r.f.current ? Number(r.today.slice(8, 10)) : days;
+  for (let d = 1; d <= upTo; d++) {
+    const row = 4 + d;
+    const iso = `${r.month}-${String(d).padStart(2, '0')}`;
+    const spentDay = round2(r.spends.filter((x) => x.day === iso).reduce((t, x) => t + x.eur, 0));
+    dy.getCell(row, 1).value = new Date(`${iso}T12:00:00Z`);
+    dy.getCell(row, 2).value = { formula: `TEXT(A${row},"ddd")`, result: new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) };
+    dy.getCell(row, 3).value = { formula: `SUMIFS(${SP('G')},${SP('A')},A${row})`, result: spentDay };
+    const running = round2(r.spends.filter((x) => x.day <= iso).reduce((t, x) => t + x.eur, 0));
+    dy.getCell(row, 4).value = { formula: `SUM(C$5:C${row})`, result: running };
+    dy.getCell(row, 5).value = s.budget ? { formula: `'By category'!$C$${tot}*${d}/${days}`, result: round2((s.budget * d) / days) } : null;
+    dy.getCell(row, 6).value = s.budget ? { formula: `D${row}-E${row}`, result: round2(running - (s.budget * d) / days) } : null;
+    bodyRow(dy, row, 6, d - 1);
+    dy.getCell(row, 1).numFmt = 'ddd dd mmm'.replace('ddd ', '');
+    for (const k of [3, 4, 5, 6]) dy.getCell(row, k).numFmt = EUR_FMT;
+    dy.getCell(row, 2).alignment = { horizontal: 'center', vertical: 'middle' };
+  }
+  const dEnd = 4 + upTo;
+  dy.getCell(dEnd + 1, 1).value = 'Total';
+  dy.getCell(dEnd + 1, 3).value = { formula: `SUM(C5:C${dEnd})`, result: s.spent };
+  dy.getCell(dEnd + 1, 3).numFmt = EUR_FMT;
+  totalRow(dy, dEnd + 1, 6);
+  dy.addConditionalFormatting({ ref: `C5:C${dEnd}`, rules: [bar('FFE6A21A')] });
+  if (s.budget) dy.addConditionalFormatting({ ref: `F5:F${dEnd}`, rules: [{ type: 'expression', priority: 2, formulae: ['F5>0'], style: { font: { bold: true, color: { argb: 'FFC8364F' } } } }, { type: 'expression', priority: 3, formulae: ['F5<=0'], style: { font: { color: { argb: 'FF2F8A3A' } } } }] });
+  setup(dy, 4, false);
+
+  /* ===== Money in ===== */
   const mi = wb.addWorksheet('Money in', { properties: { tabColor: { argb: 'FF7FB7B0' } } });
-  title(mi, `Money in · ${label}`, 7);
-  head(mi, 3, ['Date', 'Source', 'Note', 'Amount', 'Currency', '€', '₹']);
+  widths(mi, [14, 7, 20, 34, 12, 8, 12, 12]);
+  banner(mi, 8, 'Money in', sub);
+  tableHead(mi, 4, ['Date', 'Day', 'Source', 'Note', 'Amount', 'Cur.', '€', '₹'], ['left', 'center', 'left', 'left', 'right', 'center', 'right', 'right']);
   r.ins.forEach((x, i) => {
-    const row = mi.getRow(4 + i);
-    row.values = [new Date(`${x.day}T12:00:00Z`), categoryOf(x.category, 'in').label, x.note || '', x.amount, x.currency, x.eur, x.inr];
-    row.getCell(1).numFmt = 'dd mmm yyyy';
-    row.getCell(4).numFmt = '#,##0.00';
-    row.getCell(6).numFmt = EUR_FMT;
-    row.getCell(7).numFmt = INR_FMT;
+    const row = 5 + i;
+    mi.getCell(row, 1).value = new Date(`${x.day}T12:00:00Z`);
+    mi.getCell(row, 2).value = { formula: `TEXT(A${row},"ddd")`, result: new Date(`${x.day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) };
+    mi.getCell(row, 3).value = categoryOf(x.category, 'in').label;
+    mi.getCell(row, 4).value = x.note || '';
+    mi.getCell(row, 5).value = x.amount;
+    mi.getCell(row, 6).value = x.currency;
+    mi.getCell(row, 7).value = x.eur;
+    mi.getCell(row, 8).value = x.inr;
+    bodyRow(mi, row, 8, i);
+    mi.getCell(row, 1).numFmt = 'dd mmm yyyy';
+    mi.getCell(row, 5).numFmt = '#,##0.00';
+    mi.getCell(row, 7).numFmt = EUR_FMT;
+    mi.getCell(row, 8).numFmt = INR_FMT;
+    for (const cc of [2, 6]) mi.getCell(row, cc).alignment = { horizontal: 'center', vertical: 'middle' };
+    mi.getCell(row, 3).fill = fill(tint('#3e9d6c'));
+    mi.getCell(row, 3).font = { name: FONT, size: 10.5, bold: true, color: { argb: INK } };
+    mi.getCell(row, 7).font = { name: FONT, size: 10.5, bold: true, color: { argb: 'FF2F8A3A' } };
   });
-  const lastIn = 3 + r.ins.length;
-  const it = mi.getRow(lastIn + 1);
-  it.getCell(1).value = 'Total';
-  it.getCell(6).value = { formula: `SUM(F4:F${Math.max(lastIn, 4)})`, result: s.inEur };
-  it.getCell(6).numFmt = EUR_FMT;
-  it.getCell(7).value = { formula: `SUM(G4:G${Math.max(lastIn, 4)})`, result: s.inInr };
-  it.getCell(7).numFmt = INR_FMT;
-  totalRow(it);
-  widths(mi, [14, 18, 34, 12, 10, 12, 12]);
-  sheetOf(mi);
+  const itr = 5 + r.ins.length;
+  mi.getCell(itr, 1).value = 'Total';
+  mi.getCell(itr, 7).value = { formula: `SUM(G5:G${Math.max(itr - 1, 5)})`, result: s.inEur };
+  mi.getCell(itr, 7).numFmt = EUR_FMT;
+  mi.getCell(itr, 8).value = { formula: `SUM(H5:H${Math.max(itr - 1, 5)})`, result: s.inInr };
+  mi.getCell(itr, 8).numFmt = INR_FMT;
+  totalRow(mi, itr, 8);
+  if (!r.ins.length) {
+    mi.mergeCells(5, 1, 5, 8);
+    mi.getCell(5, 1).value = 'No money in this month.';
+    mi.getCell(5, 1).font = { name: FONT, italic: true, color: { argb: MUTED } };
+    mi.getCell(5, 1).alignment = { indent: 1 };
+  }
+  setup(mi, 4);
 
-  /* Jelly's take */
-  const jt = wb.addWorksheet('Jelly’s take', { properties: { tabColor: { argb: 'FFF7E3A1' } } });
-  title(jt, `Jelly’s take · ${label}`, 2);
-  jt.mergeCells('A3:B3');
-  jt.getCell('A3').value = r.take.headline;
-  jt.getCell('A3').font = { size: 14, bold: true, color: { argb: BURGUNDY } };
-  jt.getCell('A3').alignment = { wrapText: true, vertical: 'top' };
-  jt.getRow(3).height = 54;
-  r.take.tips.forEach((t, i) => {
-    const row = jt.getRow(5 + i);
-    row.getCell(1).value = t.icon;
-    row.getCell(1).alignment = { horizontal: 'center', vertical: 'top' };
-    row.getCell(2).value = t.text;
-    row.getCell(2).alignment = { wrapText: true, vertical: 'top' };
-    row.height = Math.max(34, Math.ceil(t.text.length / 80) * 18 + 8);
-  });
-  jt.getCell(5 + r.take.tips.length + 1, 2).value = r.take.via === 'jelly' ? 'Written by Jelly 🪼' : 'Quick tips (Jelly was resting when this was made)';
-  jt.getCell(5 + r.take.tips.length + 1, 2).font = { italic: true, color: { argb: 'FF7A5C69' } };
-  widths(jt, [8, 90]);
-  jt.views = [{ showGridLines: false }];
-
+  wb.views = [{ x: 0, y: 0, width: 20000, height: 20000, firstSheet: 0, activeTab: 0, visibility: 'visible' }];
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 

@@ -53,7 +53,7 @@ curl -s -b "$SA" -o "$D/sheet.xlsx" "$B/api/expenses/report/file"
 same "it is an Excel file (a zip)" "$(head -c 2 "$D/sheet.xlsx")" "PK"
 same "download is signed in only" "$(curl -s -o /dev/null -w '%{http_code}' $B/api/expenses/report/file)" "401"
 WB=$(unzip -p "$D/sheet.xlsx" xl/workbook.xml)
-for t in Summary Spends "By category" "Money in" "Jelly’s take"; do
+for t in Summary Spends "By category" Daily "Money in"; do
   [[ "$WB" == *"$t"* ]] && { pass=$((pass+1)); echo "PASS tab: $t"; } || { failn=$((failn+1)); echo "FAIL tab: $t"; }
 done
 STR=$(unzip -p "$D/sheet.xlsx" xl/sharedStrings.xml)
