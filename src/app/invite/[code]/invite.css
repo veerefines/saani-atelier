@@ -7,18 +7,8 @@
   text-align: center;
   overflow-x: clip;
 }
-.inv-jelly {
-  width: 132px;
-  height: auto;
-  filter: drop-shadow(0 14px 16px rgba(107, 30, 58, 0.22));
-  animation: inv-bob 5s ease-in-out infinite;
-}
-@keyframes inv-bob {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
-}
 .inv-kicker {
-  margin-top: 6px !important;
+  margin-top: 0 !important;
   font-size: 30px;
 }
 .inv-title {
@@ -44,6 +34,10 @@
   margin-bottom: 12px;
   color: #2a2230;
 }
+.inv-card p.inv-line {
+  font-size: 30px;
+  line-height: 1.15;
+}
 .inv-sign {
   margin-top: 4px !important;
   font-size: 30px;
@@ -51,7 +45,7 @@
 .inv-actions {
   display: flex;
   justify-content: center;
-  margin-top: 18px;
+  margin-top: 24px;
 }
 .inv-open {
   display: inline-flex;
@@ -147,8 +141,3 @@
   color: #7a5c69;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .inv-jelly {
-    animation: none;
-  }
-}

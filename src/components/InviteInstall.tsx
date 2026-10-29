@@ -43,8 +43,8 @@ export default function InviteInstall({ code }: { code: string }) {
 
   return (
     <section className="inv-keep" aria-labelledby="inv-keep-h">
-      <h2 id="inv-keep-h" className="hand inv-keep-title">keep it on your phone</h2>
-      <p className="inv-keep-sub">So it opens like an app, full screen, with its own little icon.</p>
+      <h2 id="inv-keep-h" className="hand inv-keep-title">first, save it to your Home Screen</h2>
+      <p className="inv-keep-sub">Then it opens like an app, full screen, with its own little icon.</p>
 
       {platform === 'ios' ? (
         <>
