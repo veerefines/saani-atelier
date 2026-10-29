@@ -223,9 +223,12 @@ check "a web page trying to give Jelly orders" 200 -b "$SA" -X POST "${J[@]}" -d
 cp "$D/groq-req-last.json" "$D/body"
 expect "its facts still reach Jelly" "FAKE-WEB-FINDINGS"
 expect "marked as untrusted" "Untrusted text from other websites"
-expect "its note tags are stripped" "INJECTED-FACT" absent
-expect "and its reminder too" "INJECTED-REMINDER" absent
-expect "and it can't fake a prompt section" "## Saanika asks.*INJECTED" absent
+expect "its note tags are defused" "\\[remember: INJECTED" absent
+expect "and its reminder too" "\\[remind: 2030" absent
+expect "and a fake prompt heading is quoted" "'## Saanika asks"
+fresh_minute
+check "notes on a turn with web text" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-SEARCH REMIND-AND-REMEMBER about the market\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+same "none become reminders or memories" "$(jget .turn.notes)" ""
 fresh_minute
 check "Gemini failing doesn't stop Jelly" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-BROKEN where is the post office?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
 expect "she still answers" "FAKE-GROQ-REPLY"
@@ -372,7 +375,7 @@ done
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 11
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 12
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant
