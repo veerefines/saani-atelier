@@ -3492,3 +3492,27 @@ small.jh-status {
   color: #8a6a7b;
   cursor: pointer;
 }
+
+/* where a searched answer came from */
+.jp-web {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font: 600 12px var(--font-body);
+}
+.jp-web-tag {
+  color: #5a3f4c;
+}
+.jp-web a {
+  max-width: 180px;
+  padding: 3px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  color: #2f6ab8;
+  background: rgba(79, 143, 216, 0.12);
+  text-decoration: none;
+}

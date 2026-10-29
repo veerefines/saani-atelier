@@ -15,6 +15,7 @@ import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
 import { happenings } from '@/content/happenings';
 import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY, SNORE, STILL_LIKE, WAKE, hello } from './lines';
+import WebSources from './WebSources';
 import SpeakButton from './SpeakButton';
 import { setSound, sfx, useSound, voice } from '@/lib/sound';
 import { announce, applyChange, emit, jellyEvent, useJelly, useJellyChats } from './bus';
@@ -767,6 +768,7 @@ export default function Jelly() {
                         <div className="jp-bubble">
                           <Answer text={t.a} />
                           {t.notes && <TurnNotes notes={t.notes} />}
+                          {t.web && <WebSources web={t.web} />}
                           {chat && <SpeakButton chatId={chat.id} turnId={t.id} text={t.a} />}
                         </div>
                       </div>

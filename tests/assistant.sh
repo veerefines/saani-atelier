@@ -194,6 +194,34 @@ check "ask again" 200 -b "$SA" -X POST "${J[@]}" -d '{"question":"JELLY-Q3 anyth
 cp "$D/groq-req-last.json" "$D/body"
 expect "what she remembers goes along" "Things Saanika told you before"
 expect "her reminders too" "Call home before class"
+# Jelly looks things up on Google when she needs to, and only then
+fresh_minute
+check "casual chat doesn't search" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"I feel a bit nervous about the move\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+same "no web sources saved" "$(jget .turn.web)" ""
+cp "$D/groq-req-last.json" "$D/body"
+expect "so nothing from the web is added" "From the web (Google Search" absent
+# the chat so far goes along as real messages, not a pasted block
+expect "earlier answers go along as chat messages" '"role":"assistant"'
+expect "and the first question as one of them" "JELLY-Q what next?"
+expect "not pasted into the question" "Earlier in this conversation" absent
+cp "$D/gemini-req-last.json" "$D/body"
+expect "Gemini was asked, with the question" "nervous about the move"
+expect "and never sees her projects" "OTHER-DESC" absent
+fresh_minute
+check "a question that needs Google" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-SEARCH when is the Navigli market open?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+expect "the answer says where it looked" '"web":{"sources":\[{"title":"example.com","url":"https://example.com/navigli"}'
+expect "with what was searched for" '"queries":\["navigli market opening hours"\]'
+expect "and the read list says so" "a Google search"
+cp "$D/groq-req-last.json" "$D/body"
+expect "the findings go to Jelly" "FAKE-WEB-FINDINGS"
+expect "under their own heading" "From the web (Google Search,"
+expect "and she's told how to use them" "Sometimes the message has a section"
+cp "$D/gemini-headers-last.json" "$D/body"
+expect "the key goes in a header" "x-goog-api-key"
+fresh_minute
+check "Gemini failing doesn't stop Jelly" 200 -b "$SA" -X POST "${J[@]}" -d "{\"question\":\"WEB-BROKEN where is the post office?\",\"chatId\":\"$JC\"}" $B/api/corner/jelly
+expect "she still answers" "FAKE-GROQ-REPLY"
+same "without web sources" "$(jget .turn.web)" ""
 # Jelly reads an answer aloud (tap to hear), a piece at a time, each recorded once
 check "back to the chat" 200 -b "$SA" $B/api/corner/jelly
 TURN=$(node -e "const d=JSON.parse(require('fs').readFileSync('$D/body','utf8'));console.log(d.chats.find(c=>c.id==='$JC').turns[0].id)")
@@ -336,7 +364,7 @@ done
 # free-tier limits
 count() { cat "$D/groq-count"; }
 U="$ROOT/.data/groq-usage.json"
-same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 7
+same "usage is counted" "$(node -e "console.log(JSON.parse(require('fs').readFileSync('$U','utf8'))['free-tier'].dayRequests)")" 10
 node -e "const f='$U',u=JSON.parse(require('fs').readFileSync(f,'utf8'));u['free-tier'].dayRequests=900;require('fs').writeFileSync(f,JSON.stringify(u))"
 before=$(count)
 check "daily cap reached 429" 429 -b "$SA" -X POST "${J[@]}" -d '{"mode":"summary"}' $B/api/corner/projects/$P/assistant

@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   const chatId = typeof body.chatId === 'string' && body.chatId ? body.chatId : null;
   const chat = chatId ? await getChat(JELLY_CHATS, chatId) : null;
   if (chatId && !chat) return fail('That chat isn’t here any more.', 404);
-  const history = (chat?.turns ?? []).slice(-2).map((t) => ({ q: t.q, a: t.a }));
+  const history = (chat?.turns ?? []).slice(-8).map((t) => ({ q: t.q, a: t.a }));
   // her own clock, for reminders (Mumbai before she flies, Milano after)
   const tz = zoneOr(body.tz);
   try {
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       const f = await remember(t, 'jelly', chat?.id);
       if (f) notes.push({ kind: 'remember', id: f.id, text: f.text });
     }
-    const saved = await saveTurn(JELLY_CHATS, chat?.id ?? null, { mode: 'question', q: question, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions, mood: r.mood, ...(notes.length ? { notes } : {}) });
+    const saved = await saveTurn(JELLY_CHATS, chat?.id ?? null, { mode: 'question', q: question, a: r.text, read: r.read, notRead: r.notRead, suggestions: r.suggestions, mood: r.mood, ...(notes.length ? { notes } : {}), ...(r.web ? { web: r.web } : {}) });
     return json({ ...saved, friend: view(await addChat()) });
   } catch (e) {
     if (e instanceof AssistantBusy) {

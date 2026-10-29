@@ -1,7 +1,8 @@
 import { getMedia } from './data';
 import { readLocalMedia, signedDownload, usingSupabase } from './db';
 import { costingSummary, listItems, listProjects, STUDIO, type Item, type Mode, type Project, type StudioId } from './corner';
-import { AssistantBusy, FREE, busy, reserve, seconds, settle, type Budget } from './groq-limits';
+import { AssistantBusy, FREE, busy, reserve, reserveWaiting, seconds, settle, type Budget } from './groq-limits';
+import { webLookup, type WebFindings } from './web-search';
 import { isMood, MOODS, timeMood, type JellyMood } from './jelly-mood';
 
 /**
@@ -34,6 +35,9 @@ Always finish with a heading "## Try next" and exactly three short follow-up que
 
 /* ---------- token budget for one request (fits the free tier's tokens per minute) ---------- */
 const ANSWER_TOKENS = 900; // room for the reply (the free tier allows 1,000 answer tokens a minute)
+const JELLY_ANSWER_TOKENS = 500; // Jelly keeps it short, and each request books its full length: two answers fit in a minute
+const JELLY_TURNS = 8; // earlier turns that go along as real chat messages
+const TURN_CHARS = 600; // how much of each earlier answer goes along
 const IMAGE_TOKENS = 1600; // a small image measured ~1,300 on Groq; room for bigger ones
 const MAX_IMAGES = 2;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -119,7 +123,7 @@ async function documents(items: Item[], room: number, read: string[], notRead: s
     .join('');
 }
 
-export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; tags?: Tags };
+export type AssistantReply = { text: string; read: string[]; notRead: string[]; suggestions: string[]; mood?: JellyMood; tags?: Tags; web?: Pick<WebFindings, 'sources' | 'queries'> };
 
 /** Jelly's notes to the site, on their own lines: reminders to set and things to remember. */
 export type Tags = { remind: { day: string; time: string; text: string; repeat: string }[]; remember: string[] };
@@ -156,8 +160,10 @@ export class AssistantKeyRejected extends Error {}
 type Part = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
 
 /** One request to Groq within the free tier: reserves the budget, asks, and splits off the "Try next" questions. */
-async function callGroq(system: string, text: string, parts: Part[], estimate: number) {
-  const budget: Budget = await reserve(estimate, ANSWER_TOKENS);
+type CallOptions = { prior?: { role: 'user' | 'assistant'; content: string }[]; answerTokens?: number; wait?: boolean };
+async function callGroq(system: string, text: string, parts: Part[], estimate: number, opts: CallOptions = {}) {
+  const answerTokens = opts.answerTokens ?? ANSWER_TOKENS;
+  const budget: Budget = await (opts.wait ? reserveWaiting : reserve)(estimate, answerTokens);
   let res: Response;
   try {
     res = await fetch(`${BASE()}/chat/completions`, {
@@ -167,9 +173,10 @@ async function callGroq(system: string, text: string, parts: Part[], estimate: n
         model: MODEL(),
         messages: [
           { role: 'system', content: system },
+          ...(opts.prior ?? []),
           { role: 'user', content: [{ type: 'text', text }, ...parts] },
         ],
-        max_completion_tokens: ANSWER_TOKENS,
+        max_completion_tokens: answerTokens,
         temperature: 0.6,
         // answer directly: hidden "thinking" would use up the free tier's tokens
         reasoning_effort: 'none',
@@ -303,13 +310,17 @@ Right now it's ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hou
 
 Keep it short: under about 200 words, with short paragraphs or bullets.
 
+This is an ongoing chat: the earlier messages are what you two already said. Answer what she just said (a "yes", "and tomorrow?" or "tell me more" refers to the last thing you talked about), don't repeat yourself, and keep quick or casual messages to a sentence or three.
+
+Sometimes the message has a section "From the web", findings from a Google search made just now. Use them for anything current, name the site they came from, and say so plainly when they don't answer her question. Never claim to have searched when that section isn't there.
+
 Reminders: you can set reminders for her. Her own clock says ${localNow(tz)} (${tz}). When she asks you to remind her of something, work out the date and time on her clock and put this on its own line, at the very end of your answer: [remind: YYYY-MM-DD HH:MM | what to remind her of | none]. Use 24-hour time; the last part is none, daily or weekly. Then tell her warmly when you'll remind her. If she doesn't say a time, ask her rather than guess. Never add a reminder she didn't ask for.
 
 Remembering: when she tells you something lasting about herself (what she loves, her people, her plans, exams, dates that matter to her), you may keep one short note on its own line at the very end: [remember: Saanika's favourite gelato is pistachio]. Only things she said, in a few words, at most one per answer, and never anything sensitive (health, money details, passwords, addresses, documents).
 
 Begin your reply with a tag on its own first line saying how her message makes you feel, exactly like [mood: joyful], choosing one of: ${Object.keys(MOODS).join(', ')}.
 
-Always finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points.`;
+When your answer is more than a couple of sentences, finish with a heading "## Try next" and exactly three short follow-up questions she could ask you next (each under 12 words), as bullet points. For a quick or casual reply, leave it out.`;
 
 /** "Wednesday 28 October, 7:05 PM" on her clock. */
 function localNow(tz: string) {
@@ -373,17 +384,27 @@ export async function askJelly(question: string, history: { q: string; a: string
   if (left.length) glanceText += `\n\nOlder projects (titles only): ${left.join('; ')}`;
   const all = `${world ? `${world}\n\n` : ''}# My Corner, her studio (it's ${when} in Milano)\n## Every project at a glance${glanceText || '\nNo projects yet.'}`;
 
-  const earlier = history.length ? `\n\n## Earlier in this conversation\n${history.map((h) => `Q: ${h.q}\nA: ${h.a.slice(0, 700)}`).join('\n\n')}` : '';
+  // the chat so far goes along as real messages, newest last; the oldest go first if it won't fit
+  let prior = history.slice(-JELLY_TURNS).flatMap((h) => [
+    { role: 'user' as const, content: h.q.slice(0, 600) },
+    { role: 'assistant' as const, content: h.a.slice(0, TURN_CHARS) },
+  ]);
+  const priorTokens = () => tokensOf(prior.map((m) => m.content).join('\n'));
+  // a project she's talking about already has its own page of context, so only look the web up for the rest
+  const web: WebFindings | null = focus ? null : await webLookup(question, history, tz);
+  const webText = web ? `\n\n## From the web (Google Search, ${when})\n${web.findings}\nSources: ${web.sources.map((x) => x.title).join(', ') || 'Google Search'}` : '';
   let full = '';
   if (focus) {
     full = `\n\n## Open now, in full\n${describe(focus.p, focus.items)}`;
     read.push(`“${focus.p.title}” in full`);
-    const room = FREE.requestTokens - ANSWER_TOKENS - tokensOf(JELLY_SYSTEM + all + full + earlier + question) - 300;
+    const room = FREE.requestTokens - JELLY_ANSWER_TOKENS - tokensOf(JELLY_SYSTEM + all + full + webText + question) - priorTokens() - 300;
     full += await documents(focus.items, room, read, notRead);
   }
   const notes = notRead.length ? `\n\n## Not read\n${notRead.map((n) => `- ${n}`).join('\n')}` : '';
-  const text = `${all}${full}${notes}${earlier}\n\n## Saanika asks\n${question}`;
-  const { text: raw, suggestions, tags } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + ANSWER_TOKENS);
+  const text = `${all}${full}${notes}${webText}\n\n## Saanika asks\n${question}`;
+  while (prior.length && tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS + 300 > FREE.requestTokens) prior = prior.slice(2);
+  if (web) read.push('a Google search');
+  const { text: raw, suggestions, tags } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS, { prior, answerTokens: JELLY_ANSWER_TOKENS, wait: true });
   const { mood, text: body } = moodTag(raw, now);
-  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags };
+  return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags, ...(web ? { web: { sources: web.sources, queries: web.queries } } : {}) };
 }

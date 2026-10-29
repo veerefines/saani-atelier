@@ -180,6 +180,8 @@ The assistant (and Jelly) runs **Qwen 3.8 27B**, an open model, on Groq's free t
 
 Without the key, everything else in My Corner works and the Assistant tab shows these steps.
 
+**Google Search for Jelly (optional).** With a `GEMINI_API_KEY`, Jelly can look things up on Google when a question needs current facts (events, opening hours, prices, news). Gemini decides per question whether to search at all; casual chat and anything about her own projects never leaves the site. Each searched answer shows where it came from. Create a free key at aistudio.google.com/apikey, add it in Vercel, and redeploy. It stays inside Gemini's free allowance (a few a minute, about 200 a day, `src/lib/web-search.ts`); without it Jelly answers from what she knows. Optionally set `GEMINI_MODEL`.
+
 **Staying free.** Groq's free tier allows 30 requests, 8,000 tokens and 1,000 answer tokens a minute, and 1,000 requests a day, for this model. Answers are capped at 900 tokens, so after a long answer the next question may wait a minute. `src/lib/groq-limits.ts` keeps under all of those:
 
 - **Each question fits in one minute's tokens.** Long documents are trimmed to their opening part, and the reply says so.
@@ -371,6 +373,7 @@ Every push to `main` deploys to production on Vercel. After changing a setting, 
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | push notifications |
 | `GOOGLE_MAPS_API_KEY` *(optional)* | live ratings in the Milano guide |
 | `GROQ_API_KEY`, `GROQ_MODEL` *(optional)* | Jelly, the My Corner assistant and Soldi (free tier) |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` *(optional)* | Google Search for Jelly (free tier) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` *(optional)* | meetups in Google Calendar |
 | `WHATSAPP_*` *(optional)* | Soldi over WhatsApp |
 

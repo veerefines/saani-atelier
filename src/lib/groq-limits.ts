@@ -96,3 +96,18 @@ export async function settle(b: Budget, used: number, answered: number, headers:
     };
   });
 }
+
+/**
+ * Like reserve(), but when only this minute is full (a few seconds from a fresh one) it waits and
+ * tries once more, so quick back-to-back questions go through instead of bouncing. A daily limit or
+ * a pause Groq asked for still throws straight away.
+ */
+export async function reserveWaiting(estimate: number, output: number, maxWait = 20): Promise<Budget> {
+  try {
+    return await reserve(estimate, output);
+  } catch (e) {
+    if (!(e instanceof AssistantBusy) || e.retryAfter > maxWait) throw e;
+    await new Promise((r) => setTimeout(r, (e.retryAfter + 1) * 1000));
+    return reserve(estimate, output);
+  }
+}
