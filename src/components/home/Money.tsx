@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/upload-client';
 import { sfx } from '@/lib/sound';
@@ -10,6 +9,8 @@ import { PICK_ORDER, categoryOf, fallbackFor, jellyLine, kindOf, listFor, type B
 import type { Draft } from '@/lib/money-parse';
 import type { Rate } from '@/lib/fx';
 import JellyTake from './MoneyTake';
+import MoneyReport from './MoneyReport';
+import Sheet from './MoneySheet';
 
 type Month = { month: string; expenses: Expense[]; summary: MonthSummary; budget: Budget };
 type Cat = { id: string; icon: string; label: string; color: string };
@@ -100,6 +101,8 @@ export default function Money({ initial }: { initial: Month }) {
       {m.month === thisMonth && <TellJelly onAdded={() => load()} />}
 
       <JellyTake month={m.month} sig={sig} />
+
+      <MoneyReport month={m.month} thisMonth={thisMonth} />
 
       {m.month === thisMonth &&
         (byHand ? (
@@ -520,22 +523,6 @@ function TellJelly({ onAdded }: { onAdded: () => void }) {
         )}
       </AnimatePresence>
     </section>
-  );
-}
-
-function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  // rendered on <body>: inside the page it is stuck under the radio chip and Jelly, which float above the page
-  return createPortal(
-    <motion.div className="soldi-sheet-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-      <motion.div className="soldi-sheet" role="dialog" aria-label={title} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-        <h2>{title}</h2>
-        <button type="button" className="soldi-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
-        {children}
-      </motion.div>
-    </motion.div>,
-    document.body,
   );
 }
 

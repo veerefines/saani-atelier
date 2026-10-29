@@ -10374,3 +10374,73 @@ a.mb-q:hover {
   background-size: 26px 26px;
   cursor: pointer;
 }
+
+/* ---------- Soldi: the monthly sheet ---------- */
+.soldi-report {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.12);
+}
+.soldi-report-text {
+  display: grid;
+  gap: 4px;
+}
+.soldi-report-text b {
+  font-size: 24px;
+  color: var(--burgundy);
+}
+.soldi-report-text small {
+  font: 500 13.5px/1.4 var(--font-body);
+  color: #5a3f4c;
+}
+.soldi-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.soldi-report-msg {
+  margin: 0;
+  font: 600 13px var(--font-body);
+  color: var(--burgundy);
+}
+.soldi-emails {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.soldi-emails li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(178, 48, 95, 0.18);
+  font: 500 15px var(--font-body);
+  overflow-wrap: anywhere;
+}
+.soldi-emails li.none {
+  justify-content: center;
+  color: #7a5c69;
+  box-shadow: none;
+  background: transparent;
+}
+.soldi-emails button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  color: var(--burgundy);
+  background: rgba(244, 166, 192, 0.35);
+  cursor: pointer;
+}

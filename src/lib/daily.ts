@@ -8,6 +8,7 @@ import { happenings } from '@/content/happenings';
 import { places } from '@/content/milano';
 import * as db from './db';
 import { forgetOldMessages } from './whatsapp';
+import { monthlyReport } from './money-report';
 
 const first = (name: string) => name.split(' ')[0];
 const between = (iso: string | null | undefined, from: Date, to: Date) => {
@@ -26,7 +27,7 @@ export async function runDaily(at = new Date()) {
   const since = state ? new Date(state.lastRun) : new Date(at.getTime() - 86_400_000);
   const today = milanDay(at);
   const newDay = milanDay(since) !== today || !state;
-  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0, morning: false, ahead: [] as string[], month: 0 };
+  const out = { since: since.toISOString(), at: at.toISOString(), letters: 0, drops: 0, occasion: null as string | null, reminders: [] as string[], digest: 0, morning: false, ahead: [] as string[], month: 0, report: null as string | null };
 
   const [letters, posts, occasions] = await Promise.all([listLetters(), listPosts(), listOccasions()]);
 
@@ -125,6 +126,9 @@ export async function runDaily(at = new Date()) {
       if (count) await notifySaanika({ title: '💗 Your week', body: `${count} new ${count === 1 ? 'thing' : 'things'} from your people this week`, url: '/home' });
     }
   }
+
+  // the 1st of the month: Jelly emails last month's Soldi sheet
+  if (newDay) out.report = await monthlyReport(today).catch(() => 'failed');
 
   // WhatsApp message ids are only kept long enough to spot Meta's retries
   if (newDay) await forgetOldMessages().catch(() => {});

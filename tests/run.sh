@@ -31,6 +31,7 @@ cleanup() {
   [ -n "${FAKEFX:-}" ] && kill "$FAKEFX" 2>/dev/null
   [ -n "${FAKEG:-}" ] && kill "$FAKEG" 2>/dev/null
   [ -n "${FAKEWA:-}" ] && kill "$FAKEWA" 2>/dev/null
+  [ -n "${FAKEMAIL:-}" ] && kill "$FAKEMAIL" 2>/dev/null
   rm -rf .data
   [ -d "$TEST_TMP/data-backup" ] && cp -R "$TEST_TMP/data-backup" .data
   rm -rf "$TEST_TMP"
@@ -52,6 +53,11 @@ export GOOGLE_CLIENT_ID=test-client GOOGLE_CLIENT_SECRET=test-secret GOOGLE_API_
 node tests/fake-whatsapp.js 4613 "$TEST_TMP" &
 FAKEWA=$!
 export WHATSAPP_TOKEN=test-wa-token WHATSAPP_PHONE_ID=12345 WHATSAPP_VERIFY_TOKEN=TEST-VERIFY WHATSAPP_APP_SECRET=test-app-secret WHATSAPP_OWNER='+39 333 1234567' WHATSAPP_GRAPH_URL=http://localhost:4613
+
+# a fake Resend for the monthly Soldi sheet
+node tests/fake-mail.js 4615 "$TEST_TMP" &
+FAKEMAIL=$!
+export RESEND_API_KEY=test-resend-key RESEND_BASE_URL=http://localhost:4615 REPORT_EMAILS=seed@example.com
 
 # the push library must trust that certificate; nothing else here talks to anything private
 NODE_TLS_REJECT_UNAUTHORIZED=0 node node_modules/next/dist/bin/next start -p "$PORT" > "$TEST_TMP/server.log" 2>&1 &
@@ -78,6 +84,7 @@ run "endpoints, part 4" bash tests/endpoints-4.sh
 run "endpoints, part 5" bash tests/endpoints-5.sh
 run "endpoints, part 6" bash tests/endpoints-6.sh
 run "endpoints, part 7" bash tests/endpoints-7.sh
+run "monthly Soldi sheet (fake Resend)" bash tests/report.sh
 run "web push" node tests/push.js "$TEST_TMP"
 
 # the My Corner assistant, with a key, against a fake Groq server
