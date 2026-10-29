@@ -25,7 +25,7 @@ export const vapidPublicKey = () => PUBLIC ?? null;
 let configured = false;
 function configure() {
   if (configured || !pushReady) return;
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'https://saani-atelier.vercel.app', PUBLIC!, PRIVATE!);
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'https://saani.space', PUBLIC!, PRIVATE!);
   configured = true;
 }
 

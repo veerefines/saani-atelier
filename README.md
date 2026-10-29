@@ -6,7 +6,7 @@
 
 *A little world for Saanika, packed for the move from Mumbai to Milano* ✈️ 🇮🇹
 
-**Flying 27 Oct 2026** · Live at **[saani-atelier.vercel.app](https://saani-atelier.vercel.app)** · Private, invite only
+**Flying 27 Oct 2026** · Live at **[saani.space](https://saani.space)** (also [saani-atelier.vercel.app](https://saani-atelier.vercel.app)) · Private, invite only
 
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-1e1b24?style=flat-square&logo=nextdotjs&logoColor=fff8f3)
 ![React 19](https://img.shields.io/badge/React-19-b2305f?style=flat-square&logo=react&logoColor=fff8f3)

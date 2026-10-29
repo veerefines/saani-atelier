@@ -99,7 +99,7 @@ const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 const shown = (x: Pick<Expense, 'currency' | 'eur' | 'inr'>) => (x.currency === 'INR' ? `${inr(x.inr)} (${eur(x.eur)})` : eur(x.eur));
 const monthName = (m: string) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-const SOLDI = 'https://saani-atelier.vercel.app/home/money';
+const SOLDI = 'https://saani.space/home/money';
 const dayName = (d: string, o: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' });
 function addDays(day: string, n: number) {
   const d = new Date(`${day}T12:00:00Z`);

@@ -17,7 +17,7 @@ jobs:
       - name: Send due reminders
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          SITE: ${{ vars.SITE_URL || 'https://saani-atelier.vercel.app' }}
+          SITE: ${{ vars.SITE_URL || 'https://saani.space' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then echo "Add CRON_SECRET in the repo's Settings → Secrets → Actions"; exit 0; fi
           curl -fsS --max-time 60 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/tick"
