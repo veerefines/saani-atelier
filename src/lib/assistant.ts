@@ -422,11 +422,15 @@ export async function askJelly(question: string, history: { q: string; a: string
   const { text: raw, suggestions, tags } = await callGroq(JELLY_SYSTEM, text, [], tokensOf(JELLY_SYSTEM + text) + priorTokens() + JELLY_ANSWER_TOKENS, { prior, answerTokens: JELLY_ANSWER_TOKENS, wait: true });
   const { mood, text: body } = moodTag(raw, now);
   // on a turn with web text, nothing the web said may become a note: no memories, and a reminder only
-  // when she asked for one in her own words and it shares a word with what she said
+  // when she asked for one and most of its words are hers (the repeat only if she said daily or weekly)
   const words = new Set(question.toLowerCase().match(/[a-z]{4,}/g) ?? []);
-  const askedForReminder = /\bremind/i.test(question);
+  const hers = (text: string) => {
+    const w = text.toLowerCase().match(/[a-z]{4,}/g) ?? [];
+    return w.length > 0 && w.filter((x) => words.has(x)).length / w.length >= 0.6;
+  };
+  const repeatOk = (r: string) => r === 'none' || new RegExp(`\\b${r}\\b`, 'i').test(question);
   const safeTags: Tags = web
-    ? { remember: [], remind: askedForReminder ? tags.remind.filter((t) => (t.text.toLowerCase().match(/[a-z]{4,}/g) ?? []).some((w) => words.has(w))).slice(0, 1) : [] }
+    ? { remember: [], remind: /\bremind/i.test(question) ? tags.remind.filter((t) => hers(t.text)).map((t) => (repeatOk(t.repeat) ? t : { ...t, repeat: 'none' })).slice(0, 1) : [] }
     : tags;
   return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags: safeTags, ...(web ? { web: { sources: web.sources, queries: web.queries } } : {}) };
 }
