@@ -1,0 +1,154 @@
+.inv {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(5dvh, 22px) 18px calc(32px + env(safe-area-inset-bottom));
+  text-align: center;
+  overflow-x: clip;
+}
+.inv-jelly {
+  width: 132px;
+  height: auto;
+  filter: drop-shadow(0 14px 16px rgba(107, 30, 58, 0.22));
+  animation: inv-bob 5s ease-in-out infinite;
+}
+@keyframes inv-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+.inv-kicker {
+  margin-top: 6px !important;
+  font-size: 30px;
+}
+.inv-title {
+  font-size: clamp(54px, 17vw, 84px);
+  margin-bottom: 26px !important;
+}
+
+/* the invitation, on handmade paper like the note at the end of the reveal */
+.inv-card {
+  position: relative;
+  width: min(100%, 390px);
+  border: 22px solid transparent;
+  border-image: url('/reveal/paper.webp') 60 fill / 22px stretch;
+  padding: 22px 6px 6px;
+  filter: drop-shadow(0 18px 22px rgba(107, 30, 58, 0.22));
+}
+.inv-card .tape {
+  top: -44px;
+}
+.inv-card p.whisper {
+  font-size: 21px;
+  line-height: 1.32;
+  margin-bottom: 12px;
+  color: #2a2230;
+}
+.inv-sign {
+  margin-top: 4px !important;
+  font-size: 30px;
+}
+.inv-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+.inv-open {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* keep it on your phone */
+.inv-keep {
+  width: min(100%, 390px);
+  margin-top: 30px;
+  padding: 20px 18px 18px;
+  border-radius: 24px;
+  background: rgba(255, 248, 243, 0.72);
+  border: 1.5px dashed rgba(178, 48, 95, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.inv-keep-title {
+  font-size: 34px;
+}
+.inv-keep-sub {
+  margin: 4px 0 14px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #5a3f4c;
+}
+.inv-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.inv-steps li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  align-items: start;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.inv-steps small {
+  color: #7a5c69;
+}
+.inv-n {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 700 15px var(--font-body);
+  color: #fff;
+  background: linear-gradient(180deg, #e55c8f, var(--berry));
+  box-shadow: 0 6px 12px -6px rgba(178, 48, 95, 0.7);
+}
+.inv-glyph {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--berry);
+  background: rgba(244, 166, 192, 0.35);
+}
+.inv-warn {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--burgundy);
+  background: rgba(247, 227, 161, 0.6);
+}
+.inv-copy {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 22px;
+  font: 600 15px var(--font-body);
+  color: var(--burgundy);
+  background: transparent;
+  border: 1.5px solid rgba(107, 30, 58, 0.45);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.inv-foot {
+  margin: 26px 0 0;
+  font-size: 13px;
+  color: #7a5c69;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-jelly {
+    animation: none;
+  }
+}
