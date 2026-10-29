@@ -439,7 +439,7 @@ export async function askJelly(question: string, history: { q: string; a: string
   }
   const { text: raw, suggestions, tags } = reply;
   const { mood, text: body } = moodTag(raw, now);
-  // on a turn with web text, nothing the web said may become a note: no memories, and a reminder only
+  // on a turn with web text, or one Gemini wrote (it may have searched without saying so), nothing the web said may become a note: no memories, and a reminder only
   // when she asked for one and most of its words are hers (the repeat only if she said daily or weekly)
   const words = new Set(question.toLowerCase().match(/[a-z]{4,}/g) ?? []);
   const hers = (text: string) => {
@@ -447,7 +447,7 @@ export async function askJelly(question: string, history: { q: string; a: string
     return w.length > 0 && w.filter((x) => words.has(x)).length / w.length >= 0.6;
   };
   const repeatOk = (r: string) => r === 'none' || new RegExp(`\\b${r}\\b`, 'i').test(question);
-  const safeTags: Tags = web || searchedWeb
+  const safeTags: Tags = web || searchedWeb || via === 'gemini'
     ? { remember: [], remind: /\bremind/i.test(question) ? tags.remind.filter((t) => hers(t.text)).map((t) => (repeatOk(t.repeat) ? t : { ...t, repeat: 'none' })).slice(0, 1) : [] }
     : tags;
   return { text: body || 'Blub… nothing came back. Try me again? 🫧', read, notRead, suggestions, mood, tags: safeTags, ...(web ? { web: { sources: web.sources, queries: web.queries } } : searchedWeb ? { web: searchedWeb } : {}), ...(via ? { via } : {}) };
