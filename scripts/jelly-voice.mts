@@ -108,7 +108,8 @@ function allLines(): { text: string; dir: string }[] {
   add([CHECKINS.proud], DIRECTION.love);
   for (const t of Object.values(CHEERS)) add([t], DIRECTION.joyful);
   for (const f of FACTS) add([`Did you know? ${f.text}`], DIRECTION.content);
-  return L;
+  // lines that are only an action and an emoji (“*hides behind a leaf* 🍃”) have nothing to say aloud
+  return L.filter((l) => pieces(l.text, l.dir).length);
 }
 
 const mode = process.argv[2];
