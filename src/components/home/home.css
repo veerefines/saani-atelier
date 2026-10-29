@@ -9361,6 +9361,65 @@ a.mb-q:hover {
   appearance: none;
   width: 100%;
 }
+.mt-field {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 150px;
+}
+/* a plain button and a list of buttons instead of a <select>: taps always work, on every phone */
+.mt-pick {
+  min-height: 44px;
+  padding: 10px 44px 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='13.25' fill='%23fff' stroke='%23b2305f' stroke-opacity='.3' stroke-width='1.5'/%3E%3Cpath d='M10.5 12.5h9L15 18z' fill='%23b2305f'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 26px 26px;
+  box-shadow: 0 0 0 1px rgba(30, 60, 107, 0.15);
+  font: 500 16px var(--font-body);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.mt-pick[aria-expanded='true'] {
+  box-shadow: 0 0 0 2px #4f8fd8;
+}
+.mt-timegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  max-height: 210px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(30, 60, 107, 0.1);
+}
+.mt-lens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mt-timegrid button,
+.mt-lens button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(30, 60, 107, 0.12);
+  font: 600 14px var(--font-body);
+  color: #1f3f6b;
+  cursor: pointer;
+}
+.mt-timegrid button[aria-selected='true'],
+.mt-lens button[aria-checked='true'] {
+  box-shadow: 0 0 0 2px #4f8fd8;
+  background: #f0f6fd;
+}
 .mt-their {
   margin: 0;
   font: 600 12.5px var(--font-body);

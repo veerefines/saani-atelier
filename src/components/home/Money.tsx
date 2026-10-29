@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { api } from '@/lib/upload-client';
 import { sfx } from '@/lib/sound';
@@ -523,7 +524,8 @@ function TellJelly({ onAdded }: { onAdded: () => void }) {
 }
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
+  // rendered on <body>: inside the page it is stuck under the radio chip and Jelly, which float above the page
+  return createPortal(
     <motion.div className="soldi-sheet-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
       <motion.div className="soldi-sheet" role="dialog" aria-label={title} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
@@ -532,7 +534,8 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
         </button>
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 

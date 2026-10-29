@@ -34,6 +34,7 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
   const [title, setTitle] = useState('');
   const [at, setAt] = useState('');
   const [minutes, setMinutes] = useState(45);
+  const [timeOpen, setTimeOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState(
@@ -197,30 +198,40 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
             <span>or pick your own day</span>
             <input type="date" value={at.slice(0, 10)} min={local(new Date()).slice(0, 10)} onChange={(e) => e.target.value && setAt(`${e.target.value}T${at.slice(11) || '18:00'}`)} />
           </label>
-          <label>
+          <div className="mt-field">
             <span>time</span>
-            <select value={at.slice(11)} onChange={(e) => setAt(`${at.slice(0, 10) || local(new Date()).slice(0, 10)}T${e.target.value}`)}>
-              <option value="" disabled>
-                pick a time
-              </option>
-              {at.slice(11) && !TIMES.includes(at.slice(11)) && <option value={at.slice(11)}>{timeLabel(at.slice(11))}</option>}
-              {TIMES.map((t) => (
-                <option key={t} value={t}>
-                  {timeLabel(t)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>how long</span>
-            <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-              {[30, 45, 60, 90, 120].map((m) => (
-                <option key={m} value={m}>
-                  {m < 60 ? `${m} min` : `${m / 60} h${m % 60 ? ' 30' : ''}`}
-                </option>
-              ))}
-            </select>
-          </label>
+            <button type="button" className="mt-pick" aria-haspopup="listbox" aria-expanded={timeOpen} onClick={() => (sfx('tick'), setTimeOpen((o) => !o))} data-quiet>
+              {at.slice(11) ? timeLabel(at.slice(11)) : 'pick a time'}
+            </button>
+          </div>
+        </div>
+        {timeOpen && (
+          <div className="mt-timegrid" role="listbox" aria-label="Time">
+            {(at.slice(11) && !TIMES.includes(at.slice(11)) ? [at.slice(11), ...TIMES] : TIMES).map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="option"
+                aria-selected={at.slice(11) === t}
+                onClick={() => {
+                  sfx('pop');
+                  setAt(`${at.slice(0, 10) || local(new Date()).slice(0, 10)}T${t}`);
+                  setTimeOpen(false);
+                }}
+                data-quiet
+              >
+                {timeLabel(t)}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="mt-label">How long?</p>
+        <div className="mt-lens" role="radiogroup" aria-label="How long">
+          {[30, 45, 60, 90, 120].map((m) => (
+            <button key={m} type="button" role="radio" aria-checked={minutes === m} onClick={() => (sfx('tick'), setMinutes(m))} data-quiet>
+              {m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)}½ h` : `${m / 60} h`}
+            </button>
+          ))}
         </div>
         {atDate && picked.length > 0 && <p className="mt-their">For them: {picked.map((f) => `${first(f.name)} ${when(atDate.toISOString(), f.tz)}`).join(' · ')}</p>}
 
