@@ -20,6 +20,13 @@ const pick = <T,>(l: T[]) => l[Math.floor(Math.random() * l.length)];
 /** "2026-11-14T19:30" in this browser's zone, for the datetime box. */
 const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 
+/** Half-hour slots for the time dropdown: a plain list works in every iPhone browser, a datetime box starts out blank there. */
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
+const timeLabel = (t: string) => {
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+};
+
 /** Video calls with her people on Google Meet: pick friends, a time that suits everyone, done. */
 export default function MeetupPlanner({ status }: { status: string | null }) {
   const [d, setD] = useState<Data | null>(null);
@@ -187,8 +194,22 @@ export default function MeetupPlanner({ status }: { status: string | null }) {
 
         <div className="mt-row">
           <label>
-            <span>or pick your own</span>
-            <input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} min={local(new Date())} />
+            <span>or pick your own day</span>
+            <input type="date" value={at.slice(0, 10)} min={local(new Date()).slice(0, 10)} onChange={(e) => e.target.value && setAt(`${e.target.value}T${at.slice(11) || '18:00'}`)} />
+          </label>
+          <label>
+            <span>time</span>
+            <select value={at.slice(11)} onChange={(e) => setAt(`${at.slice(0, 10) || local(new Date()).slice(0, 10)}T${e.target.value}`)}>
+              <option value="" disabled>
+                pick a time
+              </option>
+              {at.slice(11) && !TIMES.includes(at.slice(11)) && <option value={at.slice(11)}>{timeLabel(at.slice(11))}</option>}
+              {TIMES.map((t) => (
+                <option key={t} value={t}>
+                  {timeLabel(t)}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             <span>how long</span>
