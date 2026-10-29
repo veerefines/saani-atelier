@@ -2672,35 +2672,6 @@ a.pc-rating:hover {
   cursor: pointer;
   font-size: 15px;
 }
-.today-hours {
-  display: grid;
-  grid-template-columns: repeat(24, 1fr);
-  gap: 2px;
-  margin: 6px 0 2px;
-}
-.today-hours i {
-  height: 14px;
-  border-radius: 3px;
-  background: rgba(107, 30, 58, 0.08);
-}
-.today-hours i.some {
-  background: #f6d3e3;
-}
-.today-hours i.all {
-  background: linear-gradient(180deg, #9ad7b5, #6fbf98);
-}
-.today-hours i.now {
-  outline: 2px solid var(--berry);
-  outline-offset: 1px;
-}
-.today-hours-scale {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  font: 600 10px var(--font-body);
-  color: #9a7f8c;
-}
-
 /* ---------- occasion banner ---------- */
 .occasion {
   display: flex;
@@ -4160,31 +4131,167 @@ a.pc-rating:hover {
 }
 
 /* good time to call: one row per person (or everyone in the same place) */
+.call-row {
+  margin-top: 12px;
+}
 .call-row + .call-row {
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
   border-top: 1px dashed rgba(178, 48, 95, 0.2);
+}
+.call-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
 }
 .call-who {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 8px;
-  margin: 4px 0 0;
-  font-size: 14.5px;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  min-width: 0;
+  font-size: 15px;
   color: var(--ink);
 }
 .call-who span {
   font-size: 12.5px;
   color: #8a6a7b;
 }
-.today-call small.call-now {
-  margin-top: 4px;
-  font-weight: 600;
+/* the answer, first: good now (green) or when next */
+.call-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1.5px solid rgba(178, 48, 95, 0.2);
+  font: 700 12.5px var(--font-body);
   color: var(--burgundy);
+  white-space: nowrap;
 }
-.today-call small.call-now.yes {
+.call-state i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2c3cf;
+}
+.call-state.yes {
+  background: #e6f5ec;
+  border-color: rgba(47, 122, 85, 0.35);
   color: #2f7a55;
+}
+.call-state.yes i {
+  background: #3e9d6c;
+  box-shadow: 0 0 0 0 rgba(62, 157, 108, 0.5);
+  animation: call-pulse 2s ease-out infinite;
+}
+@keyframes call-pulse {
+  70% {
+    box-shadow: 0 0 0 7px rgba(62, 157, 108, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(62, 157, 108, 0);
+  }
+}
+/* the day as one line: good windows in green, a needle at now */
+.call-line {
+  position: relative;
+  height: 18px;
+  margin: 18px 0 4px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, rgba(107, 30, 58, 0.07) 0 calc(25% - 1px), rgba(107, 30, 58, 0.16) calc(25% - 1px) 25%);
+}
+.call-win {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a9dcc0, #79c39f);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.6);
+}
+.call-win.on {
+  background: linear-gradient(180deg, #6fcb9a, #3e9d6c);
+}
+.call-needle {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--berry);
+  box-shadow: 0 0 0 2px #fff;
+}
+.call-needle em {
+  position: absolute;
+  bottom: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  font: 700 9.5px var(--font-body);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--berry);
+}
+.call-scale {
+  display: flex;
+  justify-content: space-between;
+  font: 600 10px var(--font-body);
+  color: #9a7f8c;
+}
+/* each window as yours, then theirs */
+.call-wins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.call-wins li {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(47, 122, 85, 0.22);
+}
+.call-wins li b {
+  font: 700 13.5px var(--font-body);
+  color: #2f6b4c;
+}
+.call-wins li span {
+  font-size: 11.5px;
+  color: #8a6a7b;
+}
+.call-wins li.on {
+  background: #e6f5ec;
+  border-color: rgba(47, 122, 85, 0.45);
+}
+.call-wins li.past {
+  opacity: 0.55;
+}
+.call-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: #9a7f8c;
+}
+.call-key i {
+  width: 18px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a9dcc0, #79c39f);
+}
+@media (prefers-reduced-motion: reduce) {
+  .call-state.yes i {
+    animation: none;
+  }
 }
 /* folded by default: a title row with a word per person; ▾ opens the timelines */
 .call-toggle {

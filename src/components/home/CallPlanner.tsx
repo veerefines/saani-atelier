@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNow } from './Clock';
 import { usePeople, type Other } from './usePeople';
-import { clock12, hour12 } from '@/lib/time';
+import { clock12 } from '@/lib/time';
 import { AWAKE, SLOT, awake, minutesIn } from '@/lib/overlap';
 
 type Group = { tz: string; city: string; names: string[] };
@@ -24,6 +24,18 @@ function runs(ok: boolean[]) {
   return out;
 }
 
+/** "in 1h 32m", "in 20m" */
+const until = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`);
+/** A zone's distance from UTC right now, in minutes */
+const utcOffset = (d: Date, tz: string) => Math.round((Date.parse(d.toLocaleString('en-US', { timeZone: tz })) - Date.parse(d.toLocaleString('en-US', { timeZone: 'UTC' }))) / 60_000);
+/** "12½h ahead", "9h behind" */
+function offset(d: number) {
+  if (!d) return 'same time as you';
+  const h = Math.floor(Math.abs(d) / 60);
+  const half = Math.abs(d) % 60 === 30 ? '½' : Math.abs(d) % 60 ? `:${String(Math.abs(d) % 60).padStart(2, '0')}` : '';
+  return `${h}${half}h ${d > 0 ? 'ahead' : 'behind'}`;
+}
+
 /** One person (or group in the same zone): when you're both awake, across my day. */
 function plan(now: Date, me: string, g: Group) {
   const nowMin = minutesIn(now, me);
@@ -31,66 +43,80 @@ function plan(now: Date, me: string, g: Group) {
   const at = (m: number) => new Date(dayStart.getTime() + m * 60_000);
   const ok = Array.from({ length: (24 * 60) / SLOT }, (_, i) => awake(at(i * SLOT), me) && awake(at(i * SLOT), g.tz));
   const windows = runs(ok);
-  const nowSlot = Math.floor(nowMin / SLOT);
-  const next = windows.find(([, b]) => b > nowMin);
+  const current = windows.find(([a, b]) => a <= nowMin && nowMin < b);
+  const next = windows.find(([a]) => a > nowMin);
+  const theirMin = minutesIn(now, g.tz);
   return {
-    windows,
-    hours: Array.from({ length: 24 }, (_, h) => {
-      const a = ok[h * 2];
-      const b = ok[h * 2 + 1];
-      return { h, cls: `${a && b ? 'all' : a || b ? 'some' : ''}${Math.floor(nowSlot / 2) === h ? ' now' : ''}` };
-    }),
-    goodNow: ok[nowSlot],
-    next: next && next[0] > nowMin ? next[0] : null,
+    nowMin,
+    windows: windows.map(([a, b]) => ({ a, b, theirs: `${clock(at(a), g.tz)}–${clock(at(b), g.tz)}` })),
+    goodNow: Boolean(current),
+    endsAt: current ? current[1] : null,
+    next: next ? next[0] : null,
     there: clock(now, g.tz),
-    theirs: windows.map(([a, b]) => `${clock(at(a), g.tz)}–${clock(at(b), g.tz)}`),
-    same: minutesIn(now, me) === minutesIn(now, g.tz),
+    night: theirMin < 7 * 60 || theirMin >= 21 * 60,
+    offset: offset(utcOffset(now, g.tz) - utcOffset(now, me)),
+    same: theirMin === nowMin,
   };
 }
 
 type Plan = ReturnType<typeof plan>;
 
-/** The folded view: a word per person (or group) on whether now is good. */
+/** A word per person (or group) on whether now is good, for the folded view and the row's pill. */
 function status(p: Plan) {
-  if (p.goodNow) return { text: 'good now', yes: true };
-  if (p.next !== null) return { text: `from ${hhmm(p.next)}`, yes: false };
-  return { text: 'tomorrow', yes: false };
+  if (p.goodNow) return { text: `good now · until ${hhmm(p.endsAt!)}`, short: 'good now', yes: true };
+  if (p.next !== null) return { text: `next at ${hhmm(p.next)} · in ${until(p.next - p.nowMin)}`, short: `from ${hhmm(p.next)}`, yes: false };
+  return { text: 'try tomorrow', short: 'tomorrow', yes: false };
 }
 
-function Row({ p, g, me1 }: { p: Plan; g: Group; me1: string }) {
+const pct = (m: number) => `${(m / 1440) * 100}%`;
+
+function Row({ p, g }: { p: Plan; g: Group }) {
   const who = names(g.names);
-  const mine = p.windows.map(([a, b]) => `${hhmm(a)}–${hhmm(b)}`);
+  const st = status(p);
   return (
     <div className="call-row">
-      <p className="call-who">
-        <b>{who}</b>
-        <span>
-          {g.city} · it’s {p.there} there
+      <div className="call-head">
+        <p className="call-who">
+          <b>{who}</b>
+          <span>
+            {p.night ? '🌙' : '☀️'} {p.there} in {g.city} · {p.offset}
+          </span>
+        </p>
+        <span className={`call-state${st.yes ? ' yes' : ''}`}>
+          <i aria-hidden="true" />
+          {st.text}
         </span>
-      </p>
-      <div className="today-hours" aria-hidden="true">
-        {p.hours.map((x) => (
-          <i key={x.h} className={x.cls} title={`${hour12(x.h)} your time`} />
-        ))}
       </div>
-      <div className="today-hours-scale" aria-hidden="true">
+
+      <div className="call-line" aria-hidden="true">
+        {p.windows.map((w) => (
+          <span key={w.a} className={`call-win${w.a <= p.nowMin && p.nowMin < w.b ? ' on' : ''}`} style={{ left: pct(w.a), width: pct(w.b - w.a) }} />
+        ))}
+        <span className="call-needle" style={{ left: pct(p.nowMin) }}>
+          <em>now</em>
+        </span>
+      </div>
+      <div className="call-scale" aria-hidden="true">
         <span>12 AM</span>
         <span>6 AM</span>
         <span>12 PM</span>
         <span>6 PM</span>
         <span>12 AM</span>
       </div>
-      <small>
-        {p.same
-          ? `Same time as you, so anytime ${hhmm(AWAKE.from)}–${hhmm(AWAKE.to)} works, for you to call ${who} or for ${g.names.length > 1 ? 'them' : who} to call you.`
-          : mine.length
-            ? `Best time for you to call ${who}, or for ${g.names.length > 1 ? 'them' : who} to call you: ${mine.join(' and ')} your time (${p.theirs.join(' and ')} for ${g.names.length > 1 ? 'them' : who}).`
-            : `No hour today when you’re both awake. Leave ${who} a voice note instead.`}
-      </small>
-      {!p.same && mine.length > 0 && (
-        <small className={`call-now${p.goodNow ? ' yes' : ''}`}>
-          {p.goodNow ? `📞 Good moment right now, ${me1}.` : p.next !== null ? `Next good time: ${hhmm(p.next)} your time.` : 'That’s it for today; try again tomorrow.'}
-        </small>
+
+      {p.windows.length ? (
+        <ul className="call-wins" aria-label={`Good times to call ${who}`}>
+          {p.windows.map((w) => (
+            <li key={w.a} className={w.a <= p.nowMin && p.nowMin < w.b ? 'on' : w.b <= p.nowMin ? 'past' : ''}>
+              <b>
+                {hhmm(w.a)}–{hhmm(w.b)}
+              </b>
+              <span>{p.same ? 'for both of you' : `${w.theirs} for ${g.names.length > 1 ? 'them' : who}`}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <small>No hour today when you’re both awake. Leave {who} a voice note instead 🎙️</small>
       )}
     </div>
   );
@@ -100,7 +126,7 @@ function Row({ p, g, me1 }: { p: Plan; g: Group; me1: string }) {
  * "Good time to call": uses this browser's time zone (where you're signed in from) and everyone
  * else's from their last visit. Saanika sees her people; a friend sees Saanika.
  */
-export default function CallPlanner({ firstName }: { firstName: string }) {
+export default function CallPlanner() {
   const now = useNow(60_000);
   const people = usePeople();
   const me = people?.tz ?? null;
@@ -145,7 +171,7 @@ export default function CallPlanner({ firstName }: { firstName: string }) {
               return (
                 <span key={g.tz} className={`call-chip${st.yes ? ' yes' : ''}`}>
                   <i aria-hidden="true" />
-                  {g.names.length > 2 ? `${g.names[0]} +${g.names.length - 1}` : names(g.names)} · {st.text}
+                  {g.names.length > 2 ? `${g.names[0]} +${g.names.length - 1}` : names(g.names)} · {st.short}
                 </span>
               );
             })}
@@ -158,9 +184,14 @@ export default function CallPlanner({ firstName }: { firstName: string }) {
       {open && (
         <div id="call-details">
           {groups.map((g, i) => (
-            <Row key={g.tz} p={plans[i]} g={g} me1={firstName} />
+            <Row key={g.tz} p={plans[i]} g={g} />
           ))}
           {!groups.length && <small>Nobody to call yet.</small>}
+          {groups.length > 0 && (
+            <p className="call-key">
+              <i aria-hidden="true" /> you’re both awake (8 AM–11 PM) · times on the line are yours
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -83,7 +83,7 @@ export default function TodayCard() {
         </div>
       )}
 
-      <CallPlanner firstName="Saanika" />
+      <CallPlanner />
     </section>
   );
 }

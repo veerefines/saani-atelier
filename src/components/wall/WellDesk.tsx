@@ -131,7 +131,7 @@ export default function WellDesk({
       </div>
 
       <section className="today call-card" aria-label="Good time to call Saanika">
-        <CallPlanner firstName={first} />
+        <CallPlanner />
       </section>
 
       <motion.section className="h-grid" initial="hidden" animate="show" aria-label="Things to leave for Saanika">
