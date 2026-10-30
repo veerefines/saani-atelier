@@ -53,10 +53,19 @@ function plan(now: Date, me: string, g: Group) {
     endsAt: current ? current[1] : null,
     next: next ? next[0] : null,
     there: clock(now, g.tz),
-    night: theirMin < 7 * 60 || theirMin >= 21 * 60,
+    phase: phaseOf(theirMin),
     offset: offset(utcOffset(now, g.tz) - utcOffset(now, me)),
     same: theirMin === nowMin,
   };
+}
+
+/** What the sky is doing there: morning, afternoon, evening (5 to 9 PM) or night. */
+function phaseOf(min: number) {
+  const h = Math.floor(min / 60);
+  if (h >= 5 && h < 12) return { emoji: '🌅', label: 'morning' };
+  if (h >= 12 && h < 17) return { emoji: '☀️', label: 'afternoon' };
+  if (h >= 17 && h < 21) return { emoji: '🌇', label: 'evening' };
+  return { emoji: '🌙', label: 'night' };
 }
 
 type Plan = ReturnType<typeof plan>;
@@ -79,7 +88,7 @@ function Row({ p, g }: { p: Plan; g: Group }) {
         <p className="call-who">
           <b>{who}</b>
           <span>
-            {p.night ? '🌙' : '☀️'} {p.there} in {g.city} · {p.offset}
+            <span title={p.phase.label}>{p.phase.emoji}</span> {p.there} in {g.city} · {p.offset}
           </span>
         </p>
         <span className={`call-state${st.yes ? ' yes' : ''}`}>
