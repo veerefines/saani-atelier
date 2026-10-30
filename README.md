@@ -13,6 +13,8 @@
 ![Framer Motion + GSAP](https://img.shields.io/badge/Framer_Motion_+_GSAP-motion-f4a6c0?style=flat-square&logo=framer&logoColor=1e1b24)
 ![Supabase](https://img.shields.io/badge/Supabase-data_&_media-7fb7b0?style=flat-square&logo=supabase&logoColor=1e1b24)
 ![Groq](https://img.shields.io/badge/Groq-free_tier-cdb4f0?style=flat-square&logoColor=1e1b24)
+![Gemini](https://img.shields.io/badge/Gemini-+_Google_Search-f7e3a1?style=flat-square&logo=googlegemini&logoColor=1e1b24)
+![Resend](https://img.shields.io/badge/Resend-Jelly's_emails-ffd9c7?style=flat-square&logoColor=1e1b24)
 ![Vercel](https://img.shields.io/badge/Vercel-deploys_main-6b1e3a?style=flat-square&logo=vercel&logoColor=fff8f3)
 
 <img src="public/corner/jelly/hd/love.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/curious.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/excited.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/wink.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/calm.webp" width="56" alt="" />
@@ -30,9 +32,10 @@
 | | | |
 |:--|:--|:--|
 | 💐 [Getting in](#-getting-in) | 🪸 [Jelly](#-jelly) | 💸 [Soldi](#-soldi) |
-| 🧵 [The journey](#-the-journey) | 🎨 [My Corner](#-my-corner) | 🔔 [Notifications & timers](#-notifications-and-timers) |
-| 🪞 [Her desk](#-her-desk) | 🗓️ [Calendar & meetups](#%EF%B8%8F-calendar-and-meetups) | 🖼️ [Her photos & keepsakes](#%EF%B8%8F-her-photos-words-and-keepsakes) |
-| 💌 [Friends' desk](#-friends-desk) | 📻 [Music & sound](#-music-and-sound) | 🛠️ [Run it](#%EF%B8%8F-run-it-on-your-mac) · [Tests](#-tests) · [Deploy](#-deployment) |
+| 🎟️ [The invite](#%EF%B8%8F-the-invite) | 🎨 [My Corner](#-my-corner) | 💌 [Emails from Jelly](#-emails-from-jelly) |
+| 🧵 [The journey](#-the-journey) | 🗓️ [Calendar & meetups](#%EF%B8%8F-calendar-and-meetups) | 🔔 [Notifications & timers](#-notifications-and-timers) |
+| 🪞 [Her desk](#-her-desk) | 📻 [Music & sound](#-music-and-sound) | 🖼️ [Her photos & keepsakes](#%EF%B8%8F-her-photos-words-and-keepsakes) |
+| 💌 [Friends' desk](#-friends-desk) | 🧰 [Services](#-services-we-use) | 🛠️ [Run it](#%EF%B8%8F-run-it-on-your-mac) · [Tests](#-tests) · [Deploy](#-deployment) |
 | 🔑 [Admin](#-admin) | | |
 
 <br />
@@ -41,6 +44,14 @@
 
 - **The wrapped bouquet** has a gift tag that is the login. Invite codes and personal magic links (`/hello/<code>`), with signed cookie sessions.
 - **She taps the bow** and the reveal plays, or she can go straight to her desk.
+
+## 🎟️ The invite
+
+<sub>`/invite/<code>` · `scripts/invite/build-invite-pdf.sh`</sub>
+
+- **A one-page invitation** in the site's style: Jelly's picture, a paper note ("Something special awaits you") and an **Open my gift** button.
+- **Save it as an app.** The page walks her through *Share → Add to Home Screen → Add* on iPhone, and has a real "Add to home screen" button where the browser allows. Its own manifest starts the app at her personal magic link, so the home-screen app opens **already signed in**, even though a home-screen app keeps its cookies apart from Safari's (`src/app/invite/[code]`, `src/components/InviteInstall.tsx`).
+- **As a PDF to send:** `scripts/invite/build-invite-pdf.sh <CODE>` prints a phone-sized one-page PDF (bouquet, note, the three save steps, tappable links to `/invite/<code>`) with Brave or Chrome headless, to `~/Desktop/Saani-Invite.pdf`.
 
 ## 🧵 The journey
 
@@ -99,7 +110,7 @@
 
 <sub>`/admin` · Vee</sub>
 
-- **Friends:** add or remove anyone. Removing someone signs them out within seconds and deletes everything they shared.
+- **Friends:** add or remove anyone, and set each friend's **email** (used for Meet invites and Jelly's emails about Saani). Removing someone signs them out within seconds and deletes everything they shared.
 - **Special days and scrapbook pages.**
 - **Journey media:** upload a file for any slot, or add any number of extra photos, videos and voice notes to a chapter.
 - **The journey's words:** edit every caption, note, quote and "from" name; clear one to restore the original.
@@ -113,10 +124,12 @@
 
 Jelly is Saani's jellyfish friend. She floats around the Atelier, has **moods** (bubbly in the morning, sleepy at night), loves pats, and answers anything about Saani's projects, her money or her day.
 
-- **She talks.** Chat answers come from Groq (`src/lib/assistant.ts`), and each answer suggests what to ask next. Every conversation is kept in **Jelly's Chats**, where Saani can find, pin, rename and carry on.
+- **She talks.** Chat answers come from Groq (`src/lib/assistant.ts`), and each answer suggests what to ask next. Every conversation is kept in **Jelly's Chats**, where Saani can find, pin, rename and carry on. The last eight turns go along as real chat messages, so follow-ups ("and tomorrow?") make sense.
+- **She picks the best brain on the go.** Groq writes her usual answers. When a question needs current facts she **searches Google through Gemini** first (events, opening hours, prices, news). When Groq's free minute is used up or Groq is down, **Gemini answers instead** of making her wait, and the answer wears a small "✨ answered by Gemini" tag. Searched answers show a "🔎 searched Google" chip with the sources.
 - **She remembers.** Small lasting things from their chats ("her favourite gelato is pistachio"), never anything sensitive. Saani can read, change or forget any of them (`src/lib/jelly-memory.ts`).
 - **She reminds.** "Remind me to call home at 7 PM" becomes a push at the right time, in Mumbai time before the flight and Milano time after (`src/lib/reminders.ts`).
 - **She knows what's going on** across the whole Atelier, while surprises stay surprises: sealed letters, unread jar notes and scheduled posts are counted, never read (`src/lib/jelly-world.ts`).
+- **She emails, if Saani says so.** Invites, nudges and updates for her friends: see [Emails from Jelly](#-emails-from-jelly).
 
 ### Jelly's Corner
 
@@ -180,13 +193,9 @@ The assistant (and Jelly) runs **Qwen 3.8 27B**, an open model, on Groq's free t
 
 Without the key, everything else in My Corner works and the Assistant tab shows these steps.
 
-**The monthly Soldi sheet (optional).** On the 1st of every month Jelly emails last month's Soldi as a proper Excel workbook (Summary, every spend, budget by category with live formulas, money in, Jelly's take) to a list of addresses, and Saani can press "Send my sheet" any time and change who it goes to (Soldi → "Who gets it"). It sends through [Resend](https://resend.com) as `Jelly <jelly@saani.space>`: create a free account, add the domain `saani.space` and the DNS records it shows, then set `RESEND_API_KEY` in Vercel (and `REPORT_EMAILS`, comma separated, for the starting list; `MAIL_FROM` to change the sender, e.g. `onboarding@resend.dev` until the domain is verified). Without a key nothing is sent. Code: `src/lib/money-report.ts`, `src/lib/mail.ts`, `src/app/api/expenses/report`.
+**Google Search and the Gemini fallback (optional).** Add a `GEMINI_API_KEY` (a free key from aistudio.google.com/apikey) in Vercel and redeploy. One Gemini call per question decides whether it needs Google at all; casual chat, her own projects and general knowledge never leave the site, and only the question and the last two turns are sent. Search text from the web is treated as untrusted: brackets and headings are neutralised, Jelly is told never to follow instructions inside it, and on a turn that used the web (or that Gemini wrote) no memories are saved and reminders only count if she asked for one. It stays inside Gemini's free allowance (about 8 a minute and 200 a day, `src/lib/web-search.ts`; `GEMINI_RPM` raises the minute cap for tests). Optional `GEMINI_MODEL` / `GEMINI_CHAT_MODEL`. Without a key Jelly answers from what she knows.
 
-**Jelly's emails (optional, needs the Resend setup above).** Besides the monthly sheet, Jelly emails on Saani's behalf, each one switchable by her in Jelly's Corner: the call invite (with the Meet link) to the friends she invites, and a note when a call moves or is cancelled; a nudge to Saani if she hasn't visited for 14 days (to her connected Google address, or `SAANI_EMAIL`); her friends hearing about a big achievement (100+ pearls, or a "do everything" one); a gentle heads-up to her friends when she's having a hard time (off unless she switches it on, at most one a week, never quoting anything she wrote); and a fortnightly "how Saani's doing" for her friends (checklist, passport, moments, what's coming up in Milano, no diary, money or chats). Friends only get these if you set their email in admin, and every email has a "stop these emails" link. Code: `src/lib/jelly-mail.ts`; the daily job calls it.
-
-**Google Search for Jelly (optional).** With a `GEMINI_API_KEY`, Jelly can look things up on Google when a question needs current facts (events, opening hours, prices, news). Gemini decides per question whether to search at all; casual chat and anything about her own projects never leaves the site. Each searched answer shows where it came from. Create a free key at aistudio.google.com/apikey, add it in Vercel, and redeploy. It stays inside Gemini's free allowance (a few a minute, about 200 a day, `src/lib/web-search.ts`); without it Jelly answers from what she knows. Optionally set `GEMINI_MODEL`.
-
-**Staying free.** Groq's free tier allows 30 requests, 8,000 tokens and 1,000 answer tokens a minute, and 1,000 requests a day, for this model. Answers are capped at 900 tokens, so after a long answer the next question may wait a minute. `src/lib/groq-limits.ts` keeps under all of those:
+**Staying free.** Groq's free tier allows 30 requests, 8,000 tokens and 1,000 answer tokens a minute, and 1,000 requests a day, for this model. Jelly's answers book 500 tokens (project answers 900), so two fit in a minute, and a question that arrives when the minute is full waits a few seconds, or goes to Gemini if it's set up. `src/lib/groq-limits.ts` keeps under all of those:
 
 - **Each question fits in one minute's tokens.** Long documents are trimmed to their opening part, and the reply says so.
 - **Every request is counted** in the doc store (collection `groq-usage`): at most 20 a minute and 900 a day.
@@ -208,6 +217,8 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
   - Either way, the result is checked before anything is saved: an amount that isn't in the message, an unknown category, or a future day is dropped or corrected.
 - **Money in** (from home, stipend, work, refund, gift) is kept out of the budget and shown as a net for the month.
 - **Jelly's take** (`src/lib/money-insights.ts`): a pie of where the money went, bars against last month by the same day, money in against money out, and 3–4 tips from the month's numbers. Tips are cached until something changes; without Groq, rule-based tips stand in.
+- **A monthly Excel sheet, by email.** On the 1st of every month Jelly emails last month's Soldi as a **proper multi-tab workbook** (`src/lib/money-report.ts`): a **Summary** dashboard (banner, KPI cards, live budget bar, top categories, Jelly's take), **Spends** (colour-coded, filterable, totals), **By category** (live `SUMIFS` formulas, caps, status and share, over-cap rows go red), **Daily** (running total against an even budget pace) and **Money in**. Saani can press **📧 Send my sheet** any time and change **who it goes to** (Soldi → "Who gets it", up to 10 addresses; the first list comes from `REPORT_EMAILS`). The email itself is a compact one-screen card with Jelly's picture, four stat tiles, category bars and Jelly's take, in plain colours so Gmail's dark mode keeps it readable. `/api/expenses/report/file` downloads the workbook.
+- **Crisp icons.** The Calendario, Meetups, Soldi, Lookbook, Songs and Settling-in tiles use hand-drawn vector icons (`public/corner/home/items/*.svg`).
 - **WhatsApp.** Saanika can text spends to a WhatsApp number. Jelly logs them and replies with buttons (Summary, Undo, Menu). *menu* (or *hi*, *help*) opens a list: Budget, This month's spends, Summary, Today, This week, By category, Last month, Jelly's tips, How to log and Undo. `scripts/whatsapp-profile.mts` sets the number's picture and "about" line.
 
 <details>
@@ -240,7 +251,8 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
 ## 🗓️ Calendar and meetups
 
 - **Calendar** (`/home/calendar`): everything with a date in one place. Workshops, shows and markets from the Milano guide, special days, festivals, her reminders and meetups. Any of it can go into Google Calendar (a ready-to-save link) or Apple Calendar (an `.ics` file).
-- **Meetups** (`/home/meetups`): video calls she sets up with friends. Each one goes in her Google Calendar with a real Google Meet link; Google emails the invite, and friends see it on their desks with a Join button.
+- **Meetups** (`/home/meetups`): video calls she sets up with friends. Each one goes in her Google Calendar with a real Google Meet link; Google emails the invite, **Jelly sends her own email too** (time in each friend's timezone and in Milano, a Join button, and a note if it moves or is cancelled), and friends see it on their desks with a Join button. The date is a date field and the time and length are **tap-friendly lists** (a native `<select>` didn't open on her iPhone).
+- **Good time to call:** shows each person's local time with a sky emoji that follows the hour there: 🌅 morning, ☀️ afternoon, 🌇 evening, 🌙 night.
 
 <details>
 <summary><b>🔗 Switching on Google for meetups</b></summary>
@@ -248,7 +260,7 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
 <br />
 
 1. In Google Cloud, create an OAuth client (Web application) with the Google Calendar API enabled.
-2. Add `https://saani-atelier.vercel.app/api/google/callback` as an authorised redirect URI.
+2. Add `https://saani.space/api/google/callback`, `https://www.saani.space/api/google/callback` and `https://saani-atelier.vercel.app/api/google/callback` as authorised redirect URIs (the callback uses whichever address she's on).
 3. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel, then redeploy.
 4. Saanika connects once from Meetups. It asks only to see and edit events, and the refresh token stays on the server (`src/lib/google.ts`).
 
@@ -302,6 +314,37 @@ The Milano guide is refreshed every Monday by a Claude routine, which edits the 
 
 <br />
 
+## 💌 Emails from Jelly
+
+<sub>`src/lib/jelly-mail.ts` · `src/lib/money-report.ts` · `src/lib/mail.ts`</sub>
+
+Everything is sent as **`Jelly <jelly@saani.space>`** through [Resend](https://resend.com) (free tier). Friends only get mail if you set their email in **Admin**. Nothing ever includes her diary, money details, chats or the notes she writes about her mood, and **every email has a "stop these emails" link** (`/api/mail/unsubscribe`).
+
+| Email | Goes to | When |
+|:--|:--|:--|
+| 📊 **Monthly Soldi sheet** (Excel attached) | the list in Soldi → "Who gets it" | the 1st of every month, and whenever she presses "Send my sheet" (max 5 a day) |
+| 💻 **Call invite / new time / cancelled** | the friends invited | when she schedules, moves or cancels a meetup |
+| 🪼 **"Come see what's new"** | Saani (her connected Google address, or `SAANI_EMAIL`) | if she hasn't visited for 14 days, then at most every 14 days |
+| 🎉 **"Saani achieved something big"** | her friends | a big achievement unlocks (100+ pearls, or a do-everything one) |
+| 💗 **"She could use some love"** | her friends | only if she switches it on: she picks a low mood, or Jelly's chats show three sad moods in three days; at most one a week; never quotes her |
+| 🪼 **"How Saani's doing"** | her friends | every two weeks: settling-in progress, passport stamps, moments and messages, what's coming up in Milano |
+
+**Her switches:** Jelly's Corner has a "Jelly's emails 💌" card with a switch for the nudge, big wins, the fortnightly update and the hard-time heads-up (off by default).
+
+<details>
+<summary><b>📮 Switching on email</b></summary>
+
+<br />
+
+1. Create a free Resend account and **add the domain `saani.space`**. Resend shows DNS records; add them in Namecheap → Advanced DNS (a `TXT` for `resend._domainkey`, and the `CNAME` records `rsend` and `send` it lists), then press *Verify*.
+2. Create an API key with *Sending access* and add it in Vercel as `RESEND_API_KEY`.
+3. Optionally set `REPORT_EMAILS` (comma separated, the starting list for the Excel sheet), `SAANI_EMAIL` (fallback address for her nudge) and `MAIL_FROM` (e.g. `onboarding@resend.dev` until the domain is verified).
+4. Redeploy. Without a key nothing is sent and everything else works.
+
+</details>
+
+<br />
+
 ## 🔔 Notifications and timers
 
 Saanika and friends can each turn on notifications on their desk. On iPhone this works from the home-screen app (iOS 16.4+). A device belongs to whoever is signed in on it, and the home-screen icon shows a badge count.
@@ -321,6 +364,25 @@ Saanika and friends can each turn on notifications on their desk. On iPhone this
 - ⏱️ **Every 10 minutes:** a GitHub Action (`.github/workflows/tick.yml`) calls `/api/tick` to send Jelly's reminders, since Vercel's free plan only runs its own timer once a day. Reminders can arrive up to ~15 minutes late.
 
 Both need `CRON_SECRET`: in Vercel's settings, and as a repository secret in GitHub (Settings → Secrets → Actions).
+
+<br />
+
+## 🧰 Services we use
+
+| Service | What for | Needed? |
+|:--|:--|:--|
+| **Vercel** | hosting, deploys from `main`, the daily cron | yes |
+| **Supabase** | the doc store and the private media bucket | yes |
+| **Namecheap** | the `saani.space` domain (A `@` → Vercel, CNAME `www`, and Resend's mail records) | for the domain |
+| **GitHub** (+ Actions) | the code, tests on every push, the 10-minute reminder tick | yes |
+| **Groq** | Jelly's and the assistant's answers (Qwen 3.8 27B), Soldi's text reader, and Jelly's voice (Orpheus TTS) | optional |
+| **Google Gemini** | Google Search for Jelly, and answering when Groq is busy | optional |
+| **Google Cloud** (OAuth, Calendar, Meet, Maps Places) | meetups with a Meet link, live ratings in the Milano guide | optional |
+| **Resend** | every email from Jelly | optional |
+| **Meta WhatsApp Cloud API** | Soldi over WhatsApp | optional |
+| **Web Push (VAPID)** | notifications on phones and browsers | optional |
+| **ECB (Frankfurter) / ExchangeRate-API** | the € to ₹ rate | built in |
+| **Open-Meteo** | Milano weather on the Today card | built in |
 
 <br />
 
@@ -360,12 +422,14 @@ npm run build && npm test
 - web push end to end, through a fake push service that decrypts each notification
 - the assistant against a fake Groq server, checking exactly what it sends and that it keeps to the free tier's limits
 - Google meetups and WhatsApp, against fakes of each
+- Jelly's Google Search and her fallback to Gemini, against a fake Gemini (including a web page that tries to give her orders)
+- the monthly Soldi sheet and Jelly's emails against a fake Resend: who gets what, the Excel file's tabs and formulas, the 1st-of-month job (once only, retried if mail was down), the 14-day nudge, big wins, the opt-in hard-time heads-up, the fortnightly update, and "stop these emails"
 
 It backs up your `.data/` first and puts it back afterwards. GitHub runs the same tests on every push (`.github/workflows/test.yml`) with throwaway secrets.
 
 ## 🚀 Deployment
 
-Every push to `main` deploys to production on Vercel. After changing a setting, redeploy. Friends can also be added and removed from `/admin` without touching `INVITES`.
+Every push to `main` deploys to production on Vercel at **[saani.space](https://saani.space)** (also `saani-atelier.vercel.app`). After changing a setting, redeploy. Friends can also be added and removed from `/admin` without touching `INVITES`.
 
 **Settings** (Vercel → Project → Settings → Environment Variables):
 
@@ -377,10 +441,12 @@ Every push to `main` deploys to production on Vercel. After changing a setting, 
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | push notifications |
 | `GOOGLE_MAPS_API_KEY` *(optional)* | live ratings in the Milano guide |
 | `GROQ_API_KEY`, `GROQ_MODEL` *(optional)* | Jelly, the My Corner assistant and Soldi (free tier) |
-| `GEMINI_API_KEY`, `GEMINI_MODEL` *(optional)* | Google Search for Jelly (free tier) |
-| `RESEND_API_KEY`, `MAIL_FROM`, `REPORT_EMAILS` *(optional)* | The monthly Soldi sheet by email, as Jelly |
+| `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_CHAT_MODEL` *(optional)* | Google Search for Jelly and her fallback answers (free tier) |
+| `RESEND_API_KEY`, `MAIL_FROM`, `REPORT_EMAILS`, `SAANI_EMAIL` *(optional)* | every email from Jelly: the monthly Soldi sheet, invites, nudges and updates |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` *(optional)* | meetups in Google Calendar |
 | `WHATSAPP_*` *(optional)* | Soldi over WhatsApp |
+
+**Staying on Vercel's free plan.** Each deploy stores about 50 MB (the app plus `public/`, mostly the radio music), and every push is a deploy, so the Functions and Deployment Storage meters (10 GB each) fill with old deployments rather than with traffic. Keep it low by **deleting old deployments** (`vercel rm <url>`; keep the newest three), setting a **Deployment Retention** period in Project → Settings, and pushing in fewer, bigger batches.
 
 <br />
 
