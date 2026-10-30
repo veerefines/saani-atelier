@@ -13,8 +13,8 @@
 ![Framer Motion + GSAP](https://img.shields.io/badge/Framer_Motion_+_GSAP-motion-f4a6c0?style=flat-square&logo=framer&logoColor=1e1b24)
 ![Supabase](https://img.shields.io/badge/Supabase-data_&_media-7fb7b0?style=flat-square&logo=supabase&logoColor=1e1b24)
 ![Groq](https://img.shields.io/badge/Groq-free_tier-cdb4f0?style=flat-square&logoColor=1e1b24)
-![Gemini](https://img.shields.io/badge/Gemini-+_Google_Search-f7e3a1?style=flat-square&logo=googlegemini&logoColor=1e1b24)
-![Resend](https://img.shields.io/badge/Resend-Jelly's_emails-ffd9c7?style=flat-square&logoColor=1e1b24)
+![Gemini](https://img.shields.io/badge/Gemini-Google_Search-f7e3a1?style=flat-square&logoColor=1e1b24)
+![Resend](https://img.shields.io/badge/Resend-emails_from_Jelly-ffd9c7?style=flat-square&logoColor=1e1b24)
 ![Vercel](https://img.shields.io/badge/Vercel-deploys_main-6b1e3a?style=flat-square&logo=vercel&logoColor=fff8f3)
 
 <img src="public/corner/jelly/hd/love.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/curious.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/excited.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/wink.webp" width="56" alt="" /> &nbsp; <img src="public/corner/jelly/hd/calm.webp" width="56" alt="" />
