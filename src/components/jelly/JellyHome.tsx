@@ -489,7 +489,7 @@ export default function JellyHome({ initial, initialTab, chats, ready, season = 
                         setBackdrop(id);
                         save(placed, id);
                         sfx('whoosh');
-                        feel('wink', NEW_WATERS);
+                        feel('wink', pick(NEW_WATERS));
                       }}
                       style={{ ['--sky' as string]: b.sky, ['--floor' as string]: b.floor }}
                     >

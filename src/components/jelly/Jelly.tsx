@@ -14,7 +14,7 @@ import { Answer } from '@/components/corner/Assistant';
 import { shortDate } from '@/components/corner/shared';
 import { FACTS } from './facts';
 import { happenings } from '@/content/happenings';
-import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, SHY, SNORE, STILL_LIKE, WAKE, hello } from './lines';
+import { BACK, CHECKINS, DIZZY, LEVEL_UP, MEET, MISSED, OUT_OF_PUFF, PETTED, QUICK_BACK, SHY, SNORE, STILL_LIKE, WAKE, hourHello } from './lines';
 import WebSources from './WebSources';
 import SpeakButton from './SpeakButton';
 import { setSound, sfx, useSound, voice } from '@/lib/sound';
@@ -72,6 +72,20 @@ const store = {
 };
 
 const pick = <T,>(l: readonly T[]) => l[Math.floor(Math.random() * l.length)];
+/** A line from a shuffled deck: every line comes round before any repeats, and never the same twice in a row. */
+const decks = new Map<readonly string[], string[]>();
+let lastSaid = '';
+function fresh(list: readonly string[]) {
+  let deck = decks.get(list) ?? [];
+  if (!deck.length) {
+    deck = [...list].sort(() => Math.random() - 0.5);
+    if (deck.length > 1 && deck[deck.length - 1] === lastSaid) deck.unshift(deck.pop()!);
+  }
+  const line = deck.pop()!;
+  decks.set(list, deck);
+  lastSaid = line;
+  return line;
+}
 const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 
 /** A "Did you know?" she hasn't seen lately. */
@@ -274,9 +288,11 @@ export default function Jelly() {
     } else if (away !== undefined && away > 2 * 86_400_000) {
       const days = Math.round(away / 86_400_000);
       at(1200, () => feel('sad', 3200, `You were gone for ${days} days… I missed you! 🥺`));
-      at(4600, () => feel('love', 3000, MISSED));
+      at(4600, () => feel('love', 3000, fresh(MISSED)));
     } else if (away !== undefined && away > 20 * 60_000) {
-      at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, hello(baseRef.current)));
+      at(1200, () => feel(baseRef.current === 'sleepy' ? 'sleepy' : 'joyful', 2600, fresh(hourHello(Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))))));
+    } else if (away !== undefined && away > 5 * 60_000) {
+      at(1200, () => feel('joyful', 2400, fresh(QUICK_BACK)));
     }
     const due = Date.now() - Number(store.get('jelly-last') ?? 0) > QUIET;
     // something in Milano within a week she hasn't heard about from Jelly yet: that comes first
@@ -318,7 +334,7 @@ export default function Jelly() {
     let hiddenAt = 0;
     const onVis = () => {
       if (document.hidden) hiddenAt = Date.now();
-      else if (hiddenAt && Date.now() - hiddenAt > 60_000) feel('surprised', 2200, BACK);
+      else if (hiddenAt && Date.now() - hiddenAt > 60_000) feel('surprised', 2200, fresh(BACK));
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
@@ -329,7 +345,7 @@ export default function Jelly() {
     let id = 0;
     const reset = () => {
       clearTimeout(id);
-      id = window.setTimeout(() => (baseRef.current === 'sleepy' ? say(SNORE) : feel('shy', 4500, pick(SHY))), IDLE);
+      id = window.setTimeout(() => (baseRef.current === 'sleepy' ? say(fresh(SNORE)) : feel('shy', 4500, fresh(SHY))), IDLE);
     };
     reset();
     const evs = ['pointerdown', 'keydown', 'scroll'] as const;
@@ -397,7 +413,7 @@ export default function Jelly() {
       const f = await api<Friend>('/api/corner/jelly/pet', 'POST', { n });
       if (f.level > levelRef.current) {
         sfx('harp');
-        feel('love', 4000, LEVEL_UP);
+        feel('love', 4000, fresh(LEVEL_UP));
         for (let i = 0; i < 8; i++) setTimeout(() => heart('💗'), i * 90);
       }
       emit('jelly:home', f);
@@ -414,17 +430,17 @@ export default function Jelly() {
     recent.current = [...recent.current.filter((t) => now - t < 5000), now];
     if (recent.current.length > 24) {
       recent.current = [];
-      feel('grumpy', 2800, pick(DIZZY));
-      setTimeout(() => feel('shy', 2200, STILL_LIKE), 2900);
+      feel('grumpy', 2800, fresh(DIZZY));
+      setTimeout(() => feel('shy', 2200, fresh(STILL_LIKE)), 2900);
       return;
     }
     if (baseRef.current === 'sleepy' && !woke.current) {
       woke.current = true;
-      feel('surprised', 2200, pick(WAKE));
+      feel('surprised', 2200, fresh(WAKE));
       return;
     }
     feel('love', 2000);
-    if (recent.current.length % 6 === 1) say(pick(PETTED), 2600);
+    if (recent.current.length % 6 === 1) say(fresh(PETTED), 2600);
   }, [feel, flush, heart, say]);
 
   /* ---------- chat ---------- */
@@ -540,12 +556,12 @@ export default function Jelly() {
       setChatId(r.chat.id);
       announce({ chat: r.chat });
       setQ('');
-      if (r.friend.level > levelRef.current) (sfx('harp'), feel('love', 4000, LEVEL_UP));
+      if (r.friend.level > levelRef.current) (sfx('harp'), feel('love', 4000, fresh(LEVEL_UP)));
       else feel(r.turn.mood ?? 'idea', 4200);
     } catch (e) {
       const m = (e as Error).message;
       setErr(m);
-      if (/try again in/i.test(m)) feel('sleepy', 4500, OUT_OF_PUFF);
+      if (/try again in/i.test(m)) feel('sleepy', 4500, fresh(OUT_OF_PUFF));
       else feel('sad', 3500);
     }
     setBusy('');
