@@ -10,15 +10,15 @@ import { api, mediaUrl, uploadFile } from '@/lib/upload-client';
 
 type Done = Record<string, { at: string; mediaId?: string }>;
 
-const LINES: number[][] = [
+export const LINES: number[][] = [
   ...[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => r * 5 + c)),
   ...[0, 1, 2, 3, 4].map((c) => [0, 1, 2, 3, 4].map((r) => r * 5 + c)),
   [0, 6, 12, 18, 24],
   [4, 8, 12, 16, 20],
 ];
 const FLOWERS = ['🌷', '🌸', '💐', '🌼', '🪷'];
-const LETTERS = ['B', 'I', 'N', 'G', 'O'];
-const GROUPS: { id: Square['group']; label: string; icon: string }[] = [
+export const LETTERS = ['B', 'I', 'N', 'G', 'O'];
+export const GROUPS: { id: Square['group']; label: string; icon: string }[] = [
   { id: 'Milano', label: 'Milano', icon: '🏙️' },
   { id: 'School', label: 'School', icon: '🎓' },
   { id: 'Italia', label: 'Italia', icon: '🇮🇹' },
@@ -39,7 +39,7 @@ function burst(big = false) {
   }
 }
 
-function Stitch() {
+export function Stitch() {
   return (
     <svg className="stitch" viewBox="0 0 100 100" aria-hidden="true">
       {[

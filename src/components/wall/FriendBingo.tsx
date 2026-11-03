@@ -1,12 +1,13 @@
 'use client';
 
 import { sfx } from '@/lib/sound';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Square } from '@/content/home';
 import type { Dare } from '@/lib/data';
 import { api } from '@/lib/upload-client';
 import { deleteMine } from './Composer';
+import { GROUPS, LETTERS, LINES, Stitch } from '@/components/home/Bingo';
 
 const FLOWERS = ['🌷', '🌸', '💐', '🌼', '🪷'];
 const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -23,6 +24,10 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
   const [err, setErr] = useState('');
   const count = Object.keys(doneAt).length;
   const mineFor = (id: string) => dares.filter((d) => d.squareId === id);
+  const doneIdx = useMemo(() => new Set(squares.map((s, i) => (doneAt[s.id] ? i : -1)).filter((i) => i >= 0)), [squares, doneAt]);
+  // squares in a finished row, column or diagonal glow gold
+  const inLine = useMemo(() => new Set(LINES.filter((l) => l.every((i) => doneIdx.has(i))).flat()), [doneIdx]);
+  const lines = LINES.filter((l) => l.every((i) => doneIdx.has(i))).length;
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -59,29 +64,66 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
         <span className="bingo-count">
           {count}/{squares.length}
         </span>
+        {lines > 0 && (
+          <span className="bingo-lines">
+            🎉 {lines} {lines === 1 ? 'line' : 'lines'}
+          </span>
+        )}
       </div>
 
-      <div className="bingo" role="grid" aria-label="Her bingo board">
-        {squares.map((s, i) => {
-          const d = Boolean(doneAt[s.id]);
-          const n = mineFor(s.id).length;
+      <div className="bingo-legend" aria-label="Kinds of squares">
+        {GROUPS.map((g) => {
+          const all = squares.filter((x) => x.group === g.id);
           return (
-            <button
-              key={s.id}
-              className={`sq${d ? ' done' : ''}${s.id === 'free' ? ' free' : ''}`}
-              onClick={() => {
-                setErr('');
-                setText('');
-                setActive(s);
-              }}
-              aria-label={`${s.label}${d ? ', she did it' : ''}${n ? `, ${n} dares from you` : ''}`}
-            >
-              <span className="sq-label">{s.label}</span>
-              {d && <span className="sq-flower">{FLOWERS[i % FLOWERS.length]}</span>}
-              {n > 0 && <span className="sq-dare">💌{n > 1 ? n : ''}</span>}
-            </button>
+            <span key={g.id} className={`bingo-chip g-${g.id}`}>
+              <span aria-hidden="true">{g.icon}</span> {g.label}
+              <b>
+                {all.filter((x) => doneAt[x.id]).length}/{all.length}
+              </b>
+            </span>
           );
         })}
+      </div>
+
+      <div className="bingo-card">
+        <i className="bingo-tape t1" aria-hidden="true" />
+        <i className="bingo-tape t2" aria-hidden="true" />
+        <span className="bingo-spark s1" aria-hidden="true">✦</span>
+        <span className="bingo-spark s2" aria-hidden="true">✧</span>
+        <span className="bingo-spark s3" aria-hidden="true">✦</span>
+        <div className="bingo-letters" aria-hidden="true">
+          {LETTERS.map((l) => (
+            <span key={l}>{l}</span>
+          ))}
+        </div>
+        <div className="bingo" role="grid" aria-label="Her bingo board">
+          {squares.map((s, i) => {
+            const d = Boolean(doneAt[s.id]);
+            const n = mineFor(s.id).length;
+            return (
+              <button
+                key={s.id}
+                className={`sq g-${s.group}${d ? ' done' : ''}${s.id === 'free' ? ' free' : ''}${inLine.has(i) ? ' in-line' : ''}`}
+                style={{ ['--tilt' as string]: `${((i * 7) % 5) - 2}` }}
+                onClick={() => {
+                  setErr('');
+                  setText('');
+                  setActive(s);
+                }}
+                aria-label={`${s.label}${d ? ', she did it' : ''}${n ? `, ${n} dares from you` : ''}`}
+              >
+                {s.id === 'free' && <span className="sq-start">start here</span>}
+                <span className="sq-icon" aria-hidden="true">
+                  {s.icon}
+                </span>
+                <span className="sq-label">{s.label}</span>
+                {d && <Stitch />}
+                {d && <span className="sq-flower">{FLOWERS[i % FLOWERS.length]}</span>}
+                {n > 0 && <span className="sq-dare">💌{n > 1 ? n : ''}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <AnimatePresence>
@@ -98,7 +140,9 @@ export default function FriendBingo({ squares, doneAt, dares: initial }: { squar
               transition={{ type: 'spring', stiffness: 260, damping: 30 }}
             >
               <div className="grip" />
-              <p className="group">{active.group}</p>
+              <p className="group">
+                {active.icon} {active.group}
+              </p>
               <h2>{active.label}</h2>
               <p className="w-sq-status">
                 {doneAt[active.id] ? `She did this on ${fmt(doneAt[active.id])} 🌷` : 'Not stitched yet. Give her a nudge?'}
