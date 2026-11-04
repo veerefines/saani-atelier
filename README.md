@@ -57,7 +57,9 @@
 
 <sub>`/journey`</sub>
 
-- A scroll story in **five chapters**, stitched by a silk thread and a gold needle: polaroids, notes, quotes, a sliding film strip, cassette voice notes, video, and a boarding pass whose stub tears off as she scrolls. It ends with a postcard and confetti.
+- A scroll story in **five chapters**, stitched by a silk thread and a gold needle: polaroids, notes, quotes, a sliding film strip, video, and a boarding pass whose stub tears off as she scrolls. It ends with a postcard and confetti.
+- **Photos fill the screen.** Each frame is sized from its photo's own shape, so portraits take most of the screen height and landscapes most of the width, on a phone or a big desktop, and nothing is cropped. The boarding pass and postcard grow on desktop too. The film strip keeps its smaller frames.
+- **No voice notes in the story.** It is just photos, words and video, so the scroll never stops for a cassette. (Voice notes still live on the wall of love.)
 - A **spinning record** plays the music; tap it to pause.
 - A sixth chapter, **"Milano, in your words"**, writes itself from her diary.
 
@@ -82,7 +84,7 @@
 |:--|:--|:--|
 | messages, albums, voice notes and videos, with reactions and thank-you replies | letters, some locked until a date | notes by mood |
 | **🎯 Milano bingo** | **🗺️ Milano corner** | **📖 Your story** |
-| squares to tick off, cheered on by friends | her list on top; a guide of ~95 places with a map, *Surprise me* and *Near me*; fashion dates and workshops; beaches | the journey, hers to reread |
+| squares to tick off on a sticker-card board, cheered on by friends (who see the same board) | her list on top; a guide of ~95 places with a map, *Surprise me* and *Near me*; fashion dates and workshops; beaches | the journey, hers to reread |
 
 **More corners**
 
@@ -112,7 +114,7 @@
 
 - **Friends:** add or remove anyone, and set each friend's **email** (used for Meet invites and Jelly's emails about Saani). Removing someone signs them out within seconds and deletes everything they shared.
 - **Special days and scrapbook pages.**
-- **Journey media:** upload a file for any slot, or add any number of extra photos, videos and voice notes to a chapter.
+- **Journey media:** upload a file for any slot, or add any number of extra photos and videos to a chapter (four or more photos become a film strip). Voice-note extras from before are hidden, not deleted.
 - **The journey's words:** edit every caption, note, quote and "from" name; clear one to restore the original.
 - **Keepsake images, the reveal note, and how she's getting on.**
 
@@ -148,6 +150,7 @@ Her little home under the sea, decorated with **pearls** Saani earns all over th
 A bright, bouncy little fairy voice: Groq's free Orpheus **"autumn"**, lifted three semitones and 5% quicker so she sounds the same in every mood. The words and the voice brief live in `src/components/jelly/lines.ts`.
 
 - **Everyday lines** (pats, hellos, moods, check-ins, "Did you know?") are recorded ahead of time into `public/corner/voice/`, listed in `voice-manifest.json`.
+- **Natural, not repetitive.** Each kind of line is drawn from a shuffled deck, so she doesn't repeat herself until all of them have been heard. There are time-of-day hellos, and she reacts to being woken, returned to, and getting dizzy from too many pats.
 - **Chat answers** are spoken on request, recorded once and kept, so replays are free. When the day's allowance is used up, the browser reads them with its own voice until tomorrow (`src/lib/jelly-voice.ts`).
 
 ```bash
@@ -276,7 +279,7 @@ Without the key, everything else in My Corner works and the Assistant tab shows 
 
 ## 🖼️ Her photos, words and keepsakes
 
-**Journey media.** Use **Admin → Journey media**. Each slot takes an upload, and each chapter has *More in this chapter* for extras (four or more photos become a film strip) and *✎ Edit the words* for captions, notes, quotes and who a voice note is from. The music is the "Background music" slot. The defaults still live in `src/content/journey.ts`, with files in `public/journey/`; uploads and edits in admin win over them.
+**Journey media.** Use **Admin → Journey media**. Each slot takes an upload, and each chapter has *More in this chapter* for extras (four or more photos become a film strip) and *✎ Edit the words* for captions, notes, quotes and who a note is from. The music is the "Background music" slot. The defaults still live in `src/content/journey.ts`, with files in `public/journey/`; uploads and edits in admin win over them.
 
 **Things she loves.** Sunglasses, iced coffee, matcha, chamomile, bags, heels, a check scarf, flowers, Italian food and beach things are tucked around the desk. Upload transparent PNGs (about 800px on the long side) in **Admin → Keepsake images**, or drop them in `public/her/`:
 
@@ -426,6 +429,8 @@ npm run build && npm test
 - the monthly Soldi sheet and Jelly's emails against a fake Resend: who gets what, the Excel file's tabs and formulas, the 1st-of-month job (once only, retried if mail was down), the 14-day nudge, big wins, the opt-in hard-time heads-up, the fortnightly update, and "stop these emails"
 
 It backs up your `.data/` first and puts it back afterwards. GitHub runs the same tests on every push (`.github/workflows/test.yml`) with throwaway secrets.
+
+A project `.npmrc` sets `loglevel=error` to hide a harmless warning from Vercel's build image (`Unknown env config "cache-dir"`). Delete it if you want npm's other warnings back.
 
 ## 🚀 Deployment
 
