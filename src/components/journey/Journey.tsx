@@ -178,7 +178,7 @@ export default function Journey({
         gsap.utils.toArray<HTMLElement>('[data-reveal]').forEach((el, i) => {
           gsap.fromTo(
             el,
-            { y: 110, opacity: 0, rotate: i % 2 ? 9 : -9, scale: 0.92 },
+            { y: 70, opacity: 0, rotate: i % 2 ? 4 : -4, scale: 0.96 },
             {
               y: 0,
               opacity: 1,
@@ -194,11 +194,12 @@ export default function Journey({
         gsap.utils.toArray<HTMLElement>('[data-develop]').forEach((el) => {
           gsap.fromTo(
             el,
-            { filter: 'sepia(0.7) brightness(1.6) contrast(0.7) blur(3px)' },
+            { filter: 'sepia(0.55) brightness(1.35)' },
             {
-              filter: 'sepia(0) brightness(1) contrast(1) blur(0px)',
+              filter: 'sepia(0) brightness(1)',
               ease: 'none',
-              scrollTrigger: { trigger: el, start: 'top 85%', end: 'center 55%', scrub: true },
+              // no blur: it is costly on screen-sized photos and made the scroll stutter
+              scrollTrigger: { trigger: el, start: 'top 85%', end: 'top 35%', scrub: true },
             },
           );
         });

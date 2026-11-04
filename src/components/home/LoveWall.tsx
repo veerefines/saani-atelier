@@ -89,7 +89,7 @@ export function PostBody({ p, onView }: { p: Post; onView?: (id: string) => void
   if (p.kind === 'voice')
     return (
       <>
-        <Voice item={{ type: 'voice', src: mediaUrl(p.mediaId), title: p.text || 'A voice note', from: p.authorName, side: 'center' }} />
+        <Voice item={{ src: mediaUrl(p.mediaId), title: p.text || 'A voice note', from: p.authorName, side: 'center' }} />
       </>
     );
   if (p.kind === 'video')

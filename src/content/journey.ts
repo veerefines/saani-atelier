@@ -4,7 +4,7 @@
  * Media lives in /public/journey:
  *   photos/  .jpg / .webp photos  (a missing file shows a soft "your photo here" polaroid)
  *   video/   .mp4 clips (H.264). Keep them short, ideally under 15 MB.
- *   audio/   .mp3 voice notes and the background music
+ *   audio/   the background music
  *
  * To add a photo: drop it in public/journey/photos with the file name used below,
  * or change `src` to your file's name. Paths start with /journey/...
@@ -18,7 +18,6 @@ export type Item =
   | { type: 'photo'; src: string; caption?: string; size?: 's' | 'm' | 'l' | 'xl'; side?: Side; tilt?: number; tape?: boolean }
   | { type: 'note'; text: string; from?: string; paper?: 'plain' | 'lined' | 'grid'; side?: Side; tilt?: number }
   | { type: 'quote'; text: string; by?: string }
-  | { type: 'voice'; src: string; title: string; from: string; side?: Side }
   | { type: 'video'; src: string; poster?: string; caption?: string; side?: Side }
   | { type: 'film'; title: string; frames: { src: string; caption: string }[] }
   | { type: 'ticket'; from: string; fromCity: string; to: string; toCity: string; date: string; seat?: string }
@@ -117,7 +116,6 @@ export const chapters: Chapter[] = [
       },
       { type: 'video', src: '/journey/video/studio.mp4', caption: 'add a runway clip or a studio video', side: 'center' },
       { type: 'note', text: 'Something a teacher or mentor said that she still carries with her.', from: 'a mentor', side: 'right', tilt: 2 },
-      { type: 'voice', src: '/journey/audio/voice-2.mp3', title: 'So proud of you', from: 'add a name', side: 'left' },
     ],
   },
   {
@@ -132,7 +130,6 @@ export const chapters: Chapter[] = [
     items: [
       { type: 'photo', src: P('leap-1.jpg'), caption: 'the day the letter came', size: 'm', side: 'right', tilt: -3, tape: true },
       { type: 'quote', text: 'Good things take time. Great things take courage.' },
-      { type: 'voice', src: '/journey/audio/voice-3.mp3', title: 'Go get it', from: 'add a name', side: 'center' },
       {
         type: 'note',
         text: 'A few words about what it took to get here: the applications, the waiting, the doubts, and then the yes.',

@@ -29,7 +29,6 @@ function resolver(uploaded: Map<string, string>) {
   return (item: Item): ResolvedItem => {
     switch (item.type) {
       case 'photo':
-      case 'voice':
         return { ...item, ...pick(item.src) };
       case 'video': {
         const v = pick(item.src);
@@ -44,7 +43,7 @@ function resolver(uploaded: Map<string, string>) {
   };
 }
 
-/** Extras added from /admin, as journey items: polaroids (a film strip once there are four or more), films and voice notes. */
+/** Extras added from /admin, as journey items: polaroids (a film strip once there are four or more), and films. */
 function extraItems(extras: JourneyExtra[]): ResolvedItem[] {
   const sides = ['right', 'left', 'center'] as const;
   const url = (id: string) => `/api/media/${id}`;
@@ -52,7 +51,6 @@ function extraItems(extras: JourneyExtra[]): ResolvedItem[] {
   return extras.flatMap((x): ResolvedItem[] => {
     const side = () => sides[k++ % 3];
     if (x.kind === 'video') return [{ type: 'video', src: url(x.mediaIds[0]), caption: x.caption, side: 'center', missing: false }];
-    if (x.kind === 'voice') return [{ type: 'voice', src: url(x.mediaIds[0]), title: x.caption || 'a voice note', from: x.from ?? '', side: side(), missing: false }];
     if (x.mediaIds.length >= 4) return [{ type: 'film', title: x.caption || 'more moments', frames: x.mediaIds.map((m) => ({ src: url(m), caption: '' })) } as ResolvedItem];
     return x.mediaIds.map((m, i) => ({ type: 'photo', src: url(m), caption: i === 0 ? x.caption : undefined, size: 'm', side: side(), tilt: k % 2 ? 3 : -3, tape: i === 0, missing: false }) as ResolvedItem);
   });

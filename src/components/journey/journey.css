@@ -248,11 +248,12 @@
 .j-items {
   position: relative;
   z-index: 2;
-  max-width: 1000px;
-  margin: 12vh auto 0;
+  max-width: 1480px;
+  margin: 10vh auto 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(80px, 15vh, 170px);
+  /* the next piece is already peeking in as the last one leaves: one continuous scroll */
+  gap: clamp(56px, 10vh, 120px);
 }
 
 .j-item {
@@ -297,19 +298,32 @@
 }
 
 /* ---------- photo ---------- */
+/* Photos are the page: each is sized so the whole picture fills as much of the screen as it can.
+   --w is the widest a frame may be (a share of the column), --h the tallest picture (a share of the
+   screen), --ar the photo's own width/height (4:5 until it has loaded). A portrait fills the screen
+   height, a landscape fills the column width, and nothing is boxed in or cropped. */
+.j-photo {
+  --pad: 24px;
+  --ar: 0.8;
+  width: min(var(--w), calc(var(--h) * var(--ar) + var(--pad)));
+}
 .j-photo.size-s {
-  width: min(58%, 300px);
+  --w: 74%;
+  --h: 60svh;
 }
 .j-photo.size-m {
-  width: min(76%, 380px);
+  --w: 90%;
+  --h: 70svh;
 }
 .j-photo.size-l {
-  width: min(88%, 470px);
+  --w: 96%;
+  --h: 76svh;
 }
 /* a milestone piece: as big as the screen allows */
 .j-photo.size-xl {
-  --max-h: 90svh;
-  width: min(96%, 720px);
+  --w: 100%;
+  --h: 78svh;
+  --pad: 32px;
 }
 .j-photo.size-xl .j-polaroid {
   padding: 16px 16px 0;
@@ -320,34 +334,29 @@
 .j-photo.size-xl figcaption {
   font-size: clamp(28px, 6vw, 38px);
 }
-/* the polaroid shrinks to its photo, so a tall photo capped by the screen height isn't boxed in with empty sides */
-.j-root .j-photo .j-polaroid:has(.j-photo-img > img) {
-  width: fit-content;
-  max-width: 100%;
-  margin-inline: auto;
+@media (min-width: 900px) {
+  .j-photo.size-s {
+    --w: 50%;
+    --h: 64svh;
+  }
+  .j-photo.size-m {
+    --w: 66%;
+    --h: 76svh;
+  }
+  .j-photo.size-l {
+    --w: 80%;
+    --h: 80svh;
+  }
+  .j-photo.size-xl {
+    --w: 96%;
+    --h: 78svh;
+  }
+}
+.j-root .j-photo .j-polaroid {
+  width: 100%;
 }
 .j-root .j-photo .j-polaroid figcaption {
   contain: inline-size; /* a long caption wraps instead of widening the frame */
-}
-/* landscape photos get a wider frame so they aren't tiny */
-.j-photo[data-shape='wide'].size-s {
-  width: min(78%, 420px);
-}
-.j-photo[data-shape='wide'].size-m {
-  width: min(94%, 540px);
-}
-.j-photo[data-shape='wide'].size-l {
-  width: min(96%, 640px);
-}
-.j-photo[data-shape='wide'].size-xl {
-  width: min(98%, 960px);
-}
-@media (max-width: 600px) {
-  .j-photo[data-shape='wide'],
-  .j-video[data-shape='wide'] {
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 .j-polaroid {
   background: #fffdf8;
@@ -375,15 +384,12 @@
 }
 /* on the journey the frame takes the photo's own shape; 4:5 only while it's a placeholder */
 .j-root .j-photo-img:has(> img) {
-  aspect-ratio: auto;
+  aspect-ratio: var(--ar);
 }
 .j-root .j-photo-img img {
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: var(--max-h, 82svh);
-  object-fit: contain;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* the frame already has the photo's own ratio, so this never crops */
 }
 .j-polaroid figcaption {
   font-size: 26px;
@@ -654,7 +660,12 @@
 
 /* ---------- video ---------- */
 .j-video {
-  width: min(84%, 400px);
+  width: min(92%, 460px);
+}
+@media (min-width: 900px) {
+  .j-video {
+    width: min(60%, 560px);
+  }
 }
 .j-video-frame {
   position: relative;
@@ -663,12 +674,17 @@
   box-shadow: 0 20px 34px -14px rgba(70, 25, 45, 0.4);
 }
 .j-video[data-shape='wide'] {
-  width: min(96%, 640px);
+  width: min(100%, 720px);
+}
+@media (min-width: 900px) {
+  .j-video[data-shape='wide'] {
+    width: min(86%, 1080px);
+  }
 }
 .j-video-frame video {
   width: 100%;
   height: auto;
-  max-height: 82svh;
+  max-height: 86svh;
   object-fit: contain;
   display: block;
   background: #2a1e24;
@@ -748,13 +764,14 @@
 .j-film-track {
   display: flex;
   gap: 18px;
-  padding: 0 8vw;
+  padding: 0 6vw;
   width: max-content;
   will-change: transform;
 }
 /* every frame is the same height; its width follows the photo (portrait or landscape) */
 .j-frame {
-  --frame-h: min(77vw, 412px, 62svh);
+  /* tall as the screen allows (room left for the strip's title and captions) */
+  --frame-h: max(220px, min(84vw, 860px, calc(100svh - 240px)));
   margin: 0;
   width: max-content;
   max-width: 92vw;

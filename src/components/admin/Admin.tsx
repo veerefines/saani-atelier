@@ -8,7 +8,7 @@ import { sfx } from '@/lib/sound';
 type Friend = { id: string; name: string; role: string; admin: boolean; managed: boolean; link: string; email?: string };
 type ChapterRef = { id: string; title: string };
 type Word = { key: string; group: string; label: string; value: string; original: string; long?: boolean };
-type Slot = { slot: string; kind: 'photo' | 'video' | 'voice' | 'music'; label: string; chapter: string; mediaId: string | null };
+type Slot = { slot: string; kind: 'photo' | 'video' | 'music'; label: string; chapter: string; mediaId: string | null };
 type Activity = {
   lastSeen: string | null;
   letters: { opened: number; total: number };
@@ -402,8 +402,8 @@ function Journey({ initial, chapterRefs, extras: initialExtras, words }: { initi
   return (
     <section className="atl-sec">
       <p className="atl-note">
-        Upload her real photos, the studio video, voice notes and the music. Each one replaces its placeholder in the journey straight away. Under each chapter you can also add as many
-        more photos, videos and voice notes as you like.
+        Upload her real photos, the studio video and the music. Each one replaces its placeholder in the journey straight away. Under each chapter you can also add as many
+        more photos and videos as you like.
       </p>
       {err && <p className="h-err">{err}</p>}
       <Words title="the opening screen" fields={words.filter((w) => w.group === 'Opening')} />
@@ -426,7 +426,7 @@ function Journey({ initial, chapterRefs, extras: initialExtras, words }: { initi
                         <audio src={mediaUrl(s.mediaId)} controls preload="none" />
                       )
                     ) : (
-                      <span>{s.kind === 'photo' ? '📷' : s.kind === 'video' ? '🎬' : s.kind === 'music' ? '💿' : '🎙️'} placeholder</span>
+                      <span>{s.kind === 'photo' ? '📷' : s.kind === 'video' ? '🎬' : '💿'} placeholder</span>
                     )}
                   </div>
                   <b>{s.label}</b>
@@ -516,14 +516,12 @@ function WordField({ f }: { f: Word }) {
   );
 }
 
-/** "Add more to this chapter": any number of photos (four or more become a film strip), a video, or a voice note. */
+/** "Add more to this chapter": any number of photos (four or more become a film strip), or a video. */
 function ChapterExtras({ chapter, items, onAdd, onRemove }: { chapter: ChapterRef; items: JourneyExtra[]; onAdd: (x: JourneyExtra) => void; onRemove: (id: string) => void }) {
   const [files, setFiles] = useState<File[]>([]);
   const [caption, setCaption] = useState('');
-  const [from, setFrom] = useState('');
   const [busy, setBusy] = useState('');
   const { err, run } = useErr();
-  const audio = files.length === 1 && files[0].type.startsWith('audio/');
 
   const add = () =>
     run(async () => {
@@ -534,10 +532,9 @@ function ChapterExtras({ chapter, items, onAdd, onRemove }: { chapter: ChapterRe
           ids.push(await uploadFile(f, (p) => setBusy(`Uploading ${i + 1} of ${files.length} · ${p}%`)));
         }
         setBusy('Adding to the journey…');
-        onAdd(await api<JourneyExtra>('/api/admin/journey/extras', 'POST', { chapter: chapter.id, mediaIds: ids, caption, from }));
+        onAdd(await api<JourneyExtra>('/api/admin/journey/extras', 'POST', { chapter: chapter.id, mediaIds: ids, caption }));
         setFiles([]);
         setCaption('');
-        setFrom('');
       } finally {
         setBusy('');
       }
@@ -551,13 +548,12 @@ function ChapterExtras({ chapter, items, onAdd, onRemove }: { chapter: ChapterRe
           {items.map((x) => (
             <li key={x.id}>
               <span className="atl-extra-thumb">
-                {x.kind === 'photo' ? <img src={mediaUrl(x.mediaIds[0])} alt="" /> : <span aria-hidden="true">{x.kind === 'video' ? '🎬' : '🎙️'}</span>}
+                {x.kind === 'photo' ? <img src={mediaUrl(x.mediaIds[0])} alt="" /> : <span aria-hidden="true">🎬</span>}
               </span>
               <span className="atl-main">
-                <b>{x.caption || (x.kind === 'photo' ? 'photos' : x.kind === 'video' ? 'a video' : 'a voice note')}</b>
+                <b>{x.caption || (x.kind === 'photo' ? 'photos' : 'a video')}</b>
                 <small>
                   {x.kind === 'photo' ? `${x.mediaIds.length} ${x.mediaIds.length === 1 ? 'photo' : 'photos'}${x.mediaIds.length >= 4 ? ' · film strip' : ''}` : x.kind}
-                  {x.from ? ` · from ${x.from}` : ''}
                 </small>
               </span>
               <button
@@ -578,13 +574,12 @@ function ChapterExtras({ chapter, items, onAdd, onRemove }: { chapter: ChapterRe
       )}
       <div className="atl-extra-add">
         <label className="pc-btn atl-upload">
-          {files.length ? `${files.length} ${files.length === 1 ? 'file' : 'files'} chosen` : '+ Choose photos, a video or a voice note'}
-          <input type="file" multiple accept="image/*,video/*,audio/*" hidden disabled={Boolean(busy)} onChange={(e) => (setFiles([...(e.target.files ?? [])]), (e.target.value = ''))} />
+          {files.length ? `${files.length} ${files.length === 1 ? 'file' : 'files'} chosen` : '+ Choose photos or a video'}
+          <input type="file" multiple accept="image/*,video/*" hidden disabled={Boolean(busy)} onChange={(e) => (setFiles([...(e.target.files ?? [])]), (e.target.value = ''))} />
         </label>
         {files.length > 0 && (
           <>
-            <input className="h-input" value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={120} placeholder={audio ? 'Title, e.g. “Good luck, beta”' : 'Caption (optional)'} aria-label="Caption" />
-            {audio && <input className="h-input" value={from} onChange={(e) => setFrom(e.target.value)} maxLength={40} placeholder="From (e.g. Mum & Dad)" aria-label="From" />}
+            <input className="h-input" value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={120} placeholder="Caption (optional)" aria-label="Caption" />
             <button className="cta h-small-btn" disabled={Boolean(busy)} onClick={add}>
               {busy || 'Add to the journey'}
             </button>

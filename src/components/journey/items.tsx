@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { ResolvedItem } from './types';
 
 type Of<T extends ResolvedItem['type']> = Extract<ResolvedItem, { type: T }>;
+/** A voice note as a cassette. Not part of the journey any more; the love wall still plays these. */
+export type VoiceItem = { src: string; title: string; from: string; side?: 'left' | 'right' | 'center'; missing?: boolean };
 type FilmItem = Omit<Of<'film'>, 'frames'> & { frames: { src: string; caption: string; missing?: boolean }[] };
 
 /** 'wide' or 'tall' once a photo or video knows its size, so frames can fit the whole picture. */
@@ -13,16 +15,19 @@ export function shapeOf(w: number, h: number): Shape {
   return w / h > 1.15 ? 'wide' : 'tall';
 }
 
-/** Ref + shape for an <img>: also catches images that finished loading before hydration. */
+/** Ref, shape and width-to-height ratio for an <img>: also catches images that finished loading before hydration. */
 export function useImgShape() {
   const ref = useRef<HTMLImageElement>(null);
   const [shape, setShape] = useState<Shape>();
+  const [ratio, setRatio] = useState<number>();
   const read = () => {
     const img = ref.current;
-    if (img?.complete) setShape(shapeOf(img.naturalWidth, img.naturalHeight));
+    if (!img?.complete || !img.naturalWidth || !img.naturalHeight) return;
+    setShape(shapeOf(img.naturalWidth, img.naturalHeight));
+    setRatio(img.naturalWidth / img.naturalHeight);
   };
   useEffect(read, []);
-  return { ref, shape, onLoad: read };
+  return { ref, shape, ratio, onLoad: read };
 }
 
 function fileName(src: string) {
@@ -47,13 +52,13 @@ export function PhotoPlaceholder({ src, label }: { src: string; label?: string }
 
 export function Photo({ item }: { item: Of<'photo'> }) {
   const size = item.size ?? 'm';
-  const { ref, shape, onLoad } = useImgShape();
+  const { ref, shape, ratio, onLoad } = useImgShape();
   return (
     <figure
       className={`j-item j-photo size-${size} side-${item.side ?? 'center'}`}
       data-shape={shape}
       data-reveal
-      style={{ ['--tilt' as string]: `${item.tilt ?? 0}deg` }}
+      style={{ ['--tilt' as string]: `${item.tilt ?? 0}deg`, ...(ratio ? { ['--ar' as string]: ratio.toFixed(4) } : {}) }}
     >
       <Pin />
       {item.tape && <img className="j-tape" src="/reveal/washi.webp" alt="" />}
@@ -108,7 +113,7 @@ function fmt(t: number) {
 }
 
 /** Voice note as a little cassette. Reels spin while it plays. */
-export function Voice({ item }: { item: Of<'voice'> }) {
+export function Voice({ item }: { item: VoiceItem }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -359,8 +364,6 @@ export function ItemView({ item }: { item: ResolvedItem }) {
       return <Note item={item} />;
     case 'quote':
       return <Quote item={item} />;
-    case 'voice':
-      return <Voice item={item} />;
     case 'video':
       return <Video item={item} />;
     case 'film':

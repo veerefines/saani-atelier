@@ -3,7 +3,7 @@ import { clearSlotMedia, setSlotMedia } from '@/lib/extras';
 import { journeySlots } from '@/lib/journey-slots';
 import { requireAdmin, isResponse, json, fail } from '@/lib/api';
 
-/** Put an uploaded photo, video or voice note into a journey slot (replacing the placeholder). */
+/** Put an uploaded photo, video or the music into a journey slot (replacing the placeholder). */
 export async function POST(req: Request) {
   const s = await requireAdmin();
   if (isResponse(s)) return s;
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   if (!known) return fail('Unknown journey slot.');
   const m = await getMedia(String(mediaId ?? ''));
   if (!m || !m.ready || m.ownerId !== s.id) return fail('The file didn’t finish uploading. Try again.');
-  const want = known.kind === 'photo' ? 'image/' : known.kind === 'video' ? 'video/' : 'audio/';
+  const want = known.kind === 'photo' ? 'image/' : known.kind === 'video' ? 'video/' : 'audio/'; // the music is the only audio slot left
   if (!m.mime.startsWith(want)) return fail(`This slot needs ${known.kind === 'photo' ? 'a photo' : known.kind === 'video' ? 'a video' : 'an audio file'}.`);
   return json(await setSlotMedia(known.slot, m.id, m.mime), 201);
 }

@@ -1,7 +1,7 @@
 import { chapters, journeyIntro, type Chapter, type Item } from '@/content/journey';
 
 /**
- * The words in the journey (chapter titles, captions, notes, quotes, voice-note names…) can be
+ * The words in the journey (chapter titles, captions, notes, quotes…) can be
  * rewritten from /admin. Each editable spot has a stable key; edits are stored by key and laid over
  * the defaults in src/content/journey.ts, so a blank edit falls back to the original.
  */
@@ -16,10 +16,6 @@ const ITEM_FIELDS: Record<Item['type'], { field: string; label: string; long?: b
   quote: [
     { field: 'text', label: 'Quote', long: true },
     { field: 'by', label: 'Quote by' },
-  ],
-  voice: [
-    { field: 'title', label: 'Voice note title' },
-    { field: 'from', label: 'Voice note from' },
   ],
   video: [{ field: 'caption', label: 'Video caption' }],
   film: [{ field: 'title', label: 'Film strip title' }],

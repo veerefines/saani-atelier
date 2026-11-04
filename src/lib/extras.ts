@@ -276,20 +276,21 @@ export const setSlotMedia = (slot: string, mediaId: string, mime: string) => db.
 export const clearSlotMedia = (slot: string) => db.remove('journeyMedia', slotId(slot));
 
 /**
- * Extra photos, videos and voice notes added to a journey chapter from /admin, beyond the fixed
- * slots. A few photos show as polaroids; four or more become a film strip.
+ * Extra photos and videos added to a journey chapter from /admin, beyond the fixed slots. A few photos show as polaroids; four or more become a film strip.
  */
 export type JourneyExtra = {
   id: string;
   createdAt: string;
   chapter: string;
-  kind: 'photo' | 'video' | 'voice';
+  kind: 'photo' | 'video';
   mediaIds: string[];
   caption?: string;
-  /** who a voice note is from */
-  from?: string;
 };
-export const listJourneyExtras = async () => (await db.list<JourneyExtra>('journeyExtras')).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+/** Photos and videos only: voice notes added here in the past are no longer part of the journey. */
+export const listJourneyExtras = async () =>
+  (await db.list<JourneyExtra>('journeyExtras'))
+    .filter((x) => x.kind === 'photo' || x.kind === 'video')
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 export const addJourneyExtra = (x: Omit<JourneyExtra, 'id' | 'createdAt'>) => db.put<JourneyExtra>('journeyExtras', { id: db.newId('jx_'), createdAt: now(), ...x });
 export const getJourneyExtra = (id: string) => db.get<JourneyExtra>('journeyExtras', id);
 export const removeJourneyExtra = (id: string) => db.remove('journeyExtras', id);
@@ -369,7 +370,20 @@ export const setHerNudge = (emoji: string) => db.put<HerNudge>('state', { id: 'h
 /** The journey's words, rewritten from /admin (by key; see src/lib/journey-text.ts). */
 export type JourneyTextDoc = { id: 'journey-text'; createdAt: string; edits: Record<string, string> };
 export async function getJourneyText(): Promise<Record<string, string>> {
-  return (await db.get<JourneyTextDoc>('state', 'journey-text'))?.edits ?? {};
+  const doc = await db.get<JourneyTextDoc>('state', 'journey-text');
+  if (!doc) return {};
+  // the voice notes left the journey (once): drop their words, and shift the note after the one in "The leap" up a place
+  if (!(await db.get('state', 'journey-text-no-voice'))) {
+    const edits: Record<string, string> = {};
+    for (const [k, v] of Object.entries(doc.edits)) {
+      if (/^designer\.3\./.test(k) || /^leap\.2\./.test(k)) continue;
+      edits[k.replace(/^leap\.3\./, 'leap.2.')] = v;
+    }
+    await db.put<JourneyTextDoc>('state', { ...doc, edits });
+    await db.put('state', { id: 'journey-text-no-voice', createdAt: now() });
+    return edits;
+  }
+  return doc.edits;
 }
 export async function setJourneyText(key: string, value: string) {
   const cur = await db.get<JourneyTextDoc>('state', 'journey-text');
