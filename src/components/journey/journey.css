@@ -308,21 +308,21 @@
   width: min(var(--w), calc(var(--h) * var(--ar) + var(--pad)));
 }
 .j-photo.size-s {
-  --w: 74%;
-  --h: 60svh;
+  --w: 70%;
+  --h: 54svh;
 }
 .j-photo.size-m {
-  --w: 90%;
-  --h: 70svh;
+  --w: 84%;
+  --h: 62svh;
 }
 .j-photo.size-l {
-  --w: 96%;
-  --h: 76svh;
+  --w: 90%;
+  --h: 68svh;
 }
 /* a milestone piece: as big as the screen allows */
 .j-photo.size-xl {
-  --w: 100%;
-  --h: 78svh;
+  --w: 96%;
+  --h: 72svh;
   --pad: 32px;
 }
 .j-photo.size-xl .j-polaroid {
@@ -336,20 +336,20 @@
 }
 @media (min-width: 900px) {
   .j-photo.size-s {
-    --w: 50%;
-    --h: 64svh;
+    --w: 42%;
+    --h: 56svh;
   }
   .j-photo.size-m {
-    --w: 66%;
-    --h: 76svh;
+    --w: 56%;
+    --h: 66svh;
   }
   .j-photo.size-l {
-    --w: 80%;
-    --h: 80svh;
+    --w: 68%;
+    --h: 72svh;
   }
   .j-photo.size-xl {
-    --w: 96%;
-    --h: 78svh;
+    --w: 84%;
+    --h: 72svh;
   }
 }
 .j-root .j-photo .j-polaroid {
@@ -764,14 +764,13 @@
 .j-film-track {
   display: flex;
   gap: 18px;
-  padding: 0 6vw;
+  padding: 0 8vw;
   width: max-content;
   will-change: transform;
 }
 /* every frame is the same height; its width follows the photo (portrait or landscape) */
 .j-frame {
-  /* tall as the screen allows (room left for the strip's title and captions) */
-  --frame-h: max(220px, min(84vw, 860px, calc(100svh - 240px)));
+  --frame-h: min(77vw, 412px, 62svh);
   margin: 0;
   width: max-content;
   max-width: 92vw;
@@ -805,7 +804,7 @@
 
 /* ---------- ticket ---------- */
 .j-ticket {
-  width: min(94%, 520px);
+  width: min(98%, 580px);
 }
 .ticket {
   display: flex;
@@ -921,7 +920,7 @@
 
 /* ---------- postcard ---------- */
 .j-postcard {
-  width: min(96%, 640px);
+  width: min(100%, 700px);
 }
 .postcard {
   display: grid;
@@ -1075,6 +1074,49 @@
 @keyframes record-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ---------- bigger ticket and postcard on desktop (after their base rules) ---------- */
+@media (min-width: 900px) {
+  .j-ticket {
+    width: min(70%, 720px);
+  }
+  .ticket-airline {
+    font-size: 30px;
+  }
+  .ticket-route strong {
+    font-size: 64px;
+  }
+  .ticket-route small {
+    font-size: 15px;
+  }
+  .ticket-meta {
+    font-size: 14px;
+  }
+  .ticket-meta b {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 900px) {
+  .j-postcard {
+    width: min(76%, 880px);
+  }
+  .postcard {
+    min-height: 340px;
+  }
+  .postcard-msg p {
+    font-size: 34px;
+  }
+  .postcard-address span {
+    font-size: 28px;
+  }
+  .stamp {
+    width: 88px;
+  }
+  .postmark {
+    width: 112px;
   }
 }
 
