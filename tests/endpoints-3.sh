@@ -161,12 +161,12 @@ check "words: friend (not admin) 403" 403 -b "$EF" -X POST "${J[@]}" -d '{"key":
 check "words: unknown key 400" 400 -b "$FR" -X POST "${J[@]}" -d '{"key":"once.nope","value":"x"}' $B/api/admin/journey/text
 check "words: too long 400" 400 -b "$FR" -X POST "${J[@]}" -d "{\"key\":\"once.title\",\"value\":\"$(printf 'x%.0s' {1..601})\"}" $B/api/admin/journey/text
 check "rename chapter one" 200 -b "$FR" -X POST "${J[@]}" -d '{"key":"once.title","value":"WORDS-TITLE"}' $B/api/admin/journey/text
-check "name a voice note" 200 -b "$FR" -X POST "${J[@]}" -d '{"key":"designer.3.from","value":"WORDS-AUNTY"}' $B/api/admin/journey/text
+check "name who a note is from" 200 -b "$FR" -X POST "${J[@]}" -d '{"key":"designer.2.from","value":"WORDS-AUNTY"}' $B/api/admin/journey/text
 check "caption a film frame" 200 -b "$FR" -X POST "${J[@]}" -d '{"key":"designer.0.frames.1.caption","value":"WORDS-JURY"}' $B/api/admin/journey/text
 check "new opening line" 200 -b "$FR" -X POST "${J[@]}" -d '{"key":"intro.line","value":"WORDS-OPENING"}' $B/api/admin/journey/text
 check "journey shows the new words" 200 -b "$SA" $B/journey
 expect "chapter title" "WORDS-TITLE"
-expect "voice note from" "WORDS-AUNTY"
+expect "note from" "WORDS-AUNTY"
 expect "film frame" "WORDS-JURY"
 expect "opening line" "WORDS-OPENING"
 expect "old title gone" ">Once upon a time<" absent
