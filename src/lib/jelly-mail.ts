@@ -7,7 +7,7 @@ import { happenings } from '@/content/happenings';
 import { places } from '@/content/milano';
 import { listPosts } from './data';
 import { addDays, getChecklist, getPresence, listMoments, listStamps, milanDay } from './extras';
-import { jellyState, view } from './jelly';
+import { JELLY_RESET, jellyState, view } from './jelly';
 import { ACHIEVEMENTS } from './jelly-catalog';
 import { listChats, JELLY_CHATS } from './corner';
 import { signUnsub } from './session';
@@ -45,7 +45,7 @@ export async function unsubscribe(personId: string) {
 }
 
 /* ---------- what's been sent ---------- */
-type State = { id: 'jelly-mail'; createdAt: string; achSeen?: string[]; inactiveLast?: string; lowLast?: string; digestLast?: string };
+type State = { id: 'jelly-mail'; createdAt: string; achSeen?: string[]; achEpoch?: number; inactiveLast?: string; lowLast?: string; digestLast?: string };
 const getState = async (): Promise<State> => (await db.get<State>('state', 'jelly-mail')) ?? { id: 'jelly-mail', createdAt: new Date().toISOString() };
 const putState = (s: State) => db.put<State>('state', s);
 
@@ -157,7 +157,9 @@ const amazing = (a: (typeof ACHIEVEMENTS)[number]) => a.pearls >= 100 || (a as {
 
 export async function achievementMail(): Promise<number> {
   if (!mailReady()) return 0;
-  const [state, s, prefs] = await Promise.all([getState(), jellyState(), getPrefs()]);
+  const [saved, s, prefs] = await Promise.all([getState(), jellyState(), getPrefs()]);
+  // a fresh start of her pearls and achievements forgets which ones were already mailed
+  const state: State = (saved.achEpoch ?? 0) < JELLY_RESET ? { ...saved, achSeen: undefined, achEpoch: JELLY_RESET } : saved;
   const unlocked = Object.keys(s.unlocked ?? {});
   // the first look just takes note of what she already has, so nobody is mailed about old news
   if (!state.achSeen) {

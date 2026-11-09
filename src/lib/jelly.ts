@@ -50,8 +50,9 @@ export type JellyState = db.Doc & {
 
 export type GameId = 'catch' | 'pop' | 'says';
 
-// bump to wipe pats, pearls, things, streaks and achievements once (27 Oct 2026: testing done)
-const RESET = 1;
+// bump to wipe pats, pearls, things, streaks and achievements once (9 Nov 2026: handed over to Saanika)
+const RESET = 2;
+export const JELLY_RESET = RESET;
 
 // what the first (emoji) catalog charged, so anything bought from it is refunded
 const LEGACY: Record<string, number> = {
