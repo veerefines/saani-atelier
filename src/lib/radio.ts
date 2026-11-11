@@ -67,17 +67,36 @@ function moodNow(): Mood {
   }
   return m;
 }
+// the last few songs heard, kept on her device, so a reload never starts with one she just heard
+const RECENT_KEY = 'radio-recent';
+const RECENT_KEEP = 8;
+function recent(): string[] {
+  try {
+    const r = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+    return Array.isArray(r) ? r.filter((f): f is string => typeof f === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+function remember(file: string) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([...recent().filter((f) => f !== file), file].slice(-RECENT_KEEP)));
+  } catch {}
+}
+
 function pick(): Track {
   const mood = moodNow();
-  const fresh = (l: Track[]) => l.filter((t) => !played.includes(t.file));
-  let pool = fresh(ALL.filter((t) => t.mood === mood));
-  if (!pool.length) pool = fresh(ALL);
+  const skip = [...played, ...recent()];
+  let pool = ALL.filter((t) => t.mood === mood && !skip.includes(t.file));
+  if (!pool.length) pool = ALL.filter((t) => !skip.includes(t.file));
+  if (!pool.length) pool = ALL.filter((t) => !played.includes(t.file));
   if (!pool.length) {
     played.length = 0;
     pool = ALL.filter((t) => t.file !== now?.file);
   }
   const t = pool[Math.floor(Math.random() * pool.length)];
   played.push(t.file);
+  remember(t.file);
   if (played.length > ALL.length - 3) played.shift();
   return t;
 }
