@@ -606,5 +606,66 @@
       }
     ],
     "added": "2026-10-28"
+  },
+  {
+    "id": "dali-moda",
+    "kind": "exhibition",
+    "title": "Dalí e la Moda",
+    "where": "Palazzo Reale, Piazza Duomo 12",
+    "note": "Over 200 works on how Dalí dressed, drew and collaborated with fashion (Schiaparelli, Dior and more). A Thursday late opening makes it an easy after-class plan.",
+    "editions": [
+      {
+        "start": "2026-09-24",
+        "end": "2027-01-31"
+      }
+    ],
+    "details": {
+      "time": "Tue–Sun 10:00–19:30 (Thu until 22:30), closed Mondays",
+      "price": "Around €15–17, reduced for ages 6–26 (sources differ; check when booking)",
+      "booking": "Tickets at dalielamoda.it",
+      "address": "Piazza Duomo 12, Milano",
+      "lat": 45.46361,
+      "lng": 9.19097,
+      "goodFor": "Fashion history, surrealism and costume"
+    },
+    "links": [
+      {
+        "label": "Tickets: Dalí e la Moda",
+        "url": "https://www.dalielamoda.it/"
+      },
+      {
+        "label": "Milano Finanza on the show",
+        "url": "https://www.milanofinanza.it/fashion/palazzo-reale-celebra-il-legame-di-salvador-dali-con-la-moda-con-200-opere-in-mostra-202607231132059013"
+      }
+    ],
+    "added": "2026-11-16"
+  },
+  {
+    "id": "viktor-rolf-spectrum",
+    "kind": "exhibition",
+    "title": "Viktor&Rolf. Spectrum",
+    "where": "Galleria 10 Corso Como",
+    "note": "The Dutch duo's first exhibition in Italy, free to walk into. Closes soon, so go this week.",
+    "editions": [
+      {
+        "start": "2026-09-25",
+        "end": "2026-11-22"
+      }
+    ],
+    "details": {
+      "time": "Daily 10:30–19:30",
+      "price": "Free",
+      "address": "Corso Como 10, Milano",
+      "lat": 45.48182,
+      "lng": 9.18764,
+      "goodFor": "Couture, concept fashion and a gallery-café stop"
+    },
+    "links": [
+      {
+        "label": "10 Corso Como",
+        "url": "https://10corsocomo.com/blogs/news/viktor-amp-rolf-spectrum"
+      }
+    ],
+    "added": "2026-11-16"
   }
 ]
