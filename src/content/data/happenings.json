@@ -639,33 +639,5 @@
       }
     ],
     "added": "2026-11-16"
-  },
-  {
-    "id": "viktor-rolf-spectrum",
-    "kind": "exhibition",
-    "title": "Viktor&Rolf. Spectrum",
-    "where": "Galleria 10 Corso Como",
-    "note": "The Dutch duo's first exhibition in Italy, free to walk into. Closes soon, so go this week.",
-    "editions": [
-      {
-        "start": "2026-09-25",
-        "end": "2026-11-22"
-      }
-    ],
-    "details": {
-      "time": "Daily 10:30–19:30",
-      "price": "Free",
-      "address": "Corso Como 10, Milano",
-      "lat": 45.48182,
-      "lng": 9.18764,
-      "goodFor": "Couture, concept fashion and a gallery-café stop"
-    },
-    "links": [
-      {
-        "label": "10 Corso Como",
-        "url": "https://10corsocomo.com/blogs/news/viktor-amp-rolf-spectrum"
-      }
-    ],
-    "added": "2026-11-16"
   }
 ]
